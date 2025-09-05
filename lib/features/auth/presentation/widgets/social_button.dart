@@ -7,6 +7,7 @@ class SocialButton extends StatefulWidget {
   final String? imagePath;
   final VoidCallback onPressed;
   final Color iconColor;
+  final Color backgroundColor; // Thêm tham số backgroundColor
 
   const SocialButton({
     super.key,
@@ -15,6 +16,7 @@ class SocialButton extends StatefulWidget {
     this.icon,
     this.imagePath,
     this.iconColor = AppPallete.primaryColor,
+    this.backgroundColor = AppPallete.whiteColor, // Mặc định là trong suốt
   });
 
   @override
@@ -56,7 +58,7 @@ class _SocialButtonState extends State<SocialButton>
             scale: _scaleAnimation.value,
             child: Container(
               decoration: BoxDecoration(
-                color: AppPallete.whiteColor,
+                color: widget.backgroundColor, // Sử dụng backgroundColor từ tham số
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: AppPallete.borderColor,

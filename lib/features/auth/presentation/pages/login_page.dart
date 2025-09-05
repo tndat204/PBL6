@@ -36,16 +36,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: AppPallete.backgroundGradient,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: AppPallete.backgroundGradient, // Gradient từ F0FDF4 đến FFFFFF
         ),
-        child: SafeArea(
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent, // Loại bỏ nền mặc định của Scaffold
+        body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: FadeTransition(
@@ -58,20 +59,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Xin chào',
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                        'Xin chào!',
+                        style: TextStyle(
+                          fontFamily: 'Italianno', // Sử dụng font Italianno
+                          fontWeight: FontWeight.w400, // Độ đậm phù hợp với font
+                          fontSize: 50,
                           color: AppPallete.textColor,
-                          fontSize: 32,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Sign in to continue your journey',
+                        'Đăng nhập để tiếp tục hành trình của bạn',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppPallete.mutedTextColor,
-                          fontSize: 16,
-                        ),
+                              color: AppPallete.mutedTextColor,
+                              fontSize: 16,
+                            ),
                       ),
                     ],
                   ),
@@ -111,7 +113,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(
-                          'or',
+                          'hoặc',
                           style: TextStyle(
                             color: AppPallete.mutedTextColor,
                             fontWeight: FontWeight.w500,
@@ -136,16 +138,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 30),
                   SocialButton(
-                    text: 'Continue with Google',
+                    text: 'Tiếp tục với Google',
                     imagePath: 'assets/images/google_logo.jpg',
                     onPressed: () {},
+                    backgroundColor: AppPallete.whiteColor, // Đảm bảo không ghi đè gradient
                   ),
                   const SizedBox(height: 40),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        'Bạn chưa có tài khoản? ',
                         style: TextStyle(
                           color: AppPallete.mutedTextColor,
                           fontSize: 16,
@@ -164,7 +167,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             ),
                           ),
                           child: Text(
-                            'Create an account',
+                            'Tạo tài khoản',
                             style: TextStyle(
                               color: AppPallete.primaryColor,
                               fontWeight: FontWeight.bold,

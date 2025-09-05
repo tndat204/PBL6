@@ -18,13 +18,13 @@ class _LoginFormState extends State<LoginForm> {
     return Column(
       children: [
         const CustomTextField(
-          label: 'Enter your email',
+          label: 'Nhập email của bạn',
           icon: Icons.email_outlined,
           obscureText: false,
         ),
         const SizedBox(height: 20),
         const CustomTextField(
-          label: 'Enter your password',
+          label: 'Nhập mật khẩu của bạn',
           icon: Icons.lock_outline,
           obscureText: true,
         ),
@@ -52,7 +52,7 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Remember me',
+                  'Lưu đăng nhập',
                   style: TextStyle(
                     color: AppPallete.textColor,
                     fontWeight: FontWeight.w500,
@@ -76,7 +76,7 @@ class _LoginFormState extends State<LoginForm> {
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 ),
                 child: Text(
-                  'Forgot password?',
+                  'Quên mật khẩu?',
                   style: TextStyle(
                     color: AppPallete.primaryColor,
                     fontWeight: FontWeight.w600,
@@ -89,7 +89,7 @@ class _LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 32),
         const CustomElevatedButton(
-          text: 'Sign In',
+          text: 'Đăng nhập',
           onPressed: _handleSignIn,
         ),
       ],
