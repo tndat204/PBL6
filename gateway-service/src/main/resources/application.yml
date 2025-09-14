@@ -1,0 +1,52 @@
+server:
+  port: 8080
+jwt:
+  secret: ${JWT_SECRET}
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # Auth Service - No authentication required
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0  # Don't strip prefix for auth service
+        
+        # User Service - Requires authentication
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=0  # Don't strip prefix
+            - name: JwtAuthenticationFilter
+
+# Eureka Server Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+
+
+
+# Logging configuration
+logging:
+  level:
+    com.pbl6.gatewayservice: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    com.netflix.eureka: OFF
+    com.netflix.discovery: OFF
+

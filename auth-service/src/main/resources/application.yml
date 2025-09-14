@@ -1,0 +1,65 @@
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import: optional:file:.env[.properties]
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_service
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: 123456
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 7200           # 2h
+  refresh-duration: 86400
+
+feign:
+  hystrix:
+    enabled: false
+
+
+server:
+  port: 8081
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://your_prod_host:5432/auth_service
+    driver-class-name: org.postgresql.Driver
+    username: your_prod_username
+    password: your_prod_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
