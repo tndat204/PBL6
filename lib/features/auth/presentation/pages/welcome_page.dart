@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/auth/presentation/pages/login_page.dart';
-import 'package:pbl6/features/auth/presentation/pages/signup_page.dart';
+import 'package:pbl6/features/auth/presentation/pages/role_selection_screen.dart';
 import '../widgets/custom_elevated_button.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -92,7 +92,7 @@ class _WelcomePageState extends State<WelcomePage>
                             PageRouteBuilder(
                               pageBuilder:
                                   (context, animation, secondaryAnimation) =>
-                                      const SignupPage(),
+                                      const RoleSelectionScreen(),
                               transitionsBuilder: (context, animation,
                                   secondaryAnimation, child) {
                                 return FadeTransition(

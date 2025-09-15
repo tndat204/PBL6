@@ -42,7 +42,7 @@ class _CustomElevatedButtonState extends State<CustomElevatedButton>
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 56, // Increased height for better touch target
+      height: 56,
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) {

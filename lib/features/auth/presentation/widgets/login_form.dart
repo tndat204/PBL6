@@ -18,13 +18,13 @@ class _LoginFormState extends State<LoginForm> {
     return Column(
       children: [
         const CustomTextField(
-          label: 'Nhập email của bạn',
+          label: 'Nhập email',
           icon: Icons.email_outlined,
           obscureText: false,
         ),
         const SizedBox(height: 20),
         const CustomTextField(
-          label: 'Nhập mật khẩu của bạn',
+          label: 'Nhập mật khẩu',
           icon: Icons.lock_outline,
           obscureText: true,
         ),

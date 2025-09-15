@@ -5,12 +5,18 @@ class CustomTextField extends StatefulWidget {
   final String label;
   final IconData icon;
   final bool obscureText;
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
 
   const CustomTextField({
     super.key,
     required this.label,
     required this.icon,
     required this.obscureText,
+    this.controller,
+    this.validator,
+    this.keyboardType,
   });
 
   @override
@@ -35,7 +41,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _isFocused 
+            color: _isFocused
                 ? AppPallete.primaryColor.withOpacity(0.1)
                 : AppPallete.borderColor.withOpacity(0.1),
             blurRadius: _isFocused ? 12 : 6,
@@ -49,8 +55,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             _isFocused = hasFocus;
           });
         },
-        child: TextField(
+        child: TextFormField(
+          controller: widget.controller,
           obscureText: _isObscured,
+          keyboardType: widget.keyboardType,
           style: TextStyle(
             color: AppPallete.textColor,
             fontSize: 16,
@@ -108,6 +116,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             filled: true,
             fillColor: AppPallete.inputBackgroundColor,
           ),
+          validator: widget.validator,
         ),
       ),
     );

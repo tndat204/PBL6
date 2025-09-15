@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
-import 'package:pbl6/features/auth/presentation/pages/role_selection_screen.dart';
-import '../widgets/login_form.dart';
-import '../widgets/social_button.dart';
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+import 'package:pbl6/features/auth/presentation/pages/login_page.dart';
+import 'package:pbl6/features/auth/presentation/widgets/recruiter_signup_form.dart';
+
+class RecruiterSignupPage extends StatefulWidget {
+  const RecruiterSignupPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RecruiterSignupPage> createState() => _RecruiterSignupPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+class _RecruiterSignupPageState extends State<RecruiterSignupPage> with TickerProviderStateMixin {
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
 
@@ -41,11 +41,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: AppPallete.backgroundGradient, // Gradient từ F0FDF4 đến FFFFFF
+          colors: AppPallete.backgroundGradient,
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent, // Loại bỏ nền mặc định của Scaffold
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -59,17 +59,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Chào bạn quay trở lại!',
+                        'Chào nhà tuyển dụng mới!',
                         style: TextStyle(
-                          fontFamily: 'Italianno', // Sử dụng font Italianno
-                          fontWeight: FontWeight.w400, // Độ đậm phù hợp với font
+                          fontFamily: 'Italianno',
+                          fontWeight: FontWeight.w400,
                           fontSize: 50,
                           color: AppPallete.textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Đăng nhập để tiếp tục hành trình của bạn',
+                        'Đăng ký để bắt đầu tuyển dụng',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppPallete.mutedTextColor,
                               fontSize: 16,
@@ -78,21 +78,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ],
                   ),
                   const SizedBox(height: 50),
-                  Container(
-                    padding: const EdgeInsets.all(24.0),
-                    decoration: BoxDecoration(
-                      color: AppPallete.whiteColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppPallete.primaryColor.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: const LoginForm(),
-                  ),
+                  const RecruiterSignupForm(),
                   const SizedBox(height: 30),
                   Row(
                     children: [
@@ -136,19 +122,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
-                  SocialButton(
-                    text: 'Tiếp tục với Google',
-                    imagePath: 'assets/images/google_logo.jpg',
-                    onPressed: () {},
-                    backgroundColor: AppPallete.whiteColor, // Đảm bảo không ghi đè gradient
-                  ),
                   const SizedBox(height: 40),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Bạn chưa có tài khoản? ',
+                        'Bạn đã có tài khoản? ',
                         style: TextStyle(
                           color: AppPallete.mutedTextColor,
                           fontSize: 16,
@@ -156,9 +135,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                       GestureDetector(
                         onTap: () {
-                           Navigator.pushReplacement(
+                          Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+                            MaterialPageRoute(builder: (context) => const LoginPage()),
                           );
                         },
                         child: Container(
@@ -172,7 +151,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             ),
                           ),
                           child: Text(
-                            'Tạo tài khoản',
+                            'Đăng nhập',
                             style: TextStyle(
                               color: AppPallete.primaryColor,
                               fontWeight: FontWeight.bold,
