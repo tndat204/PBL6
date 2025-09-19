@@ -22,14 +22,15 @@ public abstract class Base {
     private LocalDateTime createdAt;
 
     @CreatedBy
-    @Column(name = "created_by", updatable = false)
-    private String createdBy;
+    @Column(name = "created_by", updatable = false, nullable = false)
+    private String createdBy = "SYSTEM";
 
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+
     @LastModifiedBy
-    @Column(name = "updated_by")
-    private String updatedBy;
+    @Column(name = "updated_by", nullable = false)
+    private String updatedBy = "SYSTEM";
 }

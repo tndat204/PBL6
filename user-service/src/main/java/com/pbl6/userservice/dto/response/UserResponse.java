@@ -1,5 +1,6 @@
 package com.pbl6.userservice.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -12,7 +13,7 @@ import java.util.Set;
 public class UserResponse {
     String email;
     String username;
-    String password;
-    Boolean isEnable;
+    @JsonProperty("isEnabled")
+    Boolean enabled;
     Set<RoleResponse> roles = new HashSet<>();
 }

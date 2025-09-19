@@ -36,11 +36,8 @@ import java.util.Random;
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     RoleRepository roleRepository;
-    JavaMailSender javaMailSender;
     PasswordEncoder passwordEncoder;
     ModelMapper modelMapper;
-    Map<String, OTPInfo> otpStore = new HashMap<>();
-    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse createUser(CreateUserRequest request) {
         User user = modelMapper.map(request, User.class);
 
@@ -65,47 +62,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void sendOTP(SendOTPRequest request) throws MailException, MessagingException {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            if (otpStore.containsKey(request.getEmail())) otpStore.remove(request.getEmail());
-            Random random = new Random();
-            int otp = 100000 + random.nextInt(900000);
-            otpStore.put(request.getEmail(), new OTPInfo(otp));
-            String subject = "ĐÂY LÀ MÃ OTP CỦA BẠN";
-            String htmlContent =
-                    "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; " +
-                            "border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;'>" +
-                            "<h2 style='color: #4CAF50; text-align: center;'>Xác thực OTP</h2>" +
-                            "<p style='font-size: 16px; color: #333; text-align: center;'>Mã OTP của bạn là:</p>" +
-                            "<div style='text-align: center; margin: 20px 0;'>" +
-                            "<span style='display: inline-block; font-size: 28px; font-weight: bold; " +
-                            "color: #ffffff; background-color: #4CAF50; padding: 10px 20px; border-radius: 8px;'>" +
-                            otp +
-                            "</span>" +
-                            "</div>" +
-                            "<p style='font-size: 14px; color: #555; text-align: center;'>Mã OTP sẽ hết hạn sau <b>5 phút</b>.</p>" +
-                            "<hr style='margin: 20px 0; border: none; border-top: 1px solid #ddd;'/>" +
-                            "<p style='font-size: 14px; color: #555; text-align: center;'>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>" +
-                            "<p style='font-size: 12px; font-style: italic; color: #888; text-align: center;'>Nếu bạn không yêu cầu mã OTP này, vui lòng bỏ qua email này.</p>" +
-                            "</div>";
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom("IT Job Hunt <shopddhpbl3@gmail.com>");
-            helper.setTo(request.getEmail());
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            javaMailSender.send(message);
-        } else {
-            throw new AppException(ErrorCode.EMAIL_NOT_FOUND);
-        }
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 
-    @Override
-    public boolean verifyOtp(VerifyOTPRequest request) {
-        OTPInfo otpInfo = otpStore.get(request.getEmail());
-        if (otpInfo != null && !otpInfo.isExpired() && otpInfo.getOtp().equals(request.getOtp())) return true;
-        return false;
-    }
 
     @Override
     public void resetPassword(ResetPasswordRequest request) {
@@ -113,8 +73,8 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedBy(request.getEmail());
         userRepository.save(user);
     }
-
 
 }

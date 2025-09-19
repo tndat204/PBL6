@@ -1,4 +1,4 @@
-package com.pbl6.userservice.dto.request;
+package com.pbl6.authservice.dto.request;
 
 import lombok.AccessLevel;
 import lombok.Data;

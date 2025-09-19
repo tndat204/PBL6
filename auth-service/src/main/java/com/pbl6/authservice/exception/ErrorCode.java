@@ -27,7 +27,10 @@ public enum ErrorCode {
     NOT_IN_THE_PROJ(1016,"Bạn không có trong dự án này",HttpStatus.BAD_REQUEST),
     GROUPCHAT_NOT_FOUND(1017,"Nhóm trò chuyện không tồn tại",HttpStatus.BAD_REQUEST),
     INVALID_FILE(1018,"File không hợp lệ",HttpStatus.BAD_REQUEST),
-    UPLOAD_FILE_FAILED(1019,"Tải file lên không được",HttpStatus.BAD_REQUEST);
+    UPLOAD_FILE_FAILED(1019,"Tải file lên không được",HttpStatus.BAD_REQUEST),
+    INVALID_OTP(1020,"OTP không hợp lệ",HttpStatus.BAD_REQUEST),
+    INVALID_TOKEN(1021,"Token không hợp lệ",HttpStatus.UNAUTHORIZED),
+    WRONG_PASSWORD(1023,"Sai mật khẩu",HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;

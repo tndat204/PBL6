@@ -1,10 +1,7 @@
 package com.pbl6.authservice.controller;
 
 import com.nimbusds.jose.JOSEException;
-import com.pbl6.authservice.dto.request.IntrospectRequest;
-import com.pbl6.authservice.dto.request.LoginRequest;
-import com.pbl6.authservice.dto.request.LogoutRequest;
-import com.pbl6.authservice.dto.request.RefreshTokenRequest;
+import com.pbl6.authservice.dto.request.*;
 import com.pbl6.authservice.dto.response.APIResponse;
 import com.pbl6.authservice.dto.response.AuthenticationResponse;
 import com.pbl6.authservice.dto.response.IntrospectResponse;
@@ -12,20 +9,20 @@ import com.pbl6.authservice.service.AuthService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
 @RestController
 @RequestMapping("/api/auth")
-@FieldDefaults(level= AccessLevel.PRIVATE)
+@FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class AuthController {
 
-    @Autowired
     AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/login")
     public APIResponse<AuthenticationResponse> login(@RequestBody LoginRequest request) {
@@ -58,8 +55,18 @@ public class AuthController {
             throws JOSEException, ParseException {
         var result = authService.introspect(request);
         return APIResponse.<IntrospectResponse>builder()
-                .code(1000)
+                .code(200)
                 .result(result)
+                .build();
+    }
+
+    @PostMapping("/reset-password")
+    public APIResponse<String> resetPassword( @RequestHeader("Authorization") String authHeader,
+                                              @RequestBody ResetPasswordRequest request){
+        authService.resetPassword(authHeader, request);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Reset Password Successful")
                 .build();
     }
 }

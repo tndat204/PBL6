@@ -1,0 +1,92 @@
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notification_service
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: 123456
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      initialization-fail-timeout: 0
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: shopddhpbl3@gmail.com
+    password: etax bupr dbft ejdw
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+logging:
+  level:
+    org.hibernate.SQL: off
+    org.hibernate.type.descriptor.sql.BasicBinder: off
+    org.springframework: info
+    com.zaxxer.hikari: info
+
+feign:
+  hystrix:
+    enabled: false
+
+server:
+  port: 8083
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:postgresql://your_prod_host:5432/notification_service?serverTimezone=Asia/Ho_Chi_Minh
+    driver-class-name: org.postgresql.Driver
+    username: your_prod_username
+    password: your_prod_password
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    root: warn
+

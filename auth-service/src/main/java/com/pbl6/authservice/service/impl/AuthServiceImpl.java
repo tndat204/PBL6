@@ -6,11 +6,10 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.pbl6.authservice.client.UserServiceClient;
+import com.pbl6.authservice.configuration.CustomJwtDecoder;
+import com.pbl6.authservice.dto.ResetPasswordDTO;
 import com.pbl6.authservice.dto.UserDTO;
-import com.pbl6.authservice.dto.request.IntrospectRequest;
-import com.pbl6.authservice.dto.request.LoginRequest;
-import com.pbl6.authservice.dto.request.LogoutRequest;
-import com.pbl6.authservice.dto.request.RefreshTokenRequest;
+import com.pbl6.authservice.dto.request.*;
 import com.pbl6.authservice.dto.response.AuthenticationResponse;
 import com.pbl6.authservice.dto.response.IntrospectResponse;
 import com.pbl6.authservice.entity.InvalidatedToken;
@@ -18,6 +17,7 @@ import com.pbl6.authservice.exception.AppException;
 import com.pbl6.authservice.exception.ErrorCode;
 import com.pbl6.authservice.repository.InvalidatedTokenRepository;
 import com.pbl6.authservice.service.AuthService;
+import io.jsonwebtoken.JwtException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -56,6 +58,7 @@ public class AuthServiceImpl implements AuthService {
     PasswordEncoder passwordEncoder;
     InvalidatedTokenRepository invalidatedTokenRepository;
     UserServiceClient userServiceClient;
+    CustomJwtDecoder  customJwtDecoder;
 
     // Lấy user bằng Feign
     public UserDTO getUserByEmail(String email) {
@@ -73,10 +76,10 @@ public class AuthServiceImpl implements AuthService {
         // Gọi user-service lấy thông tin user theo email
         UserDTO user = Optional.ofNullable(
                 userServiceClient.getUserByEmail(request.getEmail()).getResult()
-        ).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+        ).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.WRONG_PASSWORD);
         }
 
         if (!user.isEnabled()) {
@@ -202,5 +205,28 @@ public class AuthServiceImpl implements AuthService {
                 .token(token)
                 .authenticated(true)
                 .build();
+    }
+
+    @Override
+    public void resetPassword(String authHeader, ResetPasswordRequest request) {
+        // Log thông tin
+
+        String token = authHeader.replace("Bearer ", "");
+        Jwt jwt;
+        try {
+            jwt = customJwtDecoder.decode(token);
+        } catch (JwtException e) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String type = (String) jwt.getClaims().get("type");
+        if (!"RESET_PASSWORD".equals(type)) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+        String email = jwt.getSubject();
+        ResetPasswordDTO resetPasswordDTO = new ResetPasswordDTO();
+        resetPasswordDTO.setEmail(email);
+        resetPasswordDTO.setNewPassword(request.getNewPassword());
+        userServiceClient.resetPassword(resetPasswordDTO);
     }
 }

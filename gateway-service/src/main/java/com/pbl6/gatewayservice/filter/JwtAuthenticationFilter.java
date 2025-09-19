@@ -17,7 +17,14 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
-    JwtService jwtService;
+    private final JwtService jwtService;
+
+    // ✅ Mảng public endpoints
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/api/auth/**",      // login, register, forgot password...
+            "/api/user/add",
+            "/actuator"        // health check
+    };
 
     // Constructor injection
     public JwtAuthenticationFilter(JwtService jwtService) {
@@ -36,7 +43,12 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
     // Kiểm tra endpoint public không cần token
     private boolean isPublicEndpoint(String path) {
-        return path.startsWith("/api/auth/") || path.startsWith("/actuator");
+        for (String endpoint : PUBLIC_ENDPOINTS) {
+            if (path.startsWith(endpoint)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Xử lý 401 Unauthorized

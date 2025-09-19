@@ -13,13 +13,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        String[] PUBLIC_ENDPOINTS = {
+                "/internal/user/**",
+                "/api/user/add"
+        };
+
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/by-email").permitAll() // mở public
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated()
                 );
 
         return http.build();
     }
+
 }
 

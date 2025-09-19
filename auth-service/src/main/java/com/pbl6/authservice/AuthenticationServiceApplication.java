@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import java.util.TimeZone;
 
 @SpringBootApplication
-@EnableFeignClients(basePackages = "com.pbl6.authservice.client")
+@EnableFeignClients
 public class AuthenticationServiceApplication {
     public static void main(String[] args) {
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
