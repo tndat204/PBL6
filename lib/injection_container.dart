@@ -8,8 +8,12 @@ final sl = GetIt.instance;
 void init() {
   // Đăng ký DioClient
   sl.registerSingleton<DioClient>(DioClient());
-  // Đăng ký ApiService với instance của DioClient từ GetIt
+
+  // Đăng ký ApiService với Dio từ GetIt
   sl.registerSingleton<ApiService>(ApiService(sl<DioClient>().instance));
-  // Đăng ký AuthRemoteDataSource với instance của ApiService từ GetIt
-  sl.registerSingleton<AuthRemoteDataSource>(AuthRemoteDataSource(sl<ApiService>()));
+
+  // Đăng ký AuthRemoteDataSource với ApiService và Dio từ GetIt
+  sl.registerSingleton<AuthRemoteDataSource>(
+    AuthRemoteDataSourceImpl(sl<ApiService>(), sl<DioClient>().instance),
+  );
 }

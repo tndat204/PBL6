@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:pbl6/features/auth/presentation/widgets/custom_text_field.dart';
 import 'package:pbl6/features/auth/presentation/widgets/custom_elevated_button.dart';
-import 'package:provider/provider.dart';
+import 'package:pbl6/features/auth/presentation/widgets/custom_text_field.dart';
 
 class RecruiterSignupForm extends StatefulWidget {
   const RecruiterSignupForm({super.key});
@@ -34,34 +34,32 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  final AuthRemoteDataSource _authDataSource = GetIt.instance<AuthRemoteDataSource>();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authDataSource = Provider.of<AuthRemoteDataSource>(
-        context,
-        listen: false,
-      );
-      _fetchProvinces(authDataSource);
+      _fetchProvinces();
     });
   }
 
-  Future<void> _fetchProvinces(AuthRemoteDataSource ds) async {
+  Future<void> _fetchProvinces() async {
     try {
-      final data = await ds.fetchProvinces();
+      final data = await _authDataSource.fetchProvinces();
       setState(() {
         _provinces = data;
         _loadingProvinces = false;
       });
     } catch (e) {
       setState(() => _loadingProvinces = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi tải tỉnh/thành phố: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi tải tỉnh/thành phố: $e')),
+      );
     }
   }
 
-  Future<void> _onProvinceChanged(int? code, AuthRemoteDataSource ds) async {
+  Future<void> _onProvinceChanged(int? code) async {
     if (code == null) return;
     setState(() {
       _selectedProvinceCode = code;
@@ -69,22 +67,20 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
       _selectedWardName = null;
       _wards = [];
       _loadingWards = true;
-      _selectedProvinceName = _provinces.firstWhere(
-        (p) => p['code'] == code,
-      )['name'];
+      _selectedProvinceName = _provinces.firstWhere((p) => p['code'] == code)['name'];
     });
 
     try {
-      final wards = await ds.fetchWards(code);
+      final wards = await _authDataSource.fetchWards(code);
       setState(() {
         _wards = wards;
         _loadingWards = false;
       });
     } catch (e) {
       setState(() => _loadingWards = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi tải phường/xã: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi tải phường/xã: $e')),
+      );
     }
   }
 
@@ -101,16 +97,10 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
 
   @override
   Widget build(BuildContext context) {
-    final authDataSource = Provider.of<AuthRemoteDataSource>(
-      context,
-      listen: false,
-    );
-
     return Form(
       key: _formKey,
       child: Column(
         children: [
-          // Email
           CustomTextField(
             label: 'Nhập email',
             icon: Icons.email_outlined,
@@ -118,25 +108,19 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             controller: _emailController,
             validator: (value) {
               if (value!.isEmpty) return 'Vui lòng nhập email';
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value))
-                return 'Email không hợp lệ';
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) return 'Email không hợp lệ';
               return null;
             },
           ),
           const SizedBox(height: 20),
-
-          // Họ và tên
           CustomTextField(
             label: 'Họ và Tên',
             icon: Icons.person_outline,
             obscureText: false,
             controller: _fullNameController,
-            validator: (value) =>
-                value!.isEmpty ? 'Vui lòng nhập họ và tên' : null,
+            validator: (value) => value!.isEmpty ? 'Vui lòng nhập họ và tên' : null,
           ),
           const SizedBox(height: 20),
-
-          // Mật khẩu
           CustomTextField(
             label: 'Nhập mật khẩu',
             icon: Icons.lock_outline,
@@ -149,8 +133,6 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             },
           ),
           const SizedBox(height: 20),
-
-          // Xác nhận mật khẩu
           CustomTextField(
             label: 'Nhập lại mật khẩu',
             icon: Icons.lock_outline,
@@ -158,25 +140,19 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             controller: _confirmPasswordController,
             validator: (value) {
               if (value!.isEmpty) return 'Vui lòng nhập lại mật khẩu';
-              if (value != _passwordController.text)
-                return 'Mật khẩu không khớp';
+              if (value != _passwordController.text) return 'Mật khẩu không khớp';
               return null;
             },
           ),
           const SizedBox(height: 20),
-
-          // Tên công ty
           CustomTextField(
             label: 'Tên công ty',
             icon: Icons.business_outlined,
             obscureText: false,
             controller: _companyNameController,
-            validator: (value) =>
-                value!.isEmpty ? 'Vui lòng nhập tên công ty' : null,
+            validator: (value) => value!.isEmpty ? 'Vui lòng nhập tên công ty' : null,
           ),
           const SizedBox(height: 20),
-
-          // Số điện thoại
           CustomTextField(
             label: 'Số điện thoại',
             icon: Icons.phone_outlined,
@@ -185,14 +161,11 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             controller: _phoneController,
             validator: (value) {
               if (value!.isEmpty) return 'Vui lòng nhập số điện thoại';
-              if (!RegExp(r'^\d{10,11}$').hasMatch(value))
-                return 'Số điện thoại không hợp lệ';
+              if (!RegExp(r'^\d{10,11}$').hasMatch(value)) return 'Số điện thoại không hợp lệ';
               return null;
             },
           ),
           const SizedBox(height: 20),
-
-          // Địa chỉ: Tỉnh/Thành phố
           if (_loadingProvinces)
             const CircularProgressIndicator()
           else
@@ -206,70 +179,44 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
                 final String name = province['name'] as String;
                 return DropdownMenuItem<int>(
                   value: code,
-                  child: Text(
-                    name,
-                    style: TextStyle(color: AppPallete.textColor),
-                  ),
+                  child: Text(name, style: TextStyle(color: AppPallete.textColor)),
                 );
               }).toList(),
-              onChanged: (value) => _onProvinceChanged(value, authDataSource),
+              onChanged: (value) => _onProvinceChanged(value),
               decoration: InputDecoration(
-              
-                prefixIcon: Icon(
-                  Icons.location_on_outlined,
-                  color: AppPallete
-                      .mutedTextColor, // giống CustomTextField khi chưa focus
-                  size: 22, // chỉnh lại size cho đồng bộ
-                ),
+                prefixIcon: Icon(Icons.location_on_outlined, color: AppPallete.mutedTextColor, size: 22),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
+                  borderSide: BorderSide(color: AppPallete.borderColor, width: 1.5),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
+                  borderSide: BorderSide(color: AppPallete.borderColor, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.primaryColor,
-                    width: 2,
-                  ),
+                  borderSide: BorderSide(color: AppPallete.primaryColor, width: 2),
                 ),
                 filled: true,
                 fillColor: AppPallete.inputBackgroundColor,
               ),
-              validator: (value) =>
-                  value == null ? 'Vui lòng chọn tỉnh/thành phố' : null,
+              validator: (value) => value == null ? 'Vui lòng chọn tỉnh/thành phố' : null,
             ),
           const SizedBox(height: 20),
-
-          // Địa chỉ: Phường/Xã
           if (_loadingWards)
             const CircularProgressIndicator()
           else
             DropdownButtonFormField<int>(
               isExpanded: true,
               value: _selectedWardCode,
-              hint: Text(
-                _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
-              ),
+              hint: Text(_wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã'),
               dropdownColor: AppPallete.inputBackgroundColor,
               items: _wards.map((ward) {
                 final int code = ward['code'] as int;
                 final String name = ward['name'] as String;
                 return DropdownMenuItem<int>(
                   value: code,
-                  child: Text(
-                    name,
-                    style: TextStyle(color: AppPallete.textColor),
-                  ),
+                  child: Text(name, style: TextStyle(color: AppPallete.textColor)),
                 );
               }).toList(),
               onChanged: _wards.isEmpty
@@ -277,50 +224,29 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
                   : (value) {
                       setState(() {
                         _selectedWardCode = value;
-                        _selectedWardName = _wards.firstWhere(
-                          (w) => w['code'] == value,
-                        )['name'];
+                        _selectedWardName = _wards.firstWhere((w) => w['code'] == value)['name'];
                       });
                     },
               decoration: InputDecoration(
-              
-                prefixIcon: const Icon(
-                  Icons.location_city_outlined,
-                  color: AppPallete
-                      .mutedTextColor, // giống CustomTextField khi chưa focus
-                  size: 22,
-                ),
+                prefixIcon: const Icon(Icons.location_city_outlined, color: AppPallete.mutedTextColor, size: 22),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
+                  borderSide: BorderSide(color: AppPallete.borderColor, width: 1.5),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
+                  borderSide: BorderSide(color: AppPallete.borderColor, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.primaryColor,
-                    width: 2,
-                  ),
+                  borderSide: BorderSide(color: AppPallete.primaryColor, width: 2),
                 ),
                 filled: true,
                 fillColor: AppPallete.inputBackgroundColor,
               ),
-              validator: (value) => value == null && _wards.isNotEmpty
-                  ? 'Vui lòng chọn phường/xã'
-                  : null,
+              validator: (value) => value == null && _wards.isNotEmpty ? 'Vui lòng chọn phường/xã' : null,
             ),
           const SizedBox(height: 20),
-
-          // Checkbox
           Row(
             children: [
               Transform.scale(
@@ -351,46 +277,17 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             ],
           ),
           const SizedBox(height: 32),
-
-          // Button
           CustomElevatedButton(
             text: 'Đăng ký',
-            onPressed: () => _handleSignUp(authDataSource),
+            onPressed: () {
+              // Tạm thời chỉ hiển thị thông báo, vì chưa có API signup
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Chưa hỗ trợ đăng ký lúc này!')),
+              );
+            },
           ),
         ],
       ),
     );
-  }
-
-  void _handleSignUp(AuthRemoteDataSource authDataSource) {
-    if (_formKey.currentState!.validate() && _agreeTerms) {
-      if (_selectedProvinceCode == null ||
-          (_wards.isNotEmpty && _selectedWardCode == null)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng chọn tỉnh/thành phố và phường/xã (nếu có)'),
-          ),
-        );
-        return;
-      }
-      authDataSource.signupEmployer(
-        fullName: _fullNameController.text,
-        companyName: _companyNameController.text,
-        phone: _phoneController.text,
-        province: _selectedProvinceName ?? '',
-        ward: _selectedWardName ?? '',
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Đăng ký thành công!')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng điền đầy đủ thông tin và đồng ý điều khoản'),
-        ),
-      );
-    }
   }
 }
