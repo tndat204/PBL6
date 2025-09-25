@@ -10,6 +10,10 @@
         <option value="$PROJECT_DIR$/Eureka-Server/pom.xml" />
         <option value="$PROJECT_DIR$/notification-service/pom.xml" />
         <option value="$PROJECT_DIR$/testSOAP/pom.xml" />
+        <option value="$PROJECT_DIR$/common-/pom.xml" />
+        <option value="$PROJECT_DIR$/common-dto/pom.xml" />
+        <option value="$PROJECT_DIR$/auth-service/pom.xml" />
+        <option value="$PROJECT_DIR$/commondto/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">

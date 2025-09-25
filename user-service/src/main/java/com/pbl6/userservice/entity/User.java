@@ -24,19 +24,31 @@ public class User extends Base {
     String username;
 
     @Column(nullable = false)
+    String fullName;
+
+    @Column
+    String avatarUrl;
+
+    @Column(nullable = false)
     String password;
 
     @Column(unique = true,nullable = false)
     String email;
 
-    @Column(nullable = false)
+    @Column
     String phone;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     String address;
 
-    @Column(nullable = false)
+    @Column
     Date birthDate;
+
+    @Column
+    String taxCode;
+
+    @Column
+    String nameCompany;
 
     @Column(nullable = false)
     boolean isEnabled=true;

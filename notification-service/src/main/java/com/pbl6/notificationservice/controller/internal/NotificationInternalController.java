@@ -1,7 +1,7 @@
 package com.pbl6.notificationservice.controller.internal;
 
-import com.pbl6.notificationservice.dto.request.SendOTPRequest;
-import com.pbl6.notificationservice.dto.response.APIResponse;
+import com.pbl6.notificationservice.dto.shared.APIResponse;
+import com.pbl6.notificationservice.dto.shared.SendOTPRequest;
 import com.pbl6.notificationservice.service.NotificationService;
 import jakarta.mail.MessagingException;
 import lombok.AccessLevel;

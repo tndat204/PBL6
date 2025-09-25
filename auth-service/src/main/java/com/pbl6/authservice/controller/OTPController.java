@@ -1,8 +1,8 @@
 package com.pbl6.authservice.controller;
 
-import com.pbl6.authservice.dto.request.SendOTPRequest;
+import com.pbl6.authservice.dto.request.SendMailRequest;
 import com.pbl6.authservice.dto.request.VerifyOTPRequest;
-import com.pbl6.authservice.dto.response.APIResponse;
+import com.pbl6.authservice.dto.shared.APIResponse;
 import com.pbl6.authservice.service.OTPService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -22,7 +22,7 @@ public class OTPController {
     }
 
     @PostMapping("/forgot-password")
-    public APIResponse<String> sendOTP(@RequestBody SendOTPRequest request){
+    public APIResponse<String> sendOTP(@RequestBody SendMailRequest request){
         otpService.sendOTP(request);
         return APIResponse.<String>builder()
                 .code(200)

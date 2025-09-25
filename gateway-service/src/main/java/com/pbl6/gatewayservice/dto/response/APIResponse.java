@@ -1,22 +1,23 @@
 package com.pbl6.gatewayservice.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class APIResponse<T> {
-    @Setter
-    @Getter
-    int code;
-    @Setter
-    @Getter
-    String message;
-    @Setter
-    @Getter
-    T result;
+    @Builder.Default
+    private int code = 1000;
+
+    private String message;
+    private T result;
 }

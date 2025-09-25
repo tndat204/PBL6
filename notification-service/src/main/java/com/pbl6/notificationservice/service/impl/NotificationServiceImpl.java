@@ -1,6 +1,6 @@
 package com.pbl6.notificationservice.service.impl;
 
-import com.pbl6.notificationservice.dto.request.SendOTPRequest;
+import com.pbl6.notificationservice.dto.shared.SendOTPRequest;
 import com.pbl6.notificationservice.service.NotificationService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

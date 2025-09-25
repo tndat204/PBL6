@@ -2,15 +2,14 @@ package com.pbl6.authservice.controller;
 
 import com.nimbusds.jose.JOSEException;
 import com.pbl6.authservice.dto.request.*;
-import com.pbl6.authservice.dto.response.APIResponse;
 import com.pbl6.authservice.dto.response.AuthenticationResponse;
-import com.pbl6.authservice.dto.response.IntrospectResponse;
+import com.pbl6.authservice.dto.shared.APIResponse;
+import com.pbl6.authservice.dto.shared.IntrospectRequest;
+import com.pbl6.authservice.dto.shared.IntrospectResponse;
 import com.pbl6.authservice.service.AuthService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.text.ParseException;
 
 @RestController
@@ -61,12 +60,20 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public APIResponse<String> resetPassword( @RequestHeader("Authorization") String authHeader,
-                                              @RequestBody ResetPasswordRequest request){
-        authService.resetPassword(authHeader, request);
+    public APIResponse<String> resetPassword(@RequestBody NewPasswordRequest request){
+        authService.resetPassword(request);
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Reset Password Successful")
+                .build();
+    }
+
+    @PostMapping("/outbound/authentication")
+    APIResponse<AuthenticationResponse> outboundAuthenticate(@RequestParam("code") String code ){
+        var result = authService.outboundAuthenticate(code);
+        return APIResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .code(200)
                 .build();
     }
 }

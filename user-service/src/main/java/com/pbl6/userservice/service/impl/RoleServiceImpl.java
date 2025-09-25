@@ -1,7 +1,7 @@
 package com.pbl6.userservice.service.impl;
 
 import com.pbl6.userservice.dto.request.CreateRoleRequest;
-import com.pbl6.userservice.dto.response.RoleResponse;
+import com.pbl6.userservice.dto.shared.RoleResponse;
 import com.pbl6.userservice.entity.Permission;
 import com.pbl6.userservice.entity.Role;
 import com.pbl6.userservice.exception.AppException;

@@ -29,7 +29,6 @@ spring:
             - Path=/api/user/**
           filters:
             - StripPrefix=0  # Don't strip prefix
-            - name: JwtAuthenticationFilter
 
 # Eureka Server Configuration
 eureka:

@@ -3,19 +3,15 @@ package com.pbl6.authservice.service.impl;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.pbl6.authservice.client.NotificationServiceClient;
-import com.pbl6.authservice.client.UserServiceClient;
+import com.pbl6.authservice.client.NotificationClient;
+import com.pbl6.authservice.client.UserClient;
 import com.pbl6.authservice.dto.OTPInfo;
-import com.pbl6.authservice.dto.SendOTPDTO;
-import com.pbl6.authservice.dto.UserDTO;
-import com.pbl6.authservice.dto.request.SendOTPRequest;
+import com.pbl6.authservice.dto.request.SendMailRequest;
 import com.pbl6.authservice.dto.request.VerifyOTPRequest;
+import com.pbl6.authservice.dto.shared.SendOTPRequest;
 import com.pbl6.authservice.exception.AppException;
 import com.pbl6.authservice.exception.ErrorCode;
 import com.pbl6.authservice.service.OTPService;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -37,8 +32,8 @@ public class OTPServiceImpl implements OTPService {
 
     Map<String, OTPInfo> otpStore = new HashMap<>();
 
-    UserServiceClient userServiceClient;
-    NotificationServiceClient notificationServiceClient;
+    UserClient userServiceClient;
+    NotificationClient notificationServiceClient;
 
     @NonFinal
     @Value("${jwt.secret}")
@@ -49,16 +44,16 @@ public class OTPServiceImpl implements OTPService {
     long resetExpiration;
 
     @Override
-    public void sendOTP(SendOTPRequest request) {
+    public void sendOTP(SendMailRequest request) {
         if (userServiceClient.checkEmail(request.getEmail()).getResult()) {
             otpStore.remove(request.getEmail());
             Random random = new Random();
             int otp = 100000 + random.nextInt(900000);
             otpStore.put(request.getEmail(), new OTPInfo(otp));
-            SendOTPDTO sendOTPDTO = new SendOTPDTO();
-            sendOTPDTO.setEmail(request.getEmail());
-            sendOTPDTO.setOtp(otp);
-            notificationServiceClient.sendOtp(sendOTPDTO);
+            SendOTPRequest sendOTPRequest = new SendOTPRequest();
+            sendOTPRequest.setEmail(request.getEmail());
+            sendOTPRequest.setOtp(otp);
+            notificationServiceClient.sendOtp(sendOTPRequest);
         } else {
             throw new AppException(ErrorCode.EMAIL_NOT_FOUND);
         }

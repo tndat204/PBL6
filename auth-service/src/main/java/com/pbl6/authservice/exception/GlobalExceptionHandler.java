@@ -1,17 +1,12 @@
 package com.pbl6.authservice.exception;
 
 import java.util.Map;
-import java.util.Objects;
 
-import com.pbl6.authservice.dto.response.APIResponse;
-import jakarta.validation.ConstraintViolation;
-
+import com.pbl6.authservice.dto.shared.APIResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
 
 @ControllerAdvice
 public class GlobalExceptionHandler {

@@ -13,11 +13,9 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .csrf(csrf -> csrf.disable())
-                .authorizeExchange(exchanges -> exchanges
-                        // Allow all requests to pass through - authentication is handled by JWT filter
-                        .anyExchange().permitAll()
-                )
+                .csrf(csrf -> csrf.disable()) // ❌ Tắt CSRF
+                .authorizeExchange(ex -> ex.anyExchange().permitAll()) // Cho phép tất cả
                 .build();
     }
 }
+

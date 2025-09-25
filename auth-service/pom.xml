@@ -5,14 +5,31 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.example</groupId>
-        <artifactId>microservices-parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.2</version>
+        <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <artifactId>user-service</artifactId>
+    <groupId>com.pbl6</groupId>
+    <artifactId>auth-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <name>auth-service</name>
-    <description>Authentication Service for Microservices</description>
+    <description>Authentication Service</description>
+    <properties>
+        <spring-cloud.version>2023.0.1</spring-cloud.version>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>

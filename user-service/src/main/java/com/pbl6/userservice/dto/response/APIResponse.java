@@ -4,19 +4,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class APIResponse<T> {
-    @Setter
-    @Getter
-    int code;
-    @Setter
-    @Getter
-    String message;
-    @Setter
-    @Getter
-    T result;
+    @Builder.Default
+    private int code = 1000;
+
+    private String message;
+    private T result;
 }

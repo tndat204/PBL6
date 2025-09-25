@@ -5,13 +5,14 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.pbl6.authservice.client.UserServiceClient;
+import com.pbl6.authservice.client.GoogleClient;
+import com.pbl6.authservice.client.OutboundUserClient;
+import com.pbl6.authservice.client.UserClient;
 import com.pbl6.authservice.configuration.CustomJwtDecoder;
-import com.pbl6.authservice.dto.ResetPasswordDTO;
-import com.pbl6.authservice.dto.UserDTO;
 import com.pbl6.authservice.dto.request.*;
 import com.pbl6.authservice.dto.response.AuthenticationResponse;
-import com.pbl6.authservice.dto.response.IntrospectResponse;
+import com.pbl6.authservice.dto.response.ExchangeTokenResponse;
+import com.pbl6.authservice.dto.shared.*;
 import com.pbl6.authservice.entity.InvalidatedToken;
 import com.pbl6.authservice.exception.AppException;
 import com.pbl6.authservice.exception.ErrorCode;
@@ -24,10 +25,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -50,18 +52,35 @@ public class AuthServiceImpl implements AuthService {
     @NonFinal
     @Value("${jwt.expiration}")
     protected long expiration;
-    @NonFinal
 
+    @NonFinal
     @Value("${jwt.refresh-duration}")
     protected long refreshDuration;
 
+    @NonFinal
+    @Value("${google.client-web-id}")
+    protected String clientWebId;
+
+    @NonFinal
+    @Value("${google.client-app-id}")
+    protected String clientAppId;
+
+    @NonFinal
+    @Value("${google.client-secret}")
+    protected String clientSecret;
+
+    @NonFinal
+    @Value("${google.redirect-uri}")
+    protected String redirectUri;
+
     PasswordEncoder passwordEncoder;
     InvalidatedTokenRepository invalidatedTokenRepository;
-    UserServiceClient userServiceClient;
+    UserClient userServiceClient;
     CustomJwtDecoder  customJwtDecoder;
-
+    GoogleClient googleClient;
+    OutboundUserClient outboundUserClient;
     // Lấy user bằng Feign
-    public UserDTO getUserByEmail(String email) {
+    public UserResponse getUserByEmail(String email) {
         try {
             return userServiceClient.getUserByEmail(email).getResult();
         } catch (Exception e) {
@@ -74,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthenticationResponse login(LoginRequest request) {
         // Gọi user-service lấy thông tin user theo email
-        UserDTO user = Optional.ofNullable(
+        UserResponse user = Optional.ofNullable(
                 userServiceClient.getUserByEmail(request.getEmail()).getResult()
         ).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -82,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.WRONG_PASSWORD);
         }
 
-        if (!user.isEnabled()) {
+        if (!user.getEnabled()) {
             throw new AppException(ErrorCode.DEACTIVE_ACCOUNT);
         }
 
@@ -90,7 +109,6 @@ public class AuthServiceImpl implements AuthService {
 
         return AuthenticationResponse.builder()
                 .token(token)
-                .authenticated(true)
                 .build();
     }
 
@@ -112,7 +130,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String buildScope(UserDTO user) {
+    public String buildScope(UserResponse user) {
         StringJoiner stringJoiner = new StringJoiner(" ");
         if (user.getRoles() != null) {
             user.getRoles().forEach(role -> {
@@ -126,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String generateToken(UserDTO user, Long expiration) {
+    public String generateToken(UserResponse user, Long expiration) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
@@ -197,36 +215,70 @@ public class AuthServiceImpl implements AuthService {
         );
 
         // Sử dụng Feign lấy user
-        UserDTO user = getUserByEmail(signedJWT.getJWTClaimsSet().getSubject());
+        UserResponse user = getUserByEmail(signedJWT.getJWTClaimsSet().getSubject());
 
         String token = generateToken(user, refreshDuration);
 
         return AuthenticationResponse.builder()
                 .token(token)
-                .authenticated(true)
                 .build();
     }
 
     @Override
-    public void resetPassword(String authHeader, ResetPasswordRequest request) {
-        // Log thông tin
+    public void resetPassword(NewPasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        String token = authHeader.replace("Bearer ", "");
-        Jwt jwt;
-        try {
-            jwt = customJwtDecoder.decode(token);
-        } catch (JwtException e) {
+        if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
-        String type = (String) jwt.getClaims().get("type");
+        // Lấy type từ claims
+        String type = jwt.getClaimAsString("type");
         if (!"RESET_PASSWORD".equals(type)) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
+
+        // Lấy email từ subject
         String email = jwt.getSubject();
-        ResetPasswordDTO resetPasswordDTO = new ResetPasswordDTO();
-        resetPasswordDTO.setEmail(email);
-        resetPasswordDTO.setNewPassword(request.getNewPassword());
-        userServiceClient.resetPassword(resetPasswordDTO);
+
+        // Tạo request cho service
+        ResetPasswordRequest rpRequest = new ResetPasswordRequest();
+        rpRequest.setEmail(email);
+        rpRequest.setNewPassword(request.getNewPassword());
+
+        userServiceClient.resetPassword(rpRequest);
     }
+
+    @Override
+    public AuthenticationResponse outboundAuthenticate(String code) {
+        var response = googleClient.exchangeToken(ExchangeTokenRequest.builder()
+                .code(code)
+                .clientId(clientWebId)
+                .clientSecret(clientSecret)
+                .redirectUri(redirectUri)
+                .grantType("authorization_code")
+                .build());
+
+        log.info("TOKEN RESPONSE {}", response);
+
+        var userInfo = outboundUserClient.getUserInfo("json", response.getAccessToken());
+
+        if (!userServiceClient.checkEmail(userInfo.getEmail()).getResult()) {
+            userServiceClient.registerUser(CreateUserRequest.builder()
+                    .username(userInfo.getEmail())
+                    .email(userInfo.getEmail())
+                    .fullName(userInfo.getName())
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .avatarUrl(userInfo.getPicture())
+                    .build());
+        }
+
+        UserResponse user = userServiceClient.getUserByEmail(userInfo.getEmail()).getResult();
+        var token = generateToken(user, expiration);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .build();
+    }
+
 }

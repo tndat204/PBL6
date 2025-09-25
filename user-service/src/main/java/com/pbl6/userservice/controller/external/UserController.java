@@ -1,14 +1,14 @@
 package com.pbl6.userservice.controller.external;
 
-import com.pbl6.userservice.dto.request.CreateUserRequest;
-import com.pbl6.userservice.dto.request.ResetPasswordRequest;
 import com.pbl6.userservice.dto.response.APIResponse;
-import com.pbl6.userservice.dto.response.UserDTO;
-import com.pbl6.userservice.dto.response.UserResponse;
+import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
+import com.pbl6.userservice.dto.shared.UserResponse;
 import com.pbl6.userservice.service.UserService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -19,13 +19,6 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
-    @PostMapping("/add")
-    public APIResponse<UserResponse> createUser(@RequestBody CreateUserRequest request){
-        return APIResponse.<UserResponse>builder()
-                .code(200)
-                .result(userService.createUser(request))
-                .build();
-    }
 
     @PostMapping("/reset-password")
     public APIResponse<String> resetPassword(@RequestBody ResetPasswordRequest request) {
@@ -33,6 +26,21 @@ public class UserController {
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Reset Password Successfully")
+                .build();
+    }
+
+    @GetMapping("/my-info")
+    public APIResponse<UserResponse> getMyInfo() {
+        return APIResponse.<UserResponse>builder()
+                .code(200)
+                .result(userService.getMyInfo())
+                .build();
+    }
+    @GetMapping("/all")
+    public APIResponse<List<UserResponse>> getAllUsers() {
+        return APIResponse.<List<UserResponse>>builder()
+                .code(200)
+                .result(userService.getAllUsers())
                 .build();
     }
 }
