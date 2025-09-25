@@ -22,7 +22,9 @@ class AppPallete {
   // 🌐 Utils
   static const Color transparentColor = Colors.transparent;
   static const Color whiteColor = Colors.white;
-
+  
+  static const Color  darkGradient =Color(0xFF0D9488);
+  static const Color lightGradient =Color(0xFF06B6D4);
   // 🌈 Gradients
   static const List<Color> primaryGradient = [
     Color(0xFF0D9488), // Teal

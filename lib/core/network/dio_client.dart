@@ -7,8 +7,8 @@ class DioClient {
   factory DioClient() => _instance;
 
   DioClient._internal() : _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 3),
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 50),
     validateStatus: (status) {
         return status != null && status >= 200 && status < 500; // Chấp nhận 200-499
       },

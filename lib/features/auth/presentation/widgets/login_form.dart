@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:pbl6/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:pbl6/features/auth/domain/usecases/login_usecase.dart';
+import 'package:pbl6/features/auth/presentation/pages/forgot_password_email_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/custom_elevated_button.dart';
@@ -40,9 +42,31 @@ class _LoginFormState extends State<LoginForm> {
           if (_rememberMe) {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('auth_token', response.result!.token ?? '');
-           
           }
-          _showSuccessDialog();
+          MotionToast(
+            icon: Icons.check_circle,
+            primaryColor: AppPallete.darkGradient,
+            secondaryColor:Color.fromARGB(255, 10, 109, 101), 
+            title: const Text(
+              "Thành công",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            description: const Text(
+              "Đăng nhập thành công",
+              style: TextStyle(color: AppPallete.backgroundColor),
+            ),
+            animationType: AnimationType.slideInFromLeft,
+            toastDuration: const Duration(seconds: 2),
+            toastAlignment: Alignment.topLeft, 
+            borderRadius: 12,
+            width: 320,
+            height: 90,
+          ).show(context);
+
+          // _showSuccessDialog();
         } else if (response.code == 1023) {
           _showErrorSnackBar(response.message ?? 'Sai mật khẩu');
         } else {
@@ -66,7 +90,9 @@ class _LoginFormState extends State<LoginForm> {
           'Đăng nhập thành công!',
           style: TextStyle(color: Colors.green),
         ),
-        content: const Text('Chào mừng bạn quay lại! Bạn sẽ được chuyển hướng ngay.'),
+        content: const Text(
+          'Chào mừng bạn quay lại! Bạn sẽ được chuyển hướng ngay.',
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -164,11 +190,18 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 child: TextButton(
                   onPressed: () {
-                    // TODO: điều hướng sang màn hình quên mật khẩu
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordEmailPage(),
+                      ),
+                    );
                   },
                   style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
                   ),
                   child: Text(
                     'Quên mật khẩu?',

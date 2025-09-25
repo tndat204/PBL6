@@ -2,6 +2,9 @@ import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/network/dio_client.dart';
 import 'package:pbl6/core/services/api_service.dart';
 import 'package:pbl6/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:pbl6/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:pbl6/features/auth/domain/repositories/auth_repository.dart';
+import 'package:pbl6/features/auth/domain/usecases/forgot_password_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -15,5 +18,11 @@ void init() {
   // Đăng ký AuthRemoteDataSource với ApiService và Dio từ GetIt
   sl.registerSingleton<AuthRemoteDataSource>(
     AuthRemoteDataSourceImpl(sl<ApiService>(), sl<DioClient>().instance),
+  );
+  sl.registerSingleton<AuthRepository>(
+    AuthRepositoryImpl(sl<AuthRemoteDataSource>()),
+  );
+  sl.registerSingleton<ForgotPasswordUseCase>(
+    ForgotPasswordUseCase(sl<AuthRepository>()),
   );
 }

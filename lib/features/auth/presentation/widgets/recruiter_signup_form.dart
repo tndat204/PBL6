@@ -55,9 +55,9 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
       });
     } catch (e) {
       setState(() => _loadingProvinces = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi tải tỉnh/thành phố: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi tải tỉnh/thành phố: $e')));
     }
   }
 
@@ -69,8 +69,9 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
       _selectedWardName = null;
       _wards = [];
       _loadingWards = true;
-      _selectedProvinceName =
-          _provinces.firstWhere((p) => p['code'] == code)['name'];
+      _selectedProvinceName = _provinces.firstWhere(
+        (p) => p['code'] == code,
+      )['name'];
     });
 
     try {
@@ -81,9 +82,9 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
       });
     } catch (e) {
       setState(() => _loadingWards = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi tải phường/xã: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi tải phường/xã: $e')));
     }
   }
 
@@ -112,8 +113,8 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             controller: _emailController,
             validator: (value) {
               if (value!.isEmpty) return 'Vui lòng nhập email';
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                  .hasMatch(value)) return 'Email không hợp lệ';
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value))
+                return 'Email không hợp lệ';
               return null;
             },
           ),
@@ -134,7 +135,12 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             controller: _passwordController,
             validator: (value) {
               if (value!.isEmpty) return 'Vui lòng nhập mật khẩu';
-              if (value.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';
+              final regex = RegExp(
+                r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$',
+              );
+              if (!regex.hasMatch(value)) {
+                return 'Mật khẩu ít nhất 8 ký tự, có chữ hoa, số và ký tự đặc biệt';
+              }
               return null;
             },
           ),
@@ -199,28 +205,39 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
                 final String name = province['name'] as String;
                 return DropdownMenuItem<int>(
                   value: code,
-                  child: Text(name,
-                      style: TextStyle(color: AppPallete.textColor)),
+                  child: Text(
+                    name,
+                    style: TextStyle(color: AppPallete.textColor),
+                  ),
                 );
               }).toList(),
               onChanged: (value) => _onProvinceChanged(value),
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.location_on_outlined,
-                    color: AppPallete.mutedTextColor, size: 22),
+                prefixIcon: Icon(
+                  Icons.location_on_outlined,
+                  color: AppPallete.mutedTextColor,
+                  size: 22,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color: AppPallete.borderColor, width: 1.5),
+                    color: AppPallete.borderColor,
+                    width: 1.5,
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color: AppPallete.borderColor, width: 1.5),
+                    color: AppPallete.borderColor,
+                    width: 1.5,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color: AppPallete.primaryColor, width: 2),
+                    color: AppPallete.primaryColor,
+                    width: 2,
+                  ),
                 ),
                 filled: true,
                 fillColor: AppPallete.inputBackgroundColor,
@@ -235,17 +252,19 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             DropdownButtonFormField<int>(
               isExpanded: true,
               value: _selectedWardCode,
-              hint: Text(_wards.isEmpty
-                  ? 'Không có phường/xã'
-                  : 'Chọn phường/xã'),
+              hint: Text(
+                _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
+              ),
               dropdownColor: AppPallete.inputBackgroundColor,
               items: _wards.map((ward) {
                 final int code = ward['code'] as int;
                 final String name = ward['name'] as String;
                 return DropdownMenuItem<int>(
                   value: code,
-                  child: Text(name,
-                      style: TextStyle(color: AppPallete.textColor)),
+                  child: Text(
+                    name,
+                    style: TextStyle(color: AppPallete.textColor),
+                  ),
                 );
               }).toList(),
               onChanged: _wards.isEmpty
@@ -253,27 +272,37 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
                   : (value) {
                       setState(() {
                         _selectedWardCode = value;
-                        _selectedWardName = _wards
-                            .firstWhere((w) => w['code'] == value)['name'];
+                        _selectedWardName = _wards.firstWhere(
+                          (w) => w['code'] == value,
+                        )['name'];
                       });
                     },
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.location_city_outlined,
-                    color: AppPallete.mutedTextColor, size: 22),
+                prefixIcon: const Icon(
+                  Icons.location_city_outlined,
+                  color: AppPallete.mutedTextColor,
+                  size: 22,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color: AppPallete.borderColor, width: 1.5),
+                    color: AppPallete.borderColor,
+                    width: 1.5,
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color: AppPallete.borderColor, width: 1.5),
+                    color: AppPallete.borderColor,
+                    width: 1.5,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color: AppPallete.primaryColor, width: 2),
+                    color: AppPallete.primaryColor,
+                    width: 2,
+                  ),
                 ),
                 filled: true,
                 fillColor: AppPallete.inputBackgroundColor,
@@ -318,7 +347,9 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             onPressed: () {
               if (_formKey.currentState!.validate() && _agreeTerms) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Form hợp lệ, chuẩn bị gửi API')),
+                  const SnackBar(
+                    content: Text('Form hợp lệ, chuẩn bị gửi API'),
+                  ),
                 );
               } else if (!_agreeTerms) {
                 ScaffoldMessenger.of(context).showSnackBar(

@@ -15,8 +15,8 @@ class LoginResponse {
 }
 
 class LoginResult {
-  final String? token; // Thêm ? để tùy chọn
-  final bool? authenticated; // Thêm ? để tùy chọn
+  final String? token; 
+  final bool? authenticated; 
 
   LoginResult({this.token, this.authenticated});
 
