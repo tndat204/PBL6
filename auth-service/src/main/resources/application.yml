@@ -51,7 +51,7 @@ google:
   client-web-id: 871727759193-un865a51acfobga2nbua4k1j5p9k1nst.apps.googleusercontent.com
   client-app-id: 871727759193-kfbiudvr73r4lmc9jmgc11jih9or8ur6.apps.googleusercontent.com
   client-secret: ${GOOGLE_CLIENT_SECRET}
-  redirect-uri: http://localhost:3000/authenticate
+  redirect-web-uri: http://localhost:3000/authenticate
   user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
 
 

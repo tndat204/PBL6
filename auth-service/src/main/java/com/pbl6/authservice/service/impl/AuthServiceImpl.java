@@ -1,5 +1,9 @@
 package com.pbl6.authservice.service.impl;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -11,14 +15,13 @@ import com.pbl6.authservice.client.UserClient;
 import com.pbl6.authservice.configuration.CustomJwtDecoder;
 import com.pbl6.authservice.dto.request.*;
 import com.pbl6.authservice.dto.response.AuthenticationResponse;
-import com.pbl6.authservice.dto.response.ExchangeTokenResponse;
 import com.pbl6.authservice.dto.shared.*;
 import com.pbl6.authservice.entity.InvalidatedToken;
 import com.pbl6.authservice.exception.AppException;
 import com.pbl6.authservice.exception.ErrorCode;
 import com.pbl6.authservice.repository.InvalidatedTokenRepository;
 import com.pbl6.authservice.service.AuthService;
-import io.jsonwebtoken.JwtException;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -31,20 +34,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Optional;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
-
     @NonFinal
     @Value("${jwt.secret}")
     protected String SIGN_KEY;
@@ -62,24 +63,29 @@ public class AuthServiceImpl implements AuthService {
     protected String clientWebId;
 
     @NonFinal
-    @Value("${google.client-app-id}")
-    protected String clientAppId;
-
-    @NonFinal
     @Value("${google.client-secret}")
     protected String clientSecret;
 
     @NonFinal
-    @Value("${google.redirect-uri}")
-    protected String redirectUri;
+    @Value("${google.redirect-web-uri}")
+    protected String redirectWebUri;
 
     PasswordEncoder passwordEncoder;
     InvalidatedTokenRepository invalidatedTokenRepository;
     UserClient userServiceClient;
-    CustomJwtDecoder  customJwtDecoder;
     GoogleClient googleClient;
     OutboundUserClient outboundUserClient;
-    // Lấy user bằng Feign
+    @NonFinal
+    GoogleIdTokenVerifier verifier;
+
+    @PostConstruct
+    public void init() {
+        verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                .setAudience(Collections.singletonList(clientWebId))
+                .build();
+    }
+
+        // Lấy user bằng Feign
     public UserResponse getUserByEmail(String email) {
         try {
             return userServiceClient.getUserByEmail(email).getResult();
@@ -250,14 +256,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthenticationResponse outboundAuthenticate(String code) {
-        var response = googleClient.exchangeToken(ExchangeTokenRequest.builder()
+    public AuthenticationResponse googleWebAuthenticate(String code) {
+        ExchangeTokenRequest tokenRequest= ExchangeTokenRequest.builder()
                 .code(code)
+                .grantType("authorization_code")
+                .redirectUri(redirectWebUri)
                 .clientId(clientWebId)
                 .clientSecret(clientSecret)
-                .redirectUri(redirectUri)
-                .grantType("authorization_code")
-                .build());
+                .build();
+        var response=googleClient.exchangeToken(tokenRequest);
 
         log.info("TOKEN RESPONSE {}", response);
 
@@ -279,6 +286,35 @@ public class AuthServiceImpl implements AuthService {
         return AuthenticationResponse.builder()
                 .token(token)
                 .build();
+    }
+
+    @Override
+    public AuthenticationResponse googleAppAuthenticate(String idTokenString) throws GeneralSecurityException, IOException {
+        GoogleIdToken idToken=verifier.verify(idTokenString);
+        if (idToken == null) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        if (!Set.of("accounts.google.com", "https://accounts.google.com").contains(payload.getIssuer())) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+        if (!userServiceClient.checkEmail(payload.getEmail()).getResult()) {
+            userServiceClient.registerUser(CreateUserRequest.builder()
+                    .username(payload.getEmail())
+                    .email(payload.getEmail())
+                    .fullName((String) payload.get("name"))
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .avatarUrl((String) payload.get("picture"))
+                    .build());
+        }
+        UserResponse user = userServiceClient.getUserByEmail(payload.getEmail()).getResult();
+        var token = generateToken(user, expiration);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .build();
+
     }
 
 }

@@ -10,6 +10,9 @@ import com.pbl6.authservice.service.AuthService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.text.ParseException;
 
 @RestController
@@ -68,9 +71,17 @@ public class AuthController {
                 .build();
     }
 
-    @PostMapping("/outbound/authentication")
-    APIResponse<AuthenticationResponse> outboundAuthenticate(@RequestParam("code") String code ){
-        var result = authService.outboundAuthenticate(code);
+    @PostMapping("/google-web")
+    APIResponse<AuthenticationResponse> googleWebAuthentication(@RequestParam("code") String code){
+        var result = authService.googleWebAuthenticate(code);
+        return APIResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .code(200)
+                .build();
+    }
+    @PostMapping("/google-app")
+    APIResponse<AuthenticationResponse> googleAppAuthentication(@RequestParam("id_token") String idToken) throws GeneralSecurityException, IOException {
+        var result = authService.googleAppAuthenticate(idToken);
         return APIResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .code(200)

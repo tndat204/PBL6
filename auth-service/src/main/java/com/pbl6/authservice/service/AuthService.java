@@ -9,6 +9,8 @@ import com.pbl6.authservice.dto.shared.IntrospectResponse;
 import com.pbl6.authservice.dto.shared.UserResponse;
 
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.text.ParseException;
 
 public interface AuthService {
@@ -26,6 +28,8 @@ public interface AuthService {
 
     public void resetPassword(NewPasswordRequest request);
 
-    public AuthenticationResponse outboundAuthenticate(String code);
+    public AuthenticationResponse googleWebAuthenticate(String code);
+
+    public AuthenticationResponse googleAppAuthenticate(String idToken) throws GeneralSecurityException, IOException;
 
 }

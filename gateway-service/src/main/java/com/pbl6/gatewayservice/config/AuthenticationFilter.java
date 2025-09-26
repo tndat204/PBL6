@@ -33,7 +33,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     List<String> publicEndpoints = List.of(
             "/api/auth/login",
             "/api/user/internal/register",
-            "/api/auth/outbound/authentication",
+            "/api/auth/google-web",
+            "/api/auth/google-app",
             "/api/auth/logout",
             "/api/auth/refresh",
             "/api/auth/reset-password",
