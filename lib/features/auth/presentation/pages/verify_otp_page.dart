@@ -1,3 +1,6 @@
+// features/auth/presentation/pages/verify_otp_page.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
@@ -5,14 +8,15 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/auth/domain/repositories/auth_repository.dart';
 import 'package:pbl6/features/auth/domain/usecases/forgot_password_usecase.dart';
-import 'package:pbl6/features/auth/presentation/pages/forgot_password_email_page.dart';
 import 'package:pbl6/features/auth/presentation/pages/reset_password_page.dart';
 import 'package:pbl6/features/auth/presentation/widgets/custom_elevated_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 class VerifyOTPPage extends StatefulWidget {
   final String email;
+  final bool isOtpSent; // Cờ để xác định OTP đã được gửi
 
-  const VerifyOTPPage({super.key, required this.email});
+  const VerifyOTPPage({super.key, required this.email, this.isOtpSent = false});
 
   @override
   State<VerifyOTPPage> createState() => _VerifyOTPPageState();
@@ -26,13 +30,89 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   bool _isLoading = false;
+  int _timerSeconds = 60; // Đếm ngược 60 giây
+  Timer? _timer;
+  bool _canResend = false; // Cờ để kiểm tra có thể gửi lại không
 
   final ForgotPasswordUseCase _useCase = ForgotPasswordUseCase(
     GetIt.instance<AuthRepository>(),
   );
 
-  String get _otpText =>
-      _otpControllers.map((controller) => controller.text).join();
+  String get _otpText => _otpControllers.map((controller) => controller.text).join();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isOtpSent) {
+      startTimer(); // Bắt đầu đếm ngược nếu OTP đã được gửi
+    }
+  }
+
+  void startTimer() {
+    _timer?.cancel(); // Hủy timer cũ nếu có
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timerSeconds > 0) {
+        setState(() => _timerSeconds--);
+      } else {
+        setState(() {
+          _canResend = true;
+          _timer?.cancel();
+        });
+      }
+    });
+  }
+
+  Future<void> _resendOTP() async {
+    if (_canResend) {
+      setState(() {
+        _isLoading = true;
+        _canResend = false;
+        _timerSeconds = 60;
+      });
+      try {
+        final response = await _useCase.sendOTP(widget.email);
+        if (response.code == 200) {
+          MotionToast(
+            icon: Icons.check_circle,
+            primaryColor: AppPallete.lightGradient,
+            secondaryColor: AppPallete.darkGradient,
+            title: const Text(
+              "Thành công",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            description: const Text(
+              "Gửi lại OTP thành công",
+              style: TextStyle(color: AppPallete.backgroundColor),
+            ),
+            animationType: AnimationType.slideInFromLeft,
+            toastDuration: const Duration(seconds: 2),
+            toastAlignment: Alignment.topLeft,
+            borderRadius: 12,
+            width: 320,
+            height: 90,
+          ).show(context);
+          startTimer(); // Bắt đầu đếm ngược lại
+        } else {
+          MotionToast.error(
+            title: const Text("Lỗi"),
+            description: Text(response.message ?? "Không thể gửi OTP"),
+            toastAlignment: Alignment.topLeft,
+            animationType: AnimationType.slideInFromLeft,
+            toastDuration: const Duration(seconds: 2),
+          ).show(context);
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Future<void> _verifyOTP() async {
     if (_formKey.currentState!.validate()) {
@@ -44,8 +124,8 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
           await prefs.setString('reset_token', response.result ?? '');
           MotionToast(
             icon: Icons.check_circle,
-            primaryColor: AppPallete.darkGradient,
-            secondaryColor: Color.fromARGB(255, 10, 109, 101),
+            primaryColor: AppPallete.lightGradient,
+            secondaryColor: AppPallete.darkGradient,
             title: const Text(
               "Thành công",
               style: TextStyle(
@@ -82,9 +162,9 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
           ).show(context);
         }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
       } finally {
         setState(() => _isLoading = false);
       }
@@ -99,6 +179,7 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
     for (var focusNode in _focusNodes) {
       focusNode.dispose();
     }
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -172,17 +253,17 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
           'Xác thực OTP',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppPallete.lighterbackground,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: AppPallete.primaryGradient,
-            ),
-          ),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: const BoxDecoration(
+        //     gradient: LinearGradient(
+        //       begin: Alignment.topLeft,
+        //       end: Alignment.bottomRight,
+        //       colors: AppPallete.primaryGradient,
+        //     ),
+        //   ),
+        // ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
@@ -318,27 +399,27 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
                           fontSize: 14,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ForgotPasswordEmailPage(
-                                email: widget.email, // truyền lại email cũ
-                              ),
+                      if (_canResend)
+                        GestureDetector(
+                          onTap: _resendOTP,
+                          child: const Text(
+                            'Gửi lại',
+                            style: TextStyle(
+                              color: AppPallete.darkGradient,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
                             ),
-                          );
-                        },
-                        child: const Text(
-                          'Gửi lại',
+                          ),
+                        )
+                      else
+                        Text(
+                          'Gửi lại sau $_timerSeconds giây',
                           style: TextStyle(
-                            color: AppPallete.darkGradient,
+                            color: Colors.grey.shade600,
                             fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),

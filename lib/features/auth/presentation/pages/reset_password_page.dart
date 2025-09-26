@@ -44,8 +44,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           // Hiển thị toast thành công
           MotionToast(
             icon: Icons.check_circle,
-            primaryColor: AppPallete.darkGradient,
-            secondaryColor: Color.fromARGB(255, 10, 109, 101),
+            primaryColor: AppPallete.lightGradient,
+            secondaryColor: AppPallete.darkGradient,
             title: const Text(
               "Thành công",
               style: TextStyle(
@@ -108,17 +108,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             fontSize: 20,
           ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppPallete.lighterbackground,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: AppPallete.primaryGradient,
-            ),
-          ),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: const BoxDecoration(
+        //     gradient: LinearGradient(
+        //       begin: Alignment.topLeft,
+        //       end: Alignment.bottomRight,
+        //       colors: AppPallete.primaryGradient,
+        //     ),
+        //   ),
+        // ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(

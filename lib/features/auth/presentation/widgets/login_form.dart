@@ -45,8 +45,8 @@ class _LoginFormState extends State<LoginForm> {
           }
           MotionToast(
             icon: Icons.check_circle,
-            primaryColor: AppPallete.darkGradient,
-            secondaryColor:Color.fromARGB(255, 10, 109, 101), 
+            primaryColor: AppPallete.lightGradient,
+            secondaryColor:Color.fromARGB(255, 74, 98, 138), 
             title: const Text(
               "Thành công",
               style: TextStyle(

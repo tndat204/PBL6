@@ -12,8 +12,7 @@ class ForgotPasswordEmailPage extends StatefulWidget {
   const ForgotPasswordEmailPage({super.key, this.email});
 
   @override
-  State<ForgotPasswordEmailPage> createState() =>
-      _ForgotPasswordEmailPageState();
+  State<ForgotPasswordEmailPage> createState() => _ForgotPasswordEmailPageState();
 }
 
 class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
@@ -24,10 +23,10 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
   final ForgotPasswordUseCase _useCase = ForgotPasswordUseCase(
     GetIt.instance<AuthRepository>(),
   );
+
   @override
   void initState() {
     super.initState();
-    // Gán lại email đã truyền nếu có
     if (widget.email != null) {
       _emailController.text = widget.email!;
     }
@@ -42,7 +41,10 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => VerifyOTPPage(email: _emailController.text),
+              builder: (context) => VerifyOTPPage(
+                email: _emailController.text,
+                isOtpSent: true, // Truyền cờ cho VerifyOTPPage
+              ),
             ),
           );
         } else {
@@ -53,9 +55,9 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
       } finally {
         setState(() => _isLoading = false);
       }
@@ -71,24 +73,24 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPallete.whiteColor,
       appBar: AppBar(
         title: const Text(
           'Quên mật khẩu',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20) ,
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppPallete.lighterbackground,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: AppPallete.primaryGradient,
-            ),
-          ),
-        ),
-        foregroundColor: Colors.white,
+        // flexibleSpace: Container(
+        //   decoration: const BoxDecoration(
+        //     gradient: LinearGradient(
+        //       begin: Alignment.topLeft,
+        //       end: Alignment.bottomRight,
+        //       colors: AppPallete.backgroundGradient,
+        //     ),
+        //   ),
+        // ),
+        foregroundColor: AppPallete.inputBackgroundColor,
       ),
       body: Container(
         width: double.infinity,
@@ -132,8 +134,8 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                     ],
                   ),
                   child: const Icon(
-                    Icons.lock_reset_rounded, // Updated to rounded version
-                    size: 60, // Increased size
+                    Icons.lock_reset_rounded,
+                    size: 60,
                     color: Colors.white,
                   ),
                 ),
@@ -141,20 +143,20 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                 const Text(
                   'Khôi phục mật khẩu',
                   style: TextStyle(
-                    fontSize: 32, // Increased font size
-                    fontWeight: FontWeight.w800, // Made bolder
-                    color: Color(0xFF1E293B),
-                    letterSpacing: -0.5, // Added letter spacing
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: AppPallete.darkGradient,
+                    letterSpacing: -0.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Nhập địa chỉ email của bạn để nhận mã OTP\nvà khôi phục mật khẩu một cách an toàn', // Enhanced description
+                  'Nhập địa chỉ email của bạn để nhận mã OTP\nvà khôi phục mật khẩu một cách an toàn',
                   style: TextStyle(
-                    fontSize: 17, // Slightly increased
+                    fontSize: 17,
                     color: Colors.grey[600],
-                    height: 1.6, // Better line height
+                    height: 1.6,
                     fontWeight: FontWeight.w400,
                   ),
                   textAlign: TextAlign.center,
@@ -187,9 +189,8 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                         controller: _emailController,
                         validator: (value) {
                           if (value!.isEmpty) return 'Vui lòng nhập email';
-                          if (!RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          ).hasMatch(value))
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              .hasMatch(value))
                             return 'Email không hợp lệ';
                           return null;
                         },
@@ -197,7 +198,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                       const SizedBox(height: 35),
                       _isLoading
                           ? Container(
-                              height: 60, // Increased height
+                              height: 60,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   begin: Alignment.topLeft,
@@ -217,8 +218,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                               ),
                               child: const Center(
                                 child: SizedBox(
-                                  width:
-                                      26, // Slightly larger loading indicator
+                                  width: 26,
                                   height: 26,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 3,
@@ -231,7 +231,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                             )
                           : Container(
                               width: double.infinity,
-                              height: 60, // Increased height
+                              height: 60,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   begin: Alignment.topLeft,
@@ -266,9 +266,8 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                                       'Gửi mã OTP',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 19, // Increased font size
-                                        fontWeight:
-                                            FontWeight.w700, // Made bolder
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.w700,
                                         letterSpacing: 0.3,
                                       ),
                                     ),
@@ -306,8 +305,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
-                          Icons
-                              .info_outline_rounded, // Updated to rounded version
+                          Icons.info_outline_rounded,
                           color: AppPallete.darkGradient,
                           size: 22,
                         ),
@@ -315,7 +313,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          'Mã OTP sẽ được gửi đến email của bạn trong vòng vài phút. Vui lòng kiểm tra cả hộp thư spam.', // Enhanced message
+                          'Mã OTP sẽ được gửi đến email của bạn trong vòng vài phút. Vui lòng kiểm tra cả hộp thư spam.',
                           style: TextStyle(
                             color: Colors.grey[700],
                             fontSize: 15,
