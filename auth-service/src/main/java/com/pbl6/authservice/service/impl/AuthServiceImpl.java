@@ -61,7 +61,9 @@ public class AuthServiceImpl implements AuthService {
     @NonFinal
     @Value("${google.client-web-id}")
     protected String clientWebId;
-
+    @NonFinal
+    @Value("${google.client-app-id}")
+    protected String clientAppId;
     @NonFinal
     @Value("${google.client-secret}")
     protected String clientSecret;
@@ -81,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
     @PostConstruct
     public void init() {
         verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
-                .setAudience(Collections.singletonList(clientWebId))
+                .setAudience(Collections.singletonList(clientAppId))
                 .build();
     }
 

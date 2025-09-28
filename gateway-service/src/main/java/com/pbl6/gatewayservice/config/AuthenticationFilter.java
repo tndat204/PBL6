@@ -39,7 +39,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/api/auth/refresh",
             "/api/auth/reset-password",
             "/api/auth/otp/forgot-password",
-            "api/auth/otp/verify-otp"
+            "/api/auth/otp/verify-otp"
     );
 
     @Override
