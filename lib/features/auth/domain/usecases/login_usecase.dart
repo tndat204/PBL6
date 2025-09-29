@@ -6,18 +6,25 @@ class LoginUseCase {
 
   LoginUseCase(this._repository);
 
-  Future<LoginResponse> call({required String email, required String password}) async {
+  Future<LoginResponse> call({
+    required String email,
+    required String password,
+  }) async {
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
       throw Exception('Email không hợp lệ');
     }
-    if (password.length < 6) {
-      throw Exception('Mật khẩu phải có ít nhất 6 ký tự');
+    if (password.length < 8) {
+      throw Exception('Mật khẩu phải có ít nhất 8 ký tự');
     }
+
+    // Gọi repository, trả về LoginResponse trực tiếp
     final response = await _repository.login(email, password);
-    if (response is Map<String, dynamic>) {
-      return LoginResponse.fromJson(response);
-    } else {
-      throw Exception('Response không hợp lệ');
+    return response;
+  }
+  Future<LoginResponse> googleLogin(String idToken) async {
+    if (idToken.isEmpty) {
+      throw Exception('ID Token không hợp lệ');
     }
+    return await _repository.googleLogin(idToken);
   }
 }

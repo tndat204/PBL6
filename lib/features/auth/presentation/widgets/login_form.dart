@@ -38,11 +38,11 @@ class _LoginFormState extends State<LoginForm> {
           password: _passwordController.text,
         );
 
-        if (response.code == 200 && response.result?.authenticated == true) {
+        if (response.code == 200 && response.result?.token != null) {
           if (_rememberMe) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('auth_token', response.result!.token ?? '');
-          }
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', response.result!.token);
+        }
           MotionToast(
             icon: Icons.check_circle,
             primaryColor: AppPallete.lightGradient,
@@ -68,12 +68,12 @@ class _LoginFormState extends State<LoginForm> {
 
           // _showSuccessDialog();
         } else if (response.code == 1023) {
-          _showErrorSnackBar(response.message ?? 'Sai mật khẩu');
+           _showErrorSnackBar('Sai mật khẩu');
         } else {
           _showErrorSnackBar('Đăng nhập thất bại, vui lòng thử lại');
         }
       } catch (e) {
-        _showErrorSnackBar('Lỗi kết nối: $e');
+        _showErrorSnackBar(': $e');
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }

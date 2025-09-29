@@ -19,7 +19,8 @@ dependencies:
   equatable: ^2.0.5
   dartz: ^0.10.1
   motion_toast: ^2.14.0
-
+  google_sign_in: ^6.1.5
+  http: ^1.2.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

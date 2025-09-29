@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/auth/presentation/pages/recruiter_signup_page.dart';
 import 'package:pbl6/features/auth/presentation/pages/signup_page.dart';
+
 import '../widgets/custom_elevated_button.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
@@ -28,7 +29,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Để tối ưu trải nghiệm của bạn với ITSMARTHIRE,\nvui lòng lựa chọn nhóm phù hợp nhất với bạn.',
+                  'Để tối ưu trải nghiệm của bạn với IT Job Hunt,\nvui lòng lựa chọn nhóm phù hợp nhất với bạn.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,

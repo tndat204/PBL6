@@ -1,8 +1,15 @@
+// features/auth/presentation/pages/login_page.dart
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
+import 'package:pbl6/features/auth/data/services/google_sign_in_service.dart';
+import 'package:pbl6/features/auth/domain/usecases/login_usecase.dart';
 import 'package:pbl6/features/auth/presentation/pages/role_selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../widgets/login_form.dart';
 import '../widgets/social_button.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -13,6 +20,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
+  final LoginUseCase _loginUseCase = GetIt.instance<LoginUseCase>();
+  final GoogleSignInService _googleSignInService = GetIt.instance<GoogleSignInService>();
 
   @override
   void initState() {
@@ -34,6 +43,35 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      final idToken = await _googleSignInService.getIdToken();
+      if (idToken != null) {
+        final response = await _loginUseCase.googleLogin(idToken);
+        if (response.code == 200 && response.result != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', response.result!.token);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Đăng nhập Google thất bại: ${response.code}')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể lấy ID Token từ Google')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -41,11 +79,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: AppPallete.backgroundGradient, // Gradient từ F0FDF4 đến FFFFFF
+          colors: AppPallete.backgroundGradient,
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent, // Loại bỏ nền mặc định của Scaffold
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -61,8 +99,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       Text(
                         'Chào bạn quay trở lại!',
                         style: TextStyle(
-                          fontFamily: 'Italianno', // Sử dụng font Italianno
-                          fontWeight: FontWeight.w400, // Độ đậm phù hợp với font
+                          fontFamily: 'Italianno',
+                          fontWeight: FontWeight.w400,
                           fontSize: 50,
                           color: AppPallete.textColor,
                         ),
@@ -140,8 +178,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   SocialButton(
                     text: 'Tiếp tục với Google',
                     imagePath: 'assets/images/google_logo.jpg',
-                    onPressed: () {},
-                    backgroundColor: AppPallete.whiteColor, // Đảm bảo không ghi đè gradient
+                    onPressed: _handleGoogleSignIn,
+                    backgroundColor: AppPallete.whiteColor,
                   ),
                   const SizedBox(height: 40),
                   Row(
@@ -156,7 +194,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                       GestureDetector(
                         onTap: () {
-                           Navigator.pushReplacement(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
                           );

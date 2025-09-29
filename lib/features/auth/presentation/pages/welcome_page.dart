@@ -73,7 +73,7 @@ class _WelcomePageState extends State<WelcomePage>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Hãy bắt đầu hành trình cùng với IT Smart Hire',
+                        'Hãy bắt đầu hành trình cùng với IT Job Hunt',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppPallete.backgroundColor,
                               fontSize: 16,
