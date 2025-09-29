@@ -38,7 +38,7 @@ public class User extends Base {
     @Column
     String phone;
 
-    @Column(nullable = true)
+    @Column
     String address;
 
     @Column

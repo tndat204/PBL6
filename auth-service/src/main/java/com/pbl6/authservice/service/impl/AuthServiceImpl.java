@@ -83,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
     @PostConstruct
     public void init() {
         verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
-                .setAudience(Collections.singletonList(clientAppId))
+                .setAudience(Collections.singletonList(clientWebId))
                 .build();
     }
 
