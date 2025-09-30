@@ -11,24 +11,10 @@ spring:
   application:
     name: notification-service
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/notification_service
-    driver-class-name: org.postgresql.Driver
-    username: admin
-    password: 123456
-    hikari:
-      maximum-pool-size: 10
-      connection-timeout: 30000
-      initialization-fail-timeout: 0
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    mongodb:
+      uri: mongodb://admin:123456@localhost:27017/notification_service?authSource=admin
+      database: notification_service
 
   mail:
     host: smtp.gmail.com
@@ -39,17 +25,23 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
 logging:
   level:
-    org.hibernate.SQL: off
-    org.hibernate.type.descriptor.sql.BasicBinder: off
+    org.springframework.data.mongodb.core: info
     org.springframework: info
-    com.zaxxer.hikari: info
 
-feign:
-  hystrix:
-    enabled: false
-
+brevo:
+  api_key: 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
 server:
   port: 8083
 
@@ -71,22 +63,12 @@ spring:
   application:
     name: notification-service
 
-  datasource:
-    url: jdbc:postgresql://your_prod_host:5432/notification_service?serverTimezone=Asia/Ho_Chi_Minh
-    driver-class-name: org.postgresql.Driver
-    username: your_prod_username
-    password: your_prod_password
+  data:
+    mongodb:
+      uri: mongodb://your_prod_username:your_prod_password@your_prod_host:27017/notification_service
+      database: notification_service
 
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
   level:
     root: warn
-

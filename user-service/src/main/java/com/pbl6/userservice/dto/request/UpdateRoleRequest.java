@@ -1,11 +1,8 @@
 package com.pbl6.userservice.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.pbl6.userservice.entity.Permission;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -14,8 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class CreateRoleRequest {
+public class UpdateRoleRequest {
     String name;
     Set<UUID> permissionIds;
 }

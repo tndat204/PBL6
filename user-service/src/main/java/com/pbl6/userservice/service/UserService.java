@@ -19,4 +19,6 @@ public interface UserService {
     public UserResponse getMyInfo();
 
     public List<UserResponse> getAllUsers();
+
+    public void changeStatus(String id);
 }

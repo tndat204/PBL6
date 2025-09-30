@@ -20,6 +20,7 @@ public enum ErrorCode {
     EMAIL_NOT_FOUND(1010, "Email not found", HttpStatus.BAD_REQUEST),
     USER_EXISTED(1011,"Tên đăng nhập hoặc email hoặc sdt đã tồn tại",HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(1012,"Vai trò không tồn tại",HttpStatus.BAD_REQUEST),
+    PERMISSION_NOT_FOUND(1021,"Quyền không tồn tại",HttpStatus.BAD_REQUEST),
     ROLE_EXISTED(1020,"Vai trò đã tồn tại",HttpStatus.BAD_REQUEST),
     DEACTIVE_ACCOUNT(1013,"Tài khoản không kích hoạt",HttpStatus.FORBIDDEN),
     OLDPASSWORD_INCORRECT(1014,"Sai mật khẩu cũ",HttpStatus.BAD_REQUEST),
@@ -27,7 +28,9 @@ public enum ErrorCode {
     NOT_IN_THE_PROJ(1016,"Bạn không có trong dự án này",HttpStatus.BAD_REQUEST),
     GROUPCHAT_NOT_FOUND(1017,"Nhóm trò chuyện không tồn tại",HttpStatus.BAD_REQUEST),
     INVALID_FILE(1018,"File không hợp lệ",HttpStatus.BAD_REQUEST),
-    UPLOAD_FILE_FAILED(1019,"Tải file lên không được",HttpStatus.BAD_REQUEST);
+    UPLOAD_FILE_FAILED(1019,"Tải file lên không được",HttpStatus.BAD_REQUEST),
+    ROLE_IN_USE(1022,"Vai trò đang được sử dụng",HttpStatus.BAD_REQUEST),
+    PERMISSION_IN_USE(1023,"Quyền đang được sử dụng",HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;

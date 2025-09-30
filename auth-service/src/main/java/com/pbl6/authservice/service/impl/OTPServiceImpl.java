@@ -3,21 +3,21 @@ package com.pbl6.authservice.service.impl;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.pbl6.authservice.client.NotificationClient;
 import com.pbl6.authservice.client.UserClient;
 import com.pbl6.authservice.dto.OTPInfo;
 import com.pbl6.authservice.dto.request.SendMailRequest;
 import com.pbl6.authservice.dto.request.VerifyOTPRequest;
-import com.pbl6.authservice.dto.shared.SendOTPRequest;
 import com.pbl6.authservice.exception.AppException;
 import com.pbl6.authservice.exception.ErrorCode;
 import com.pbl6.authservice.service.OTPService;
+import com.pbl6.event.dto.NotificationEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -33,8 +33,7 @@ public class OTPServiceImpl implements OTPService {
     Map<String, OTPInfo> otpStore = new HashMap<>();
 
     UserClient userServiceClient;
-    NotificationClient notificationServiceClient;
-
+    KafkaTemplate<String, Object> kafkaTemplate;
     @NonFinal
     @Value("${jwt.secret}")
     protected String SIGN_KEY;
@@ -50,10 +49,14 @@ public class OTPServiceImpl implements OTPService {
             Random random = new Random();
             int otp = 100000 + random.nextInt(900000);
             otpStore.put(request.getEmail(), new OTPInfo(otp));
-            SendOTPRequest sendOTPRequest = new SendOTPRequest();
-            sendOTPRequest.setEmail(request.getEmail());
-            sendOTPRequest.setOtp(otp);
-            notificationServiceClient.sendOtp(sendOTPRequest);
+            NotificationEvent notificationEvent = NotificationEvent.builder()
+                    .channel("EMAIL")
+                    .recipient(request.getEmail())
+                    .templateCode("otp_template")
+                    .subject("Mã OTP của bạn")
+                    .param(Map.of("otp", otp, "expire", 5))
+                    .build();
+            kafkaTemplate.send("notification-delivery", notificationEvent);
         } else {
             throw new AppException(ErrorCode.EMAIL_NOT_FOUND);
         }

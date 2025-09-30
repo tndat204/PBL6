@@ -1,5 +1,6 @@
 package com.pbl6.userservice.service.impl;
 
+import com.pbl6.event.dto.NotificationEvent;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
@@ -14,13 +15,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +35,7 @@ public class UserServiceImpl implements UserService {
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
     ModelMapper modelMapper;
+    KafkaTemplate<String, Object> kafkaTemplate;
     public UserResponse register(CreateUserRequest request) {
         User user = modelMapper.map(request, User.class);
 
@@ -40,9 +45,18 @@ public class UserServiceImpl implements UserService {
         user.setEnabled(true);
         try {
             User savedUser = userRepository.save(user);
+            NotificationEvent notificationEvent = NotificationEvent.builder()
+                    .channel("EMAIL")
+                    .recipient(savedUser.getEmail())
+                    .templateCode("welcome_template")
+                    .subject("Chào mừng đến với IT Job Hunt!")
+                    .param(Map.of( "name", savedUser.getFullName(),
+                            "email", savedUser.getEmail()))
+                    .build();
+
+            kafkaTemplate.send("notification-delivery", notificationEvent);
             return modelMapper.map(savedUser, UserResponse.class);
         } catch (DataIntegrityViolationException e) {
-            // Trường username/email/phone bị trùng (vi phạm unique constraint)
             throw new AppException(ErrorCode.USER_EXISTED);
         }
     }
@@ -87,6 +101,19 @@ public class UserServiceImpl implements UserService {
         return users.stream()
                 .map(user->modelMapper.map(user,UserResponse.class))
                 .collect(Collectors.toList());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void changeStatus(String id) {
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(id));
+
+        if (userOptional.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        User user = userOptional.get();
+        user.setEnabled(!user.isEnabled());
+        userRepository.save(user);
     }
 
 }

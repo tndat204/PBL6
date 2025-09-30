@@ -1,14 +1,13 @@
-package com.pbl6.authservice.dto.shared;
+package com.pbl6.userservice.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SendOTPRequest {
-    String email;
-    int otp;
+public class PermissionRequest {
+    String name;
 }

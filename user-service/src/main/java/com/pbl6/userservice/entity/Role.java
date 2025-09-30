@@ -21,12 +21,13 @@ public class Role extends Base{
 
     @Column(unique = true,nullable = false)
     String name;
-    
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "role_permissions",
         joinColumns = @JoinColumn(name = "role_id"),
         inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
+
     Set<Permission> permissions = new HashSet<>();
 }

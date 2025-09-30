@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -18,4 +21,6 @@ public class Permission extends Base {
 
     @Column(unique = true, nullable = false)
     String name;
+
+
 }

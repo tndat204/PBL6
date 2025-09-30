@@ -43,4 +43,12 @@ public class UserController {
                 .result(userService.getAllUsers())
                 .build();
     }
+    @PutMapping("/change-status")
+    public APIResponse<String> changeStatus(@RequestParam("id") String id){
+        userService.changeStatus(id);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Change Status Successfully")
+                .build();
+    }
 }

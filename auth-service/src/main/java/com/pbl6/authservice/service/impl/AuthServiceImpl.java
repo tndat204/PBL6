@@ -12,7 +12,6 @@ import com.nimbusds.jwt.SignedJWT;
 import com.pbl6.authservice.client.GoogleClient;
 import com.pbl6.authservice.client.OutboundUserClient;
 import com.pbl6.authservice.client.UserClient;
-import com.pbl6.authservice.configuration.CustomJwtDecoder;
 import com.pbl6.authservice.dto.request.*;
 import com.pbl6.authservice.dto.response.AuthenticationResponse;
 import com.pbl6.authservice.dto.shared.*;

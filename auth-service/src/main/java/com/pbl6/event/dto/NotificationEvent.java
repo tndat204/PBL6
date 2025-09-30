@@ -1,13 +1,10 @@
-package com.pbl6.userservice.dto.request;
+package com.pbl6.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.pbl6.userservice.entity.Permission;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Map;
 
 @Data
 @Builder
@@ -15,7 +12,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CreateRoleRequest {
-    String name;
-    Set<UUID> permissionIds;
+public class NotificationEvent {
+    String channel;
+    String recipient;
+    String templateCode;
+    Map<String, Object> param;
+    String subject;
 }
