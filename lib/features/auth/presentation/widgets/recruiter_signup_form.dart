@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:pbl6/features/auth/data/models/register_request_model.dart';
+import 'package:pbl6/features/auth/domain/usecases/register_usecase.dart';
+import 'package:pbl6/features/auth/presentation/pages/login_page.dart';
+import 'package:pbl6/features/auth/presentation/widgets/custom_dropdown_field.dart';
 import 'package:pbl6/features/auth/presentation/widgets/custom_elevated_button.dart';
 import 'package:pbl6/features/auth/presentation/widgets/custom_text_field.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecruiterSignupForm extends StatefulWidget {
   const RecruiterSignupForm({super.key});
@@ -25,22 +32,28 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
 
   bool _loadingProvinces = true;
   bool _loadingWards = false;
+  bool _isRegistering = false;
 
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _companyNameController = TextEditingController();
-  final _taxCodeController = TextEditingController(); // 👉 thêm controller
+  final _taxCodeController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _birthDateController = TextEditingController();
 
+  DateTime? _selectedBirthDate;
+
+  late final RegisterUseCase _registerUseCase;
   final AuthRemoteDataSource _authDataSource =
       GetIt.instance<AuthRemoteDataSource>();
 
   @override
   void initState() {
     super.initState();
+    _registerUseCase = GetIt.I<RegisterUseCase>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchProvinces();
     });
@@ -88,6 +101,109 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
     }
   }
 
+  Future<void> _selectBirthDate() async {
+    FocusScope.of(context).unfocus();
+
+    final picked = await showDatePicker(
+      context: Navigator.of(
+        context,
+        rootNavigator: true,
+      ).context, // ✅ dùng context gốc của MaterialApp
+      initialDate: _selectedBirthDate ?? DateTime.now(),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+      locale: const Locale('vi', 'VN'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppPallete.primaryColor, // màu chủ đạo
+              onPrimary: Colors.white, // màu chữ trong header
+              surface: Colors.white, // màu nền hộp thoại
+              onSurface: AppPallete.textColor, // màu chữ ngày
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedBirthDate = picked;
+        // 👇 Hiển thị dd-MM-yyyy cho người dùng
+        _birthDateController.text = DateFormat('dd-MM-yyyy').format(picked);
+      });
+    }
+  }
+
+  Future<void> _handleRegister() async {
+    if (_formKey.currentState!.validate() && _agreeTerms) {
+      setState(() => _isRegistering = true);
+      try {
+        final address =
+            '${_selectedProvinceName ?? ''}, ${_selectedWardName ?? ''}';
+
+        final request = RegisterRequest(
+          username: _emailController.text,
+          password: _passwordController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          fullName: _fullNameController.text,
+          address: address,
+          taxCode: _taxCodeController.text,
+          nameCompany: _companyNameController.text,
+          avatarUrl: '',
+          birthDate: _selectedBirthDate ?? DateTime(2000, 1, 1),
+        );
+
+        await _registerUseCase(request);
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('registered_email', _emailController.text);
+
+        MotionToast(
+          icon: Icons.check_circle,
+          primaryColor: AppPallete.lightGradient,
+          secondaryColor: const Color.fromARGB(255, 74, 98, 138),
+          title: const Text(
+            "Thành công",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          description: const Text(
+            "Đăng ký thành công, vui lòng đăng nhập để tiếp tục",
+            style: TextStyle(color: AppPallete.backgroundColor),
+          ),
+          animationType: AnimationType.slideInFromLeft,
+          toastDuration: const Duration(seconds: 2),
+          toastAlignment: Alignment.topLeft,
+          borderRadius: 12,
+          width: 320,
+          height: 90,
+        ).show(context);
+
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          }
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Đăng ký thất bại: $e')));
+      } finally {
+        if (mounted) setState(() => _isRegistering = false);
+      }
+    } else if (!_agreeTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bạn phải đồng ý điều khoản')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _fullNameController.dispose();
@@ -97,6 +213,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _birthDateController.dispose();
     super.dispose();
   }
 
@@ -126,6 +243,22 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             controller: _fullNameController,
             validator: (value) =>
                 value!.isEmpty ? 'Vui lòng nhập họ và tên' : null,
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: _selectBirthDate,
+            child: AbsorbPointer(
+              child: CustomTextField(
+                label: 'Ngày sinh',
+                icon: Icons.cake_outlined,
+                obscureText: false,
+                controller: _birthDateController,
+                validator: (value) {
+                  if (value!.isEmpty) return 'Vui lòng chọn ngày sinh';
+                  return null;
+                },
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           CustomTextField(
@@ -195,53 +328,17 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           if (_loadingProvinces)
             const CircularProgressIndicator()
           else
-            DropdownButtonFormField<int>(
-              isExpanded: true,
+            CustomDropdownField<int>(
+              label: 'Tỉnh/Thành phố',
+              icon: Icons.location_on_outlined,
               value: _selectedProvinceCode,
-              hint: const Text('Chọn tỉnh/thành phố'),
-              dropdownColor: AppPallete.inputBackgroundColor,
+              hint: 'Chọn tỉnh/thành phố',
               items: _provinces.map((province) {
-                final int code = province['code'] as int;
-                final String name = province['name'] as String;
-                return DropdownMenuItem<int>(
-                  value: code,
-                  child: Text(
-                    name,
-                    style: TextStyle(color: AppPallete.textColor),
-                  ),
-                );
+                final int code = province['code'];
+                final String name = province['name'];
+                return DropdownMenuItem<int>(value: code, child: Text(name));
               }).toList(),
               onChanged: (value) => _onProvinceChanged(value),
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.location_on_outlined,
-                  color: AppPallete.mutedTextColor,
-                  size: 22,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.primaryColor,
-                    width: 2,
-                  ),
-                ),
-                filled: true,
-                fillColor: AppPallete.inputBackgroundColor,
-              ),
               validator: (value) =>
                   value == null ? 'Vui lòng chọn tỉnh/thành phố' : null,
             ),
@@ -249,23 +346,15 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           if (_loadingWards)
             const CircularProgressIndicator()
           else
-            DropdownButtonFormField<int>(
-              isExpanded: true,
+            CustomDropdownField<int>(
+              label: 'Phường/Xã',
+              icon: Icons.location_city_outlined,
               value: _selectedWardCode,
-              hint: Text(
-                _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
-              ),
-              dropdownColor: AppPallete.inputBackgroundColor,
+              hint: _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
               items: _wards.map((ward) {
                 final int code = ward['code'] as int;
                 final String name = ward['name'] as String;
-                return DropdownMenuItem<int>(
-                  value: code,
-                  child: Text(
-                    name,
-                    style: TextStyle(color: AppPallete.textColor),
-                  ),
-                );
+                return DropdownMenuItem<int>(value: code, child: Text(name));
               }).toList(),
               onChanged: _wards.isEmpty
                   ? null
@@ -277,40 +366,11 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
                         )['name'];
                       });
                     },
-              decoration: InputDecoration(
-                prefixIcon: const Icon(
-                  Icons.location_city_outlined,
-                  color: AppPallete.mutedTextColor,
-                  size: 22,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.borderColor,
-                    width: 1.5,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppPallete.primaryColor,
-                    width: 2,
-                  ),
-                ),
-                filled: true,
-                fillColor: AppPallete.inputBackgroundColor,
-              ),
               validator: (value) => value == null && _wards.isNotEmpty
                   ? 'Vui lòng chọn phường/xã'
                   : null,
             ),
+
           const SizedBox(height: 20),
           Row(
             children: [
@@ -319,9 +379,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
                 child: Checkbox(
                   value: _agreeTerms,
                   onChanged: (value) {
-                    setState(() {
-                      _agreeTerms = value ?? false;
-                    });
+                    setState(() => _agreeTerms = value ?? false);
                   },
                   activeColor: AppPallete.primaryColor,
                   checkColor: Colors.white,
@@ -342,22 +400,12 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             ],
           ),
           const SizedBox(height: 32),
-          CustomElevatedButton(
-            text: 'Đăng ký',
-            onPressed: () {
-              if (_formKey.currentState!.validate() && _agreeTerms) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Form hợp lệ, chuẩn bị gửi API'),
-                  ),
-                );
-              } else if (!_agreeTerms) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Bạn phải đồng ý điều khoản')),
-                );
-              }
-            },
-          ),
+          _isRegistering
+              ? const Center(child: CircularProgressIndicator())
+              : CustomElevatedButton(
+                  text: 'Đăng ký',
+                  onPressed: _handleRegister,
+                ),
         ],
       ),
     );

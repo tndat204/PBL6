@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pbl6/core/theme/theme.dart';
 import 'package:pbl6/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:pbl6/features/auth/presentation/pages/welcome_page.dart';
@@ -28,6 +29,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'IT Smart Hire',
       theme: AppTheme.lightThemeMode,
+       localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('vi', 'VN'), // hỗ trợ tiếng Việt
+        Locale('en', 'US'), // fallback tiếng Anh
+      ],
       home: const WelcomePage(),
     );
   }

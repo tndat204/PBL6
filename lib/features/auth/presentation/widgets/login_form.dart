@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
-import 'package:pbl6/features/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:pbl6/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:pbl6/features/auth/domain/usecases/login_usecase.dart';
 import 'package:pbl6/features/auth/presentation/pages/forgot_password_email_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart'; // Để tạo id UUID tạm
 
+import '../../../jobs/domain/entities/user.dart'; // Import User từ jobs domain
+import '../../../jobs/presentation/pages/home_page.dart'; // Import HomePage
 import '../widgets/custom_elevated_button.dart';
 import '../widgets/custom_text_field.dart';
 
@@ -25,9 +26,13 @@ class _LoginFormState extends State<LoginForm> {
   bool _isLoading = false;
   bool _rememberMe = false;
 
-  final LoginUseCase _loginUseCase = LoginUseCase(
-    AuthRepositoryImpl(GetIt.instance<AuthRemoteDataSource>()),
-  );
+  late final LoginUseCase _loginUseCase; // Sử dụng GetIt
+
+  @override
+  void initState() {
+    super.initState();
+    _loginUseCase = GetIt.I<LoginUseCase>(); // Lấy từ GetIt
+  }
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -39,14 +44,17 @@ class _LoginFormState extends State<LoginForm> {
         );
 
         if (response.code == 200 && response.result?.token != null) {
+          // Lưu token nếu rememberMe
           if (_rememberMe) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', response.result!.token);
-        }
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('auth_token', response.result!.token);
+          }
+
+          // Hiển thị toast thành công
           MotionToast(
             icon: Icons.check_circle,
             primaryColor: AppPallete.lightGradient,
-            secondaryColor:Color.fromARGB(255, 74, 98, 138), 
+            secondaryColor: Color.fromARGB(255, 74, 98, 138), 
             title: const Text(
               "Thành công",
               style: TextStyle(
@@ -66,44 +74,40 @@ class _LoginFormState extends State<LoginForm> {
             height: 90,
           ).show(context);
 
-          // _showSuccessDialog();
+          // Tạo User từ response (không expose password)
+          // Giả sử response.result có thêm info (name, birthday); hiện tại dùng mặc định
+          final user = User(
+            id: const Uuid().v4(), // Tạo UUID tạm
+            name: 'Huy Ngoc Vo', // Mặc định từ ảnh, sau thay từ API response hoặc profile
+            email: _emailController.text,
+            birthday: DateTime(1990, 1, 1), // Mặc định, sau lấy từ profile API
+            role: UserRole.candidate, // Mặc định candidate; thay từ response.roles nếu có
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+
+          // Chuyển hướng sang HomePage sau 2 giây (để toast hiển thị)
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HomePage(user: user),
+                ),
+              );
+            }
+          });
         } else if (response.code == 1023) {
-           _showErrorSnackBar('Sai mật khẩu');
+          _showErrorSnackBar('Sai mật khẩu');
         } else {
           _showErrorSnackBar('Đăng nhập thất bại, vui lòng thử lại');
         }
       } catch (e) {
-        _showErrorSnackBar(': $e');
+        _showErrorSnackBar('Lỗi: $e');
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
     }
-  }
-
-  void _showSuccessDialog() {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text(
-          'Đăng nhập thành công!',
-          style: TextStyle(color: Colors.green),
-        ),
-        content: const Text(
-          'Chào mừng bạn quay lại! Bạn sẽ được chuyển hướng ngay.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: điều hướng sang trang chính
-            },
-            child: const Text('OK', style: TextStyle(color: Colors.green)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showErrorSnackBar(String message) {

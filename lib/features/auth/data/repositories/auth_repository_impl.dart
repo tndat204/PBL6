@@ -1,6 +1,7 @@
 import 'package:pbl6/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:pbl6/features/auth/data/models/api_response_model.dart';
 import 'package:pbl6/features/auth/data/models/login_response_model.dart';
+import 'package:pbl6/features/auth/data/models/register_request_model.dart';
 import 'package:pbl6/features/auth/data/models/reset_password_request_model.dart';
 import 'package:pbl6/features/auth/data/models/send_otp_request_model.dart';
 import 'package:pbl6/features/auth/data/models/verify_otp_request_model.dart';
@@ -42,5 +43,9 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<LoginResponse> googleLogin(String idToken) {
     return _remoteDataSource.googleLogin(idToken);
+  }
+  @override
+  Future register(RegisterRequest request) {
+    return _remoteDataSource.register(request);
   }
 }

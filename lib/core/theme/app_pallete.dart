@@ -12,7 +12,7 @@ class AppPallete {
   static const Color mutedTextColor = Color(0xFF6B7280);  
 
   // 🖌️ UI
-  static const Color borderColor = Color(0xFFD1D5DB);      
+  static const Color borderColor = Color(0xFFc7c7c7);      
   static const Color inputBackgroundColor = Color(0xFFFFFFFF); 
 
   // ✅ Status
