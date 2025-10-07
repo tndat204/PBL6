@@ -1,9 +1,8 @@
-package com.pbl6.authservice.exception;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+package com.pbl6.fileservice.exception;
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum ErrorCode {

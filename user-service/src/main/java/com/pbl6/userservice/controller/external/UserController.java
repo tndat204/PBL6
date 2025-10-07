@@ -7,6 +7,7 @@ import com.pbl6.userservice.service.UserService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -49,6 +50,14 @@ public class UserController {
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Change Status Successfully")
+                .build();
+    }
+    @PutMapping("/upload-avatar")
+    public APIResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file){
+        userService.uploadAvatar(file);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Upload Avatar Successfully")
                 .build();
     }
 }

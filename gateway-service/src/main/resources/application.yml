@@ -28,6 +28,14 @@ spring:
           filters:
             - StripPrefix=0  # Don't strip prefix
 
+        # User Service - Requires authentication
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notification/**
+          filters:
+            - StripPrefix=0  # Don't strip prefix
+
 # Eureka Server Configuration
 eureka:
   client:

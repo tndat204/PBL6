@@ -16,15 +16,6 @@ spring:
       uri: mongodb://admin:123456@localhost:27017/notification_service?authSource=admin
       database: notification_service
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: shopddhpbl3@gmail.com
-    password: etax bupr dbft ejdw
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-
   kafka:
     bootstrap-servers: localhost:9094
     consumer:
@@ -39,6 +30,12 @@ logging:
   level:
     org.springframework.data.mongodb.core: info
     org.springframework: info
+
+springdoc:
+  api-docs:
+    enabled: true  # Bật endpoint /v3/api-docs
+  swagger-ui:
+    enabled: true # Tắt UI nếu muốn
 
 brevo:
   api_key: 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

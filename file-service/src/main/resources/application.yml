@@ -1,0 +1,67 @@
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  application:
+    name: file-service
+
+  data:
+    mongodb:
+      uri: mongodb://admin:123456@localhost:27017/file_service?authSource=admin
+      database: file-service
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+supabase:
+  project_url: https://ugpihwlrcredhqkodzck.supabase.co
+  secrey_key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVncGlod2xyY3JlZGhxa29kemNrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTczMTk5NSwiZXhwIjoyMDc1MzA3OTk1fQ.T1xYKII2TBBaEgKZxvCEqpUmZlGOAWsKFgAA5xw8yGM
+  bucket_name: uploads
+
+springdoc:
+  api-docs:
+    enabled: true  # Bật endpoint /v3/api-docs
+  swagger-ui:
+    enabled: true # Tắt UI nếu muốn
+
+logging:
+  level:
+    org.springframework.data.mongodb.core: info
+    org.springframework: info
+server:
+  port: 8084
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  application:
+    name: file-service
+
+  data:
+    mongodb:
+      uri: mongodb://your_prod_username:your_prod_password@your_prod_host:27017/file-service
+      database: file-service
+
+
+logging:
+  level:
+    root: warn

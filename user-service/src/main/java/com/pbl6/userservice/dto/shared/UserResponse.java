@@ -22,5 +22,6 @@ public class UserResponse {
     String fullName;
     @JsonProperty("isEnabled")
     Boolean enabled;
+    String avatarUrl;
     Set<RoleResponse> roles;
 }

@@ -1,6 +1,7 @@
 package com.pbl6.userservice.service.impl;
 
 import com.pbl6.event.dto.NotificationEvent;
+import com.pbl6.userservice.client.FileClient;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
@@ -20,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,7 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     ModelMapper modelMapper;
     KafkaTemplate<String, Object> kafkaTemplate;
+    FileClient  fileClient;
     public UserResponse register(CreateUserRequest request) {
         User user = modelMapper.map(request, User.class);
 
@@ -113,6 +116,21 @@ public class UserServiceImpl implements UserService {
 
         User user = userOptional.get();
         user.setEnabled(!user.isEnabled());
+        userRepository.save(user);
+    }
+
+    @Override
+    public void uploadAvatar(MultipartFile file) {
+        String url=fileClient.uploadFile(file,"avatars").getResult();
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        user.setAvatarUrl(url);
         userRepository.save(user);
     }
 

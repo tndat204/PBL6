@@ -4,6 +4,7 @@ package com.pbl6.userservice.service;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,4 +22,6 @@ public interface UserService {
     public List<UserResponse> getAllUsers();
 
     public void changeStatus(String id);
+
+    public void uploadAvatar(MultipartFile file);
 }

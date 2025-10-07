@@ -59,6 +59,11 @@ google:
   redirect-web-uri: http://localhost:3000/authenticate
   user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
 
+springdoc:
+  api-docs:
+    enabled: true  # Bật endpoint /v3/api-docs
+  swagger-ui:
+    enabled: true # Tắt UI nếu muốn
 
 ---
 spring:

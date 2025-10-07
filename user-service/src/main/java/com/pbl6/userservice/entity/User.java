@@ -10,9 +10,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-@Data
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Data
 @Table(name = "users")
 public class User extends Base {
     @Id
