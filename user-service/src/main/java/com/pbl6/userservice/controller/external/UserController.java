@@ -1,5 +1,6 @@
 package com.pbl6.userservice.controller.external;
 
+import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.response.APIResponse;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
@@ -58,6 +59,21 @@ public class UserController {
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Upload Avatar Successfully")
+                .build();
+    }
+    @PatchMapping("/update-my-info")
+    public APIResponse<UserResponse> updateMyInfo(@RequestBody UpdateUserRequest request){
+        return APIResponse.<UserResponse>builder()
+                .code(200)
+                .result(userService.updateMyInfo(request))
+                .build();
+    }
+    @DeleteMapping("/{id}")
+    public APIResponse<String> deleteUser(@PathVariable String id){
+        userService.deleteUser(id);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Delete User Successfully")
                 .build();
     }
 }

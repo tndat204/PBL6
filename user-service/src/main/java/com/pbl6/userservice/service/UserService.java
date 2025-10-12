@@ -1,6 +1,7 @@
 package com.pbl6.userservice.service;
 
 
+import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
@@ -24,4 +25,8 @@ public interface UserService {
     public void changeStatus(String id);
 
     public void uploadAvatar(MultipartFile file);
+
+    public UserResponse updateMyInfo(UpdateUserRequest request);
+
+    public void deleteUser(String id);
 }

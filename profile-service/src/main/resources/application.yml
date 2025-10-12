@@ -1,0 +1,62 @@
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  application:
+    name: profile-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/profile_service
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: 123456
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+
+springdoc:
+  api-docs:
+    enabled: true  # B?t endpoint /v3/api-docs
+  swagger-ui:
+    enabled: true # T?t UI n?u mu?n
+
+logging:
+  level:
+    org.springframework.data.mongodb.core: info
+    org.springframework: info
+server:
+  port: 8086
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  application:
+    name: profile-service
+
+logging:
+  level:
+    root: warn

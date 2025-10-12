@@ -2,6 +2,7 @@ package com.pbl6.userservice.service.impl;
 
 import com.pbl6.event.dto.NotificationEvent;
 import com.pbl6.userservice.client.FileClient;
+import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
@@ -132,6 +133,33 @@ public class UserServiceImpl implements UserService {
         User user = userOptional.get();
         user.setAvatarUrl(url);
         userRepository.save(user);
+    }
+
+    @Override
+    public UserResponse updateMyInfo(UpdateUserRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
+        modelMapper.map(request,user);
+        userRepository.save(user);
+        return modelMapper.map(user,UserResponse.class);
+    }
+
+    @Override
+    public void deleteUser(String id) {
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(id));
+
+        if (userOptional.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        userRepository.delete(user);
     }
 
 }

@@ -12,15 +12,13 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        # Auth Service - No authentication required
         - id: auth-service
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
           filters:
             - StripPrefix=0  # Don't strip prefix for auth service
-        
-        # User Service - Requires authentication
+
         - id: user-service
           uri: lb://user-service
           predicates:
@@ -28,7 +26,6 @@ spring:
           filters:
             - StripPrefix=0  # Don't strip prefix
 
-        # User Service - Requires authentication
         - id: notification-service
           uri: lb://notification-service
           predicates:
@@ -36,6 +33,26 @@ spring:
           filters:
             - StripPrefix=0  # Don't strip prefix
 
+        - id: file-service
+          uri: lb://file-service
+          predicates:
+            - Path=/api/file/**
+          filters:
+            - StripPrefix=0  # Don't strip prefix
+
+        - id: job-service
+          uri: lb://job-service
+          predicates:
+            - Path=/api/job/**
+          filters:
+            - StripPrefix=0  # Don't strip prefix
+
+        - id: profile-service
+          uri: lb://profile-service
+          predicates:
+            - Path=/api/profile/**
+          filters:
+            - StripPrefix=0  # Don't strip prefix
 # Eureka Server Configuration
 eureka:
   client:
