@@ -8,6 +8,7 @@ import 'package:pbl6/features/shared/auth/presentation/pages/signup_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/unauthorized_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/verify_otp_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/welcome_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/admin/dashboard/presentation/pages/admin_dashboard.dart';
 import '../features/recruiter/dashboard/presentation/pages/recruiter_dashboard.dart';
@@ -18,20 +19,22 @@ import 'route_guard.dart';
 import 'route_names.dart';
 
 /// Hàm hiệu ứng trượt từ phải sang trái
-CustomTransitionPage slideFromRightTransition(Widget child, GoRouterState state) {
+CustomTransitionPage slideFromRightTransition(
+  Widget child,
+  GoRouterState state,
+) {
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
     transitionDuration: const Duration(milliseconds: 400),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final tween = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-          .chain(CurveTween(curve: Curves.easeInOut));
+      final tween = Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).chain(CurveTween(curve: Curves.easeInOut));
       return SlideTransition(
         position: animation.drive(tween),
-        child: FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
+        child: FadeTransition(opacity: animation, child: child),
       );
     },
   );
@@ -74,42 +77,48 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: RouteNames.WELCOME,
       name: RouteNames.WELCOME,
-      pageBuilder: (context, state) => fadeScaleTransition(const WelcomePage(), state),
+      pageBuilder: (context, state) =>
+          fadeScaleTransition(const WelcomePage(), state),
     ),
 
     // 🟢 Login
     GoRoute(
       path: RouteNames.LOGIN,
       name: RouteNames.LOGIN,
-      pageBuilder: (context, state) => slideFromRightTransition(LoginPage(), state),
+      pageBuilder: (context, state) =>
+          slideFromRightTransition(LoginPage(), state),
     ),
 
     // 🟢 Signup (Ứng viên)
     GoRoute(
       path: RouteNames.SIGNUP,
       name: RouteNames.SIGNUP,
-      pageBuilder: (context, state) => slideFromRightTransition(const SignupPage(), state),
+      pageBuilder: (context, state) =>
+          slideFromRightTransition(const SignupPage(), state),
     ),
 
     // 🟢 Signup (Nhà tuyển dụng)
     GoRoute(
       path: RouteNames.RECRUITER_SIGNUP,
       name: RouteNames.RECRUITER_SIGNUP,
-      pageBuilder: (context, state) => slideFromRightTransition(const RecruiterSignupPage(), state),
+      pageBuilder: (context, state) =>
+          slideFromRightTransition(const RecruiterSignupPage(), state),
     ),
 
     // 🟢 Role selection
     GoRoute(
       path: RouteNames.ROLE_SELECTION,
       name: RouteNames.ROLE_SELECTION,
-      pageBuilder: (context, state) => fadeScaleTransition(const RoleSelectionScreen(), state),
+      pageBuilder: (context, state) =>
+          fadeScaleTransition(const RoleSelectionScreen(), state),
     ),
 
     // 🟢 Forgot password
     GoRoute(
       path: RouteNames.FORGOT_PASSWORD_EMAIL,
       name: RouteNames.FORGOT_PASSWORD_EMAIL,
-      pageBuilder: (context, state) => slideFromRightTransition(const ForgotPasswordEmailPage(), state),
+      pageBuilder: (context, state) =>
+          slideFromRightTransition(const ForgotPasswordEmailPage(), state),
     ),
 
     // 🟢 Verify OTP
@@ -139,7 +148,28 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: RouteNames.UNAUTHORIZED,
       name: RouteNames.UNAUTHORIZED,
-      pageBuilder: (context, state) => fadeTransition(UnauthorizedPage(), state),
+      pageBuilder: (context, state) =>
+          fadeTransition(UnauthorizedPage(), state),
+    ),
+    // 🟢 Route trung gian tự động điều hướng đến dashboard theo role
+    GoRoute(
+      path: '/dashboard',
+      name: 'dashboard_redirect',
+      redirect: (context, state) async {
+        final prefs = await SharedPreferences.getInstance();
+        final role = prefs.getString('user_role');
+
+        switch (role) {
+          case 'UserRole.user':
+            return RouteNames.USER_DASHBOARD;
+          case 'UserRole.recruiter':
+            return RouteNames.RECRUITER_DASHBOARD;
+          case 'UserRole.admin':
+            return RouteNames.ADMIN_DASHBOARD;
+          default:
+            return RouteNames.LOGIN;
+        }
+      },
     ),
 
     // 🟢 Dashboards
@@ -151,7 +181,8 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: RouteNames.RECRUITER_DASHBOARD,
       name: RouteNames.RECRUITER_DASHBOARD,
-      pageBuilder: (context, state) => fadeTransition(RecruiterDashboard(), state),
+      pageBuilder: (context, state) =>
+          fadeTransition(RecruiterDashboard(), state),
     ),
     GoRoute(
       path: RouteNames.ADMIN_DASHBOARD,
