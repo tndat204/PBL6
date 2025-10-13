@@ -12,4 +12,6 @@ public interface CompanyService {
     public CompanyResponse getCompanyById(String id);
     public List<CompanyResponse> getAllCompanies();
     public void deleteCompanyById(String id);
+    public void activateCompanyById(String id);
+    public void deactivateCompanyById(String id);
 }

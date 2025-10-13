@@ -29,4 +29,6 @@ public interface UserService {
     public UserResponse updateMyInfo(UpdateUserRequest request);
 
     public void deleteUser(String id);
+
+    public void upgradeRole(String userId,String roleId);
 }

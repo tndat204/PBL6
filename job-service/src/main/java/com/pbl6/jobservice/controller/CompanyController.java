@@ -57,4 +57,20 @@ public class CompanyController {
                 .result("Company deleted successfully")
                 .build();
     }
+    @PutMapping("/activate/{id}")
+    public APIResponse<String> activateCompany(@PathVariable String id){
+        companyService.activateCompanyById(id);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Company activated successfully")
+                .build();
+    }
+    @PutMapping("/deactivate/{id}")
+    public APIResponse<String> deactivateCompany(@PathVariable String id){
+        companyService.deactivateCompanyById(id);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Company deactivated successfully")
+                .build();
+    }
 }

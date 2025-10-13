@@ -39,6 +39,9 @@ public class JobServiceImpl implements JobService {
     public JobResponse createJob(CreateJobRequest request) {
         Company company = companyRepository.findById(request.getCompanyId())
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+        if(!company.isActive()) {
+            throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
+        }
 
         UUID postedBy=getCurrentUserId();
         boolean allowed = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(

@@ -76,4 +76,12 @@ public class UserController {
                 .result("Delete User Successfully")
                 .build();
     }
+    @PutMapping("/{userId}/upgrade-role/{roleId}")
+    public APIResponse<String> upgradeRole(@PathVariable String userId, @PathVariable String roleId){
+        userService.upgradeRole(userId,roleId);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Upgrade Role Successfully")
+                .build();
+    }
 }

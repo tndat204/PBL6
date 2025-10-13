@@ -2,10 +2,14 @@ package com.pbl6.profileservice.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.io.Serializable;
-import java.util.UUID;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 
 @Getter
 @Setter
@@ -14,16 +18,10 @@ import java.util.UUID;
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "profile_skills")
-@IdClass(ProfileSkill.class)
 public class ProfileSkill implements Serializable {
 
-    @Id
-    @Column(columnDefinition = "uuid", nullable = false)
-    UUID skillId;
-
-    @Id
-    @Column(columnDefinition = "uuid", nullable = false)
-    UUID profileId;
+    @EmbeddedId
+    ProfileSkillId id;
 
     Integer experienceYears;
 
@@ -32,13 +30,15 @@ public class ProfileSkill implements Serializable {
 
     Boolean isPrimary;
 
-    @ManyToOne
-    @JoinColumn(name = "skillId", insertable = false, updatable = false)
-    @JsonBackReference("skill-profiles")
-    Skill skill;
-
-    @ManyToOne
-    @JoinColumn(name = "profileId", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("profileId") // Vẫn ánh xạ tới trường profileId trong ProfileSkillId
+    @JoinColumn(name = "profile_id", referencedColumnName = "id") // Thay đổi tham chiếu đến id của Profile
     @JsonBackReference("profile-skills")
     Profile profile;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("skillId")
+    @JoinColumn(name = "skill_id", referencedColumnName = "id")
+    @JsonBackReference("skill-profiles")
+    Skill skill;
 }

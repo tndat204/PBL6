@@ -11,7 +11,8 @@ public enum ErrorCode {
     INVALID_KEY(1009, "Uncategorized error", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1004, "Chưa xác thực", HttpStatus.UNAUTHORIZED),
     CATEGORY_NOT_FOUND(3001,"Không tồn tại danh mục",HttpStatus.NOT_FOUND),
-    SKILL_NOT_FOUND(3002,"Không tồn tại kỹ năng",HttpStatus.NOT_FOUND);
+    SKILL_NOT_FOUND(3002,"Không tồn tại kỹ năng",HttpStatus.NOT_FOUND),
+    PROFILE_NOT_FOUND(3003,"Hồ sơ không tồn tại",HttpStatus.NOT_FOUND);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;

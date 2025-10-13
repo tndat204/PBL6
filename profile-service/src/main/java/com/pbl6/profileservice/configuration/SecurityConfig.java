@@ -1,5 +1,7 @@
 package com.pbl6.profileservice.configuration;
 
+import com.pbl6.profileservice.dto.request.ProfileRequest;
+import com.pbl6.profileservice.entity.Profile;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +57,12 @@ public class SecurityConfig {
 
     @Bean
     public ModelMapper modelMapper() {
-        return new ModelMapper();
+        ModelMapper modelMapper = new ModelMapper();
+
+        modelMapper.createTypeMap(ProfileRequest.class, Profile.class)
+                .addMappings(mapper -> mapper.skip(Profile::setId));
+
+        return modelMapper;
     }
 
 

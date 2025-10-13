@@ -6,6 +6,7 @@ import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
+import com.pbl6.userservice.entity.Role;
 import com.pbl6.userservice.entity.User;
 import com.pbl6.userservice.exception.AppException;
 import com.pbl6.userservice.exception.ErrorCode;
@@ -151,7 +152,7 @@ public class UserServiceImpl implements UserService {
         return modelMapper.map(user,UserResponse.class);
     }
 
-    @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(String id) {
         Optional<User> userOptional = userRepository.findById(UUID.fromString(id));
 
@@ -160,6 +161,29 @@ public class UserServiceImpl implements UserService {
         }
         User user = userOptional.get();
         userRepository.delete(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void upgradeRole(String userId, String roleId) {
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+
+        if (userOptional.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Optional<Role> roleOptional = roleRepository.findById(UUID.fromString(roleId));
+        if (roleOptional.isEmpty()) {
+            throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+        }
+
+        User user = userOptional.get();
+        Role role = roleOptional.get();
+        if (!user.getRoles().contains(role)) {
+            user.getRoles().add(role);
+            userRepository.save(user);
+        } else {
+            throw new AppException(ErrorCode.ROLE_ALREADY_ASSIGNED);
+        }
+
     }
 
 }

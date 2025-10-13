@@ -18,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.Conditions;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -127,6 +128,22 @@ public class CompanyServiceImpl implements CompanyService {
             jobRepository.deleteByCompanyId(UUID.fromString(id));
         }
         companyRepository.delete(company);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void activateCompanyById(String id) {
+        Company company = companyRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+        company.setActive(true);
+        companyRepository.save(company);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deactivateCompanyById(String id) {
+        Company company = companyRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+        company.setActive(false);
+        companyRepository.save(company);
     }
 
     private UUID getCurrentUserId() {

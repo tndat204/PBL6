@@ -20,7 +20,7 @@ public class Profile {
     @Id
     @GeneratedValue
     @Column(columnDefinition = "uuid")
-    UUID profileId;
+    UUID id;
 
     @Column(columnDefinition = "uuid", unique = true, nullable = false)
     UUID userId;
