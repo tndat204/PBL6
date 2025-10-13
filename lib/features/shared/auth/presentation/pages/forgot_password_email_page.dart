@@ -1,18 +1,20 @@
 // features/auth/presentation/pages/forgot_password_email_page.dart
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/domain/repositories/auth_repository.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/forgot_password_usecase.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/verify_otp_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_text_field.dart';
+import 'package:pbl6/routes/route_names.dart';
 
 class ForgotPasswordEmailPage extends StatefulWidget {
   final String? email;
   const ForgotPasswordEmailPage({super.key, this.email});
 
   @override
-  State<ForgotPasswordEmailPage> createState() => _ForgotPasswordEmailPageState();
+  State<ForgotPasswordEmailPage> createState() =>
+      _ForgotPasswordEmailPageState();
 }
 
 class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
@@ -38,14 +40,9 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
       try {
         final response = await _useCase.sendOTP(_emailController.text);
         if (response.code == 200) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VerifyOTPPage(
-                email: _emailController.text,
-                isOtpSent: true, // Truyền cờ cho VerifyOTPPage
-              ),
-            ),
+          context.pushNamed(
+            RouteNames.VERIFY_OTP,
+            extra: _emailController.text.trim(),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -55,9 +52,9 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       } finally {
         setState(() => _isLoading = false);
       }
@@ -77,7 +74,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
       appBar: AppBar(
         title: const Text(
           'Quên mật khẩu',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20) ,
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
         ),
         backgroundColor: AppPallete.lighterbackground,
         elevation: 0,
@@ -189,8 +186,9 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                         controller: _emailController,
                         validator: (value) {
                           if (value!.isEmpty) return 'Vui lòng nhập email';
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                              .hasMatch(value))
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value))
                             return 'Email không hợp lệ';
                           return null;
                         },

@@ -1,21 +1,27 @@
 // features/auth/presentation/pages/reset_password_page.dart
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/domain/repositories/auth_repository.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_elevated_button.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_text_field.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pbl6/routes/route_names.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
-
-  const ResetPasswordPage({super.key, required this.email});
+  final String token;
+  const ResetPasswordPage({
+    super.key,
+    required this.email,
+    required this.token,
+  });
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
+  
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
@@ -32,13 +38,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('reset_token') ?? '';
-        if (token.isEmpty) throw Exception('Token không hợp lệ');
-
+        print('🔹 Reset password với token: ${widget.token}');
         final response = await _useCase.resetPassword(
           _passwordController.text,
-          token,
+          widget.token,
         );
         if (response.code == 200) {
           // Hiển thị toast thành công
@@ -67,7 +70,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
           // Delay 2s rồi quay về Login
           Future.delayed(const Duration(seconds: 2), () {
-            Navigator.popUntil(context, (route) => route.isFirst);
+            context.go(RouteNames.LOGIN);
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

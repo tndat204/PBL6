@@ -4,12 +4,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/domain/repositories/auth_repository.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/forgot_password_usecase.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/reset_password_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_elevated_button.dart';
+import 'package:pbl6/routes/route_names.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class VerifyOTPPage extends StatefulWidget {
@@ -38,7 +39,8 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
     GetIt.instance<AuthRepository>(),
   );
 
-  String get _otpText => _otpControllers.map((controller) => controller.text).join();
+  String get _otpText =>
+      _otpControllers.map((controller) => controller.text).join();
 
   @override
   void initState() {
@@ -105,9 +107,9 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
           ).show(context);
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       } finally {
         setState(() => _isLoading = false);
       }
@@ -145,11 +147,12 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
             height: 90,
           ).show(context);
           Future.delayed(const Duration(seconds: 2), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ResetPasswordPage(email: widget.email),
-              ),
+            context.pushReplacementNamed(
+              RouteNames.RESET_PASSWORD,
+              extra: {
+                'email': widget.email,
+                'token': response.result ?? '', // 👈 truyền token qua
+              },
             );
           });
         } else {
@@ -162,9 +165,9 @@ class _VerifyOTPPageState extends State<VerifyOTPPage> {
           ).show(context);
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       } finally {
         setState(() => _isLoading = false);
       }

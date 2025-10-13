@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/recruiter_signup_page.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/signup_page.dart';
+import 'package:pbl6/routes/route_names.dart';
 
 import '../widgets/custom_elevated_button.dart';
 
@@ -48,19 +48,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   child: CustomElevatedButton(
                     text: 'Tôi là nhà tuyển dụng',
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) =>
-                              const RecruiterSignupPage(),
-                          transitionsBuilder: (context, animation,
-                              secondaryAnimation, child) {
-                            return FadeTransition(
-                                opacity: animation, child: child);
-                          },
-                          transitionDuration: const Duration(milliseconds: 500),
-                        ),
-                      );
+                     context.push(RouteNames.RECRUITER_SIGNUP); 
                     },
                   ),
                 ),
@@ -76,19 +64,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   child: CustomElevatedButton(
                     text: 'Tôi là ứng viên',
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) =>
-                              const SignupPage(),
-                          transitionsBuilder: (context, animation,
-                              secondaryAnimation, child) {
-                            return FadeTransition(
-                                opacity: animation, child: child);
-                          },
-                          transitionDuration: const Duration(milliseconds: 500),
-                        ),
-                      );
+                      context.push(RouteNames.SIGNUP); 
                     },
                   ),
                 ),

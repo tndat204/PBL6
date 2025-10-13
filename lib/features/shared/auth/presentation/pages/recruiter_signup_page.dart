@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/login_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/recruiter_signup_form.dart';
+import 'package:pbl6/routes/route_names.dart';
 
 class RecruiterSignupPage extends StatefulWidget {
   const RecruiterSignupPage({super.key});
@@ -135,10 +136,7 @@ class _RecruiterSignupPageState extends State<RecruiterSignupPage> with TickerPr
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const LoginPage()),
-                          );
+                           context.push(RouteNames.LOGIN);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

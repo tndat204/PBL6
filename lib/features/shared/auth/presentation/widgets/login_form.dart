@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart'; // Để dùng context.go
+import 'package:jwt_decode/jwt_decode.dart'; // Decode token
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/forgot_password_email_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart'; // Để tạo id UUID tạm
+import 'package:uuid/uuid.dart';
 
-import '../../../../candidate/jobs/domain/entities/user.dart'; // Import User từ jobs domain
-import '../../../../candidate/jobs/presentation/pages/home_page.dart'; // Import HomePage
-import 'custom_elevated_button.dart';
-import 'custom_text_field.dart';
+import '../../../../../routes/route_names.dart'; // Import route names
+import '../../../../user/jobs/domain/entities/user.dart'; // Import User từ user domain (mở rộng từ auth)
+import '../widgets/custom_elevated_button.dart';
+import '../widgets/custom_text_field.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -26,12 +27,12 @@ class _LoginFormState extends State<LoginForm> {
   bool _isLoading = false;
   bool _rememberMe = false;
 
-  late final LoginUseCase _loginUseCase; // Sử dụng GetIt
+  late final LoginUseCase _loginUseCase;
 
   @override
   void initState() {
     super.initState();
-    _loginUseCase = GetIt.I<LoginUseCase>(); // Lấy từ GetIt
+    _loginUseCase = GetIt.I<LoginUseCase>();
   }
 
   Future<void> _handleLogin() async {
@@ -44,11 +45,48 @@ class _LoginFormState extends State<LoginForm> {
         );
 
         if (response.code == 200 && response.result?.token != null) {
+          final token = response.result!.token;
+
           // Lưu token nếu rememberMe
           if (_rememberMe) {
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('auth_token', response.result!.token);
+            await prefs.setString('auth_token', token);
           }
+
+          // Decode token để lấy role, userId, email
+          final decodedToken = Jwt.parseJwt(token);
+          final email = decodedToken['sub'] ?? _emailController.text;
+          final userId = decodedToken['userId'] ?? const Uuid().v4().toString();
+          final scope = decodedToken['scope'] ?? 'ROLE_USER';
+
+          // Map scope sang UserRole mới
+          UserRole role;
+          switch (scope) {
+            case 'ROLE_RECRUITER':
+              role = UserRole.recruiter;
+              break;
+            case 'ROLE_ADMIN':
+              role = UserRole.admin;
+              break;
+            default:
+              role = UserRole.user; // ROLE_USER hoặc default
+          }
+
+          // Lưu role và userId vào prefs (guard dùng)
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_role', role.toString());
+          await prefs.setString('user_id', userId);
+
+          // Tạo User từ decoded data
+          final user = User(
+            id: userId,
+            name: 'Unknown', // Load từ my-info sau
+            email: email,
+            birthday: DateTime(1990, 1, 1), // Mặc định
+            role: role,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
 
           // Hiển thị toast thành công
           MotionToast(
@@ -74,27 +112,10 @@ class _LoginFormState extends State<LoginForm> {
             height: 90,
           ).show(context);
 
-          // Tạo User từ response (không expose password)
-          // Giả sử response.result có thêm info (name, birthday); hiện tại dùng mặc định
-          final user = User(
-            id: const Uuid().v4(), // Tạo UUID tạm
-            name: 'Huy Ngoc Vo', // Mặc định từ ảnh, sau thay từ API response hoặc profile
-            email: _emailController.text,
-            birthday: DateTime(1990, 1, 1), // Mặc định, sau lấy từ profile API
-            role: UserRole.candidate, // Mặc định candidate; thay từ response.roles nếu có
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
-
-          // Chuyển hướng sang HomePage sau 2 giây (để toast hiển thị)
+          // Route đến dashboard dựa trên role sau 2 giây (GoRouter tự redirect nếu cần)
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HomePage(user: user),
-                ),
-              );
+              context.go('/dashboard'); // GoRouter sẽ redirect dựa trên guard/role
             }
           });
         } else if (response.code == 1023) {
@@ -194,12 +215,7 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 child: TextButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ForgotPasswordEmailPage(),
-                      ),
-                    );
+                    context.go(RouteNames.FORGOT_PASSWORD_EMAIL); // Dùng GoRouter
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(

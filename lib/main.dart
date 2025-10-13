@@ -3,13 +3,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pbl6/core/injection_container.dart';
 import 'package:pbl6/core/theme/theme.dart';
 import 'package:pbl6/features/shared/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/welcome_page.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'routes/app_router.dart'; // Import router config
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Khởi tạo binding
   await SharedPreferences.getInstance();     // Khởi tạo SharedPreferences
-  init();                                   // Khởi tạo dependency injection
+   init();                              // Khởi tạo dependency injection (await nếu async)
   runApp(
     MultiProvider(
       providers: [
@@ -25,11 +27,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router( // Thay MaterialApp bằng .router
       debugShowCheckedModeBanner: false,
       title: 'IT Smart Hire',
       theme: AppTheme.lightThemeMode,
-       localizationsDelegates: const [
+      localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -38,7 +40,7 @@ class MyApp extends StatelessWidget {
         Locale('vi', 'VN'), // hỗ trợ tiếng Việt
         Locale('en', 'US'), // fallback tiếng Anh
       ],
-      home: const WelcomePage(),
+      routerConfig: router, // Sử dụng GoRouter config từ app_router.dart
     );
   }
 }

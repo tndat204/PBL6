@@ -1,10 +1,11 @@
 // features/auth/presentation/pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/data/services/google_sign_in_service.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/role_selection_screen.dart';
+import 'package:pbl6/routes/route_names.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/login_form.dart';
@@ -51,10 +52,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         if (response.code == 200 && response.result != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('auth_token', response.result!.token);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
-          );
+          context.push(RouteNames.LOGIN);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Đăng nhập Google thất bại: ${response.code}')),
@@ -194,10 +192,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
-                          );
+                           context.push(RouteNames.ROLE_SELECTION);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

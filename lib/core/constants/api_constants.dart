@@ -10,5 +10,6 @@ class ApiConstants {
   static const String verifyOTP = '/api/auth/otp/verify-otp';
   static const String resetPassword = '/api/auth/reset-password';
   static const String register = '/api/user/internal/register';
-
+  //user
+  static const String getMyInfo = '/api/user/my-info';
 }

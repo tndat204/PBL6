@@ -4,9 +4,9 @@ import 'package:pbl6/core/services/api_service.dart';
 import 'package:pbl6/features/shared/auth/data/models/api_response_model.dart';
 import 'package:pbl6/features/shared/auth/data/models/login_response_model.dart';
 import 'package:pbl6/features/shared/auth/data/models/register_request_model.dart';
-import 'package:pbl6/features/shared/auth/data/models/register_response_model.dart';
 import 'package:pbl6/features/shared/auth/data/models/reset_password_request_model.dart';
 import 'package:pbl6/features/shared/auth/data/models/send_otp_request_model.dart';
+import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
 import 'package:pbl6/features/shared/auth/data/models/verify_otp_request_model.dart';
 abstract class AuthRemoteDataSource {
   Future<List<Map<String, dynamic>>> fetchProvinces();
@@ -16,7 +16,7 @@ abstract class AuthRemoteDataSource {
   Future<APIResponse<String>> verifyOTP(VerifyOTPRequest request);
   Future<APIResponse<String>> resetPassword(ResetPasswordRequest request, String token);
   Future<LoginResponse> googleLogin(String idToken);
-  Future<RegisterResponse> register(RegisterRequest request);
+  Future<UserApiResponse> register(RegisterRequest request);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -83,7 +83,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
  @override
 @override
-Future<RegisterResponse> register(RegisterRequest request) async {
+Future<UserApiResponse> register(RegisterRequest request) async {
   try {
     final response = await _dio.post(
       ApiConstants.register,
@@ -96,7 +96,7 @@ Future<RegisterResponse> register(RegisterRequest request) async {
       print('⚠️ Server trả về HTML hoặc chuỗi không hợp lệ!');
       throw Exception('Phản hồi không phải JSON: ${response.data}');
     }
-    return RegisterResponse.fromJson(response.data);
+    return UserApiResponse.fromJson(response.data);
   } catch (e) {
     print('❌ Đăng ký thất bại: $e');
     rethrow;

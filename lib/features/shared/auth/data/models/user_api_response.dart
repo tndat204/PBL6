@@ -1,16 +1,16 @@
-class RegisterResponse {
+class UserApiResponse {
   final int code;
   final String message;
   final UserResponse? result;
 
-  const RegisterResponse({
+  const UserApiResponse({
     required this.code,
     required this.message,
     this.result,
   });
 
-  factory RegisterResponse.fromJson(Map<String, dynamic> json) {
-    return RegisterResponse(
+  factory UserApiResponse.fromJson(Map<String, dynamic> json) {
+    return UserApiResponse(
       code: json['code'] ?? 0,
       message: json['message'] ?? '',
       result: json['result'] != null ? UserResponse.fromJson(json['result']) : null,
@@ -21,7 +21,7 @@ class RegisterResponse {
 class UserResponse {
   final String id;
   final String username;
-  final String email; // Bỏ password để không expose
+  final String email;
   final String phone;
   final String address;
   final String fullName;

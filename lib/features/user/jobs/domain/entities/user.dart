@@ -1,9 +1,9 @@
 // lib/features/jobs/domain/entities/user.dart (cập nhật để không expose password, map từ UserEntity hoặc RegisterResponse)
-import 'package:pbl6/features/shared/auth/data/models/register_response_model.dart';
+import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
 import 'package:pbl6/features/shared/auth/domain/entities/user_entity.dart'; // Import UserEntity từ auth
 import 'package:uuid/uuid.dart'; // Nếu dùng UUID
 
-enum UserRole { candidate, recruiter, manager } // Từ Role table
+enum UserRole { user, recruiter, admin } // Từ Role table
 
 class User {
   final String id; // UUID
@@ -31,7 +31,7 @@ class User {
       name: name.isEmpty ? authEntity.fullName ?? 'Unknown' : name, // Sử dụng fullName nếu có
       email: authEntity.email,
       birthday: birthday ?? DateTime.now(),
-      role: UserRole.candidate, // Mặc định cho Candidates; thay bằng response.roles nếu có
+      role: UserRole.user, // Mặc định cho Candidates; thay bằng response.roles nếu có
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -46,13 +46,13 @@ class User {
           role = UserRole.recruiter;
           break;
         case 'manager':
-          role = UserRole.manager;
+          role = UserRole.admin;
           break;
         default:
-          role = UserRole.candidate;
+          role = UserRole.user;
       }
     } else {
-      role = UserRole.candidate; // Mặc định
+      role = UserRole.user; // Mặc định
     }
 
     return User(

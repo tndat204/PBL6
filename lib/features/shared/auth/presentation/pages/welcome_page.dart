@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // Import GoRouter để navigate
 import 'package:pbl6/core/theme/app_pallete.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/login_page.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/role_selection_screen.dart';
+import 'package:pbl6/routes/route_names.dart'; // Import route names (giả sử bạn có RouteNames.ROLE_SELECTION và RouteNames.LOGIN)
 
 import '../widgets/custom_elevated_button.dart';
 
@@ -88,21 +88,7 @@ class _WelcomePageState extends State<WelcomePage>
                       CustomElevatedButton(
                         text: 'Đăng ký',
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            PageRouteBuilder(
-                              pageBuilder:
-                                  (context, animation, secondaryAnimation) =>
-                                      const RoleSelectionScreen(),
-                              transitionsBuilder: (context, animation,
-                                  secondaryAnimation, child) {
-                                return FadeTransition(
-                                    opacity: animation, child: child);
-                              },
-                              transitionDuration:
-                                  const Duration(milliseconds: 500),
-                            ),
-                          );
+                          context.push(RouteNames.ROLE_SELECTION); // Dùng GoRouter thay Navigator
                         },
                       ),
                       const SizedBox(height: 20),
@@ -118,21 +104,7 @@ class _WelcomePageState extends State<WelcomePage>
                           ),
                           GestureDetector(
                             onTap: () {
-                              Navigator.pushReplacement(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
-                                      const LoginPage(),
-                                  transitionsBuilder: (context, animation,
-                                      secondaryAnimation, child) {
-                                    return FadeTransition(
-                                        opacity: animation, child: child);
-                                  },
-                                  transitionDuration:
-                                      const Duration(milliseconds: 500),
-                                ),
-                              );
+                              context.push(RouteNames.LOGIN); // Dùng GoRouter thay Navigator
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(

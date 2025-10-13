@@ -1,4 +1,4 @@
-import 'package:pbl6/features/shared/auth/data/models/register_response_model.dart';
+import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart'; // Import shared model
 
 enum UserRole { candidate, recruiter, manager }
 
@@ -27,22 +27,27 @@ class UserEntity {
     this.birthDate,
   });
 
-  factory UserEntity.fromRegisterResponse(UserResponse response) {
+  // Factory chung cho register/my-info (map từ UserApiResponse.result)
+  factory UserEntity.fromUserApiResponse(UserApiResponse response) {
+    if (response.result == null) throw Exception('No user data in response');
+    final userRes = response.result!;
     return UserEntity(
-      id: response.id,
-      username: response.username,
-      email: response.email,
-      fullName: response.fullName,
-      phone: response.phone,
-      address: response.address,
-      avatarUrl: response.avatarUrl,
-      roles: response.roles.map((role) => RoleEntity.fromRole(role)).toList(),
-      isEnabled: response.isEnabled,
-      birthDate: null, // Có thể lấy từ profile sau
+      id: userRes.id,
+      username: userRes.username,
+      email: userRes.email,
+      fullName: userRes.fullName,
+      phone: userRes.phone,
+      address: userRes.address,
+      avatarUrl: userRes.avatarUrl,
+      roles: userRes.roles.map((role) => RoleEntity.fromRole(role)).toList(),
+      isEnabled: userRes.isEnabled,
+      birthDate: null, // Lấy từ profile nếu cần
     );
   }
+  
 }
 
+// Giữ nguyên RoleEntity, PermissionEntity (map từ Role/Permission)
 class RoleEntity {
   final String name;
   final List<PermissionEntity> permissions;

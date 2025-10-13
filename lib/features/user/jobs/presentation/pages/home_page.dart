@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
+import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
 
 import '../../domain/entities/company.dart';
 import '../../domain/entities/job_post.dart';
@@ -16,7 +17,7 @@ import '../widgets/job_card.dart';
 import '../widgets/search_bar.dart';
 
 class HomePage extends StatefulWidget {
-  final User user;
+  final User user; // Giữ nguyên, nhưng sẽ load lại từ my-info nếu cần
 
   const HomePage({super.key, required this.user});
 
@@ -28,10 +29,12 @@ class _HomePageState extends State<HomePage> {
   late final GetJobsUseCase _getJobsUseCase;
   late final GetCategoriesUseCase _getCategoriesUseCase;
   late final JobRepository _jobRepository;
+  late final GetMyInfoUseCase _getMyInfoUseCase; // Thêm usecase cho my-info
 
   List<CategoryUiModel> _uiCategories = [];
   List<JobPost> _jobs = [];
   Map<String, Company> _companies = {};
+  User? _loadedUser; // User load từ my-info (thay vì mock)
 
   String? _selectedCategory;
   String? _searchQuery;
@@ -44,31 +47,46 @@ class _HomePageState extends State<HomePage> {
     _getJobsUseCase = GetIt.I<GetJobsUseCase>();
     _getCategoriesUseCase = GetIt.I<GetCategoriesUseCase>();
     _jobRepository = GetIt.I<JobRepository>();
+    _getMyInfoUseCase = GetIt.I<GetMyInfoUseCase>(); // Lấy từ DI
     _loadInitialData();
   }
 
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
 
-    final categories = await _getCategoriesUseCase();
-    final jobs = await _getJobsUseCase();
+    try {
+      // Load user info thực từ my-info API (UserEntity)
+      final loadedUserEntity = await _getMyInfoUseCase(); // Gọi API my-info
 
-    _uiCategories = categories
-        .map((entity) => CategoryUiModel.fromEntity(
-              entity,
-              isSelected: entity.name == 'All',
-            ))
-        .toList();
+      // Map UserEntity sang User (jobs entity)
+      _loadedUser = User.fromAuthEntity(loadedUserEntity); // Map để dùng trong jobs
 
-    _selectedCategory = 'All';
-    _jobs = jobs;
+      // Load categories và jobs
+      final categories = await _getCategoriesUseCase();
+      final jobs = await _getJobsUseCase();
 
-    for (final job in jobs) {
-      _companies[job.companyId] =
-          await _jobRepository.getCompany(job.companyId);
+      _uiCategories = categories
+          .map((entity) => CategoryUiModel.fromEntity(
+                entity,
+                isSelected: entity.name == 'All',
+              ))
+          .toList();
+
+      _selectedCategory = 'All';
+      _jobs = jobs;
+
+      // Load companies cho jobs
+      for (final job in jobs) {
+        _companies[job.companyId] = await _jobRepository.getCompany(job.companyId);
+      }
+    } catch (e) {
+      // Xử lý lỗi (e.g., show snackbar)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi load data: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    setState(() => _isLoading = false);
   }
 
   Future<void> _loadFilteredJobs({String? category, String? query}) async {
@@ -83,8 +101,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     for (final job in _jobs) {
-      _companies[job.companyId] =
-          await _jobRepository.getCompany(job.companyId);
+      _companies[job.companyId] = await _jobRepository.getCompany(job.companyId);
     }
 
     setState(() => _isLoading = false);
@@ -93,7 +110,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       backgroundColor: Colors.white,
+      backgroundColor: Colors.white,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -106,14 +123,14 @@ class _HomePageState extends State<HomePage> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : RefreshIndicator(
-                  onRefresh: _loadInitialData,
+                  onRefresh: _loadInitialData, // Pull to refresh load lại data thực
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        /// --- Header ---
-                        CustomAppBar(user: widget.user),
+                        /// --- Header (dùng user load từ my-info) ---
+                        CustomAppBar(user: _loadedUser ?? widget.user), // Ưu tiên data thực
 
                         const SizedBox(height: 12),
 
@@ -197,10 +214,7 @@ class _HomePageState extends State<HomePage> {
                                           }).toList();
                                         });
                                         _loadFilteredJobs(
-                                            category:
-
-                                                selectedModel.category.name);
-
+                                            category: selectedModel.category.name);
                                       },
                                     );
                                   },

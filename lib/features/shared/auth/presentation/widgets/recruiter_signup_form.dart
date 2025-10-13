@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:pbl6/features/shared/auth/data/models/register_request_model.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/register_usecase.dart';
-import 'package:pbl6/features/shared/auth/presentation/pages/login_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_dropdown_field.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_elevated_button.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_text_field.dart';
+import 'package:pbl6/routes/route_names.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RecruiterSignupForm extends StatefulWidget {
@@ -184,10 +185,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
 
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginPage()),
-            );
+           context.pushReplacementNamed(RouteNames.LOGIN);
           }
         });
       } catch (e) {
