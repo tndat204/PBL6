@@ -1,5 +1,6 @@
 package com.pbl6.profileservice.service.impl;
 
+import com.pbl6.profileservice.client.FileClient;
 import com.pbl6.profileservice.dto.request.ProfileRequest;
 import com.pbl6.profileservice.dto.response.ProfileResponse;
 import com.pbl6.profileservice.entity.Profile;
@@ -22,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -36,6 +38,7 @@ public class ProfileServiceImpl implements ProfileService {
     ProfileRepository profileRepository;
     ModelMapper modelMapper;
     SkillRepository skillRepository;
+    FileClient fileClient;
 
     @Transactional
     public ProfileResponse createProfile(ProfileRequest profileRequest) {
@@ -162,6 +165,18 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
         profile.setIsActive(!profile.getIsActive());
         profileRepository.save(profile);
+    }
+
+    @Override
+    public String uploadCv(MultipartFile file) {
+        UUID userId = getCurrentUserId();
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
+        String urlFile=fileClient.uploadFile(file,"cvs").getResult();
+        profile.setCvFile(urlFile);
+        profileRepository.save(profile);
+        return urlFile;
+
     }
 
     private UUID getCurrentUserId() {

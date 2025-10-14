@@ -2,6 +2,7 @@ package com.pbl6.profileservice.service;
 
 import com.pbl6.profileservice.dto.request.ProfileRequest;
 import com.pbl6.profileservice.dto.response.ProfileResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ProfileService {
     public ProfileResponse createProfile(ProfileRequest profileRequest);
@@ -9,5 +10,6 @@ public interface ProfileService {
     public ProfileResponse getMyProfile();
     public ProfileResponse getProfileByUserId(String userId);
     public void toggleActive();
+    public String uploadCv(MultipartFile file);
 
 }

@@ -7,6 +7,7 @@ import com.pbl6.profileservice.service.ProfileService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -56,6 +57,14 @@ public class ProfileController {
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Toggle status successfully")
+                .build();
+    }
+    @PutMapping("/upload-cv")
+    public APIResponse<String>  uploadCV(@RequestParam("file") MultipartFile file)
+    {
+        return APIResponse.<String>builder()
+                .code(200)
+                .result(profileService.uploadCv(file))
                 .build();
     }
 }
