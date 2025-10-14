@@ -179,6 +179,14 @@ public class ProfileServiceImpl implements ProfileService {
 
     }
 
+    @Override
+    public String getCv() {
+        UUID userId = getCurrentUserId();
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
+        return profile.getCvFile();
+    }
+
     private UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication.getPrincipal() instanceof Jwt jwt)) {

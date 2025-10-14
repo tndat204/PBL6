@@ -11,5 +11,6 @@ public interface ProfileService {
     public ProfileResponse getProfileByUserId(String userId);
     public void toggleActive();
     public String uploadCv(MultipartFile file);
+    public String getCv();
 
 }

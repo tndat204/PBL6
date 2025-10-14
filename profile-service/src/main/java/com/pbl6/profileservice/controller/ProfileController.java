@@ -41,6 +41,14 @@ public class ProfileController {
                 .result(profileService.getProfileByUserId(userId))
                 .build();
     }
+    @GetMapping("/cv")
+    public APIResponse<String> getCv()
+    {
+        return APIResponse.<String>builder()
+                .code(200)
+                .result(profileService.getCv())
+                .build();
+    }
 
     @PutMapping
     public APIResponse<ProfileResponse> updateProfile(@RequestBody ProfileRequest profileRequest) {

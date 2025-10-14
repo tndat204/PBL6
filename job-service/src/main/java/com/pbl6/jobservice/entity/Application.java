@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 @Entity
 @Table(name = "applications")
@@ -31,6 +32,11 @@ public class Application extends Base{
 
     @Column(columnDefinition = "TEXT")
     String notes;
+
+    @Column(nullable = false)
+    LocalDateTime appliedDate;
+
+    String cvFileUrl;
 
     public enum Status {
         SUBMITTED, REVIEWED, INTERVIEW, HIRED, REJECTED

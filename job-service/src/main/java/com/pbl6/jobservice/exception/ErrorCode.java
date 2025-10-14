@@ -15,7 +15,8 @@ public enum ErrorCode {
     JOB_NOT_FOUND(2002,"Công việc không tồn tại", HttpStatus.NOT_FOUND),
     NOT_ALLOW_TO_UPDATE(2003,"Bạn không được phép chỉnh sửa công việc cho công ty này", HttpStatus.FORBIDDEN),
     NOT_ALLOW_TO_DELETE(2004,"Bạn không được phép xóa công việc của công ty này", HttpStatus.FORBIDDEN),
-    COMPANY_NOT_ACTIVE(2005,"Công ty chưa được kích hoạt", HttpStatus.FORBIDDEN);
+    COMPANY_NOT_ACTIVE(2005,"Công ty chưa được kích hoạt", HttpStatus.FORBIDDEN),
+    APPLICATION_NOT_FOUND(2006,"Đơn ứng tuyển không tồn tại", HttpStatus.NOT_FOUND);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;
