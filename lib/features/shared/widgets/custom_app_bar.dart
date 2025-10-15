@@ -1,7 +1,7 @@
 // lib/features/jobs/presentation/widgets/custom_app_bar.dart
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/user.dart';
+import '../../user/jobs/domain/entities/user.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final User user;

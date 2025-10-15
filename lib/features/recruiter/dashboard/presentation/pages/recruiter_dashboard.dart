@@ -1,31 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class RecruiterDashboard extends StatelessWidget {
+class RecruiterDashboard extends StatefulWidget {
+  final Widget child;
+  const RecruiterDashboard({super.key, required this.child});
 
+  @override
+  State<RecruiterDashboard> createState() => _RecruiterDashboardState();
+}
 
-  const RecruiterDashboard({super.key});
+class _RecruiterDashboardState extends State<RecruiterDashboard> {
+  int _currentIndex = 0;
+
+  final List<String> _routes = [
+    '/recruiter/home',
+    '/recruiter/projects',
+    '/recruiter/messages',
+    '/recruiter/profile',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recruiter Dashboard'),
-        backgroundColor: Colors.green, // Mock color for recruiter
+        title: const Text('Nhà tuyển dụng'),
+        backgroundColor: Colors.orange,
+        centerTitle: true,
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.business_center, size: 100, color: Colors.green),
-            SizedBox(height: 20),
-            Text(
-              'Welcome to Recruiter Dashboard',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('Manage jobs, profiles, reports, companies'),
-          ],
-        ),
+      body: widget.child,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        selectedItemColor: Colors.orange,
+        unselectedItemColor: Colors.grey,
+        onTap: (index) {
+          if (_currentIndex != index) {
+            setState(() => _currentIndex = index);
+            context.go(_routes[index]);
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Dự án'),
+          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Tin nhắn'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Hồ sơ'),
+        ],
       ),
     );
   }

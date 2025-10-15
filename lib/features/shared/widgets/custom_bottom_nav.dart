@@ -1,22 +1,25 @@
+// lib/shared/widgets/custom_bottom_nav.dart
 import 'package:flutter/material.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final List<BottomNavigationBarItem> items;
 
   const CustomBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.items,
   });
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      minimum: const EdgeInsets.only(bottom: 8), // tránh bị đè ở thiết bị có thanh điều hướng
+      minimum: const EdgeInsets.only(bottom: 8),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.symmetric(vertical: 4), // 🔥 giảm độ dày thanh
+ 
         decoration: BoxDecoration(
           color: Colors.black87,
           borderRadius: BorderRadius.circular(32),
@@ -41,24 +44,7 @@ class CustomBottomNav extends StatelessWidget {
             showUnselectedLabels: false,
             elevation: 0,
             iconSize: 26,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_rounded),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.work_outline_rounded),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.chat_bubble_outline_rounded),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline_rounded),
-                label: '',
-              ),
-            ],
+            items: items,
           ),
         ),
       ),

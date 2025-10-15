@@ -7,11 +7,11 @@ import '../datasources/user_remote_datasource.dart';
 class UserRepositoryImpl implements UserRepository {
   final UserRemoteDataSource remoteDataSource;
 
-  UserRepositoryImpl(UserRemoteDataSource userRemoteDataSource, {required this.remoteDataSource});
+  UserRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<UserApiResponse> getMyInfo() async {
     return await remoteDataSource.getMyInfo();
   }
-
 }
+

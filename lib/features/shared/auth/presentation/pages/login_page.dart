@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jwt_decode/jwt_decode.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/data/services/google_sign_in_service.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
@@ -44,31 +45,58 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    try {
-      final idToken = await _googleSignInService.getIdToken();
-      if (idToken != null) {
-        final response = await _loginUseCase.googleLogin(idToken);
-        if (response.code == 200 && response.result != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', response.result!.token);
-          context.push(RouteNames.LOGIN);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Đăng nhập Google thất bại: ${response.code}')),
-          );
+ Future<void> _handleGoogleSignIn() async {
+  try {
+    final idToken = await _googleSignInService.getIdToken();
+
+    if (idToken != null) {
+      final response = await _loginUseCase.googleLogin(idToken);
+
+      if (response.code == 200 && response.result != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final token = response.result!.token;
+        await prefs.setString('auth_token', token);
+
+        // 🧩 Giống như login thường: decode token để biết vai trò
+        final decodedToken = Jwt.parseJwt(token);
+        final scope = decodedToken['scope'] ?? 'ROLE_USER';
+
+        String targetRoute = RouteNames.USER_DASHBOARD; // mặc định
+
+        switch (scope) {
+          case 'ROLE_ADMIN':
+            targetRoute = RouteNames.ADMIN_DASHBOARD;
+            break;
+          case 'ROLE_RECRUITER':
+            targetRoute = RouteNames.RECRUITER_DASHBOARD;
+            break;
+          case 'ROLE_USER':
+          default:
+            targetRoute = RouteNames.USER_DASHBOARD;
         }
+
+        // 🧠 Lưu thêm role nếu cần guard hoặc my-info
+        await prefs.setString('user_role', scope);
+
+        // ✅ Điều hướng tới dashboard tương ứng
+        context.go(targetRoute);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể lấy ID Token từ Google')),
+          SnackBar(content: Text('Đăng nhập Google thất bại: ${response.code}')),
         );
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
+        const SnackBar(content: Text('Không thể lấy ID Token từ Google')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Lỗi: $e')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

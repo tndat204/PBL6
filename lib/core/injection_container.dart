@@ -11,6 +11,7 @@ import 'package:pbl6/features/shared/auth/domain/usecases/forgot_password_usecas
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/register_usecase.dart';
 import 'package:pbl6/features/shared/user/data/datasources/user_remote_datasource.dart';
+import 'package:pbl6/features/shared/user/data/repositories/user_repository_impl.dart';
 import 'package:pbl6/features/shared/user/domain/repositories/user_repository.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
 import 'package:pbl6/features/user/jobs/data/datasources/job_local_datasource.dart'; // Import JobLocalDataSource
@@ -27,11 +28,15 @@ void init() {
   sl.registerSingleton<DioClient>(DioClient());
 
   // Dio riêng cho provinces API
-  sl.registerSingleton<Dio>(Dio(BaseOptions(
-    baseUrl: 'https://provinces.open-api.vn/api/',
-    connectTimeout: const Duration(seconds: 50),
-    receiveTimeout: const Duration(seconds: 50),
-  )));
+  sl.registerSingleton<Dio>(
+    Dio(
+      BaseOptions(
+        baseUrl: 'https://provinces.open-api.vn/api/',
+        connectTimeout: const Duration(seconds: 50),
+        receiveTimeout: const Duration(seconds: 50),
+      ),
+    ),
+  );
 
   // ApiService dùng Dio riêng cho provinces
   sl.registerSingleton<ApiService>(ApiService(sl<Dio>()));
@@ -46,19 +51,32 @@ void init() {
     () => UserRemoteDataSourceImpl(sl<ApiService>(), sl<DioClient>().instance),
   );
 
-
-
   // Các phần khác giữ nguyên
-  sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl<AuthRemoteDataSource>()));
-  sl.registerSingleton<ForgotPasswordUseCase>(ForgotPasswordUseCase(sl<AuthRepository>()));
+  sl.registerSingleton<AuthRepository>(
+    AuthRepositoryImpl(sl<AuthRemoteDataSource>()),
+  );
+  sl.registerSingleton<ForgotPasswordUseCase>(
+    ForgotPasswordUseCase(sl<AuthRepository>()),
+  );
   sl.registerSingleton<LoginUseCase>(LoginUseCase(sl<AuthRepository>()));
   sl.registerSingleton<GoogleSignInService>(GoogleSignInService());
   sl.registerSingleton<RegisterUseCase>(RegisterUseCase(sl<AuthRepository>()));
 
   sl.registerLazySingleton<JobLocalDataSource>(() => JobLocalDataSource());
-  sl.registerLazySingleton<JobRepository>(() => JobRepositoryImpl(sl<JobLocalDataSource>()));
-  sl.registerLazySingleton<GetJobsUseCase>(() => GetJobsUseCase(sl<JobRepository>()));
-  sl.registerLazySingleton<GetCategoriesUseCase>(() => GetCategoriesUseCase(sl<JobRepository>()));
+  sl.registerLazySingleton<JobRepository>(
+    () => JobRepositoryImpl(sl<JobLocalDataSource>()),
+  );
+  sl.registerLazySingleton<GetJobsUseCase>(
+    () => GetJobsUseCase(sl<JobRepository>()),
+  );
+  sl.registerLazySingleton<GetCategoriesUseCase>(
+    () => GetCategoriesUseCase(sl<JobRepository>()),
+  );
+  sl.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(remoteDataSource: sl<UserRemoteDataSource>()),
+  );
 
-  sl.registerLazySingleton<GetMyInfoUseCase>(() => GetMyInfoUseCase(sl<UserRepository>()));
+  sl.registerLazySingleton<GetMyInfoUseCase>(
+    () => GetMyInfoUseCase(sl<UserRepository>()),
+  );
 }

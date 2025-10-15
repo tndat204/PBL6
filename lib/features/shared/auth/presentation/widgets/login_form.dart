@@ -36,100 +36,98 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      try {
-        final response = await _loginUseCase(
-          email: _emailController.text,
-          password: _passwordController.text,
+  if (_formKey.currentState!.validate()) {
+    setState(() => _isLoading = true);
+    try {
+      final response = await _loginUseCase(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      if (response.code == 200 && response.result?.token != null) {
+        final token = response.result!.token;
+        final prefs = await SharedPreferences.getInstance();
+
+        // ✅ Luôn lưu token (dù không rememberMe)
+        await prefs.setString('auth_token', token);
+
+        // Decode token để lấy role, userId, email
+        final decodedToken = Jwt.parseJwt(token);
+        final email = decodedToken['sub'] ?? _emailController.text;
+        final userId = decodedToken['userId'] ?? const Uuid().v4().toString();
+        final scope = decodedToken['scope'] ?? 'ROLE_USER';
+
+        // Map scope sang UserRole
+        UserRole role;
+        switch (scope) {
+          case 'ROLE_RECRUITER':
+            role = UserRole.recruiter;
+            break;
+          case 'ROLE_ADMIN':
+            role = UserRole.admin;
+            break;
+          default:
+            role = UserRole.user;
+        }
+
+        // Lưu role & userId vào prefs để guard dùng
+        await prefs.setString('user_role', role.toString());
+        await prefs.setString('user_id', userId);
+
+        // Nếu rememberMe thì đánh dấu cờ remember
+        await prefs.setBool('remember_me', _rememberMe);
+
+        // Tạo User tạm
+        final user = User(
+          id: userId,
+          name: 'Unknown',
+          email: email,
+          birthday: DateTime(1990, 1, 1),
+          role: role,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
 
-        if (response.code == 200 && response.result?.token != null) {
-          final token = response.result!.token;
+        // ✅ Hiển thị toast thành công
+        MotionToast(
+          icon: Icons.check_circle,
+          primaryColor: AppPallete.lightGradient,
+          secondaryColor: const Color.fromARGB(255, 74, 98, 138),
+          title: const Text(
+            "Thành công",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          description: const Text(
+            "Đăng nhập thành công",
+            style: TextStyle(color: AppPallete.backgroundColor),
+          ),
+          animationType: AnimationType.slideInFromLeft,
+          toastDuration: const Duration(seconds: 2),
+          toastAlignment: Alignment.topLeft,
+          borderRadius: 12,
+          width: 320,
+          height: 90,
+        ).show(context);
 
-          // Lưu token nếu rememberMe
-          if (_rememberMe) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('auth_token', token);
+        // Điều hướng đến dashboard sau 2 giây
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            context.go('/dashboard');
           }
-
-          // Decode token để lấy role, userId, email
-          final decodedToken = Jwt.parseJwt(token);
-          final email = decodedToken['sub'] ?? _emailController.text;
-          final userId = decodedToken['userId'] ?? const Uuid().v4().toString();
-          final scope = decodedToken['scope'] ?? 'ROLE_USER';
-
-          // Map scope sang UserRole mới
-          UserRole role;
-          switch (scope) {
-            case 'ROLE_RECRUITER':
-              role = UserRole.recruiter;
-              break;
-            case 'ROLE_ADMIN':
-              role = UserRole.admin;
-              break;
-            default:
-              role = UserRole.user; // ROLE_USER hoặc default
-          }
-
-          // Lưu role và userId vào prefs (guard dùng)
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user_role', role.toString());
-          await prefs.setString('user_id', userId);
-
-          // Tạo User từ decoded data
-          final user = User(
-            id: userId,
-            name: 'Unknown', // Load từ my-info sau
-            email: email,
-            birthday: DateTime(1990, 1, 1), // Mặc định
-            role: role,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
-
-          // Hiển thị toast thành công
-          MotionToast(
-            icon: Icons.check_circle,
-            primaryColor: AppPallete.lightGradient,
-            secondaryColor: Color.fromARGB(255, 74, 98, 138), 
-            title: const Text(
-              "Thành công",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            description: const Text(
-              "Đăng nhập thành công",
-              style: TextStyle(color: AppPallete.backgroundColor),
-            ),
-            animationType: AnimationType.slideInFromLeft,
-            toastDuration: const Duration(seconds: 2),
-            toastAlignment: Alignment.topLeft, 
-            borderRadius: 12,
-            width: 320,
-            height: 90,
-          ).show(context);
-
-          // Route đến dashboard dựa trên role sau 2 giây (GoRouter tự redirect nếu cần)
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) {
-              context.go('/dashboard'); // GoRouter sẽ redirect dựa trên guard/role
-            }
-          });
-        } else if (response.code == 1023) {
-          _showErrorSnackBar('Sai mật khẩu');
-        } else {
-          _showErrorSnackBar('Đăng nhập thất bại, vui lòng thử lại');
-        }
-      } catch (e) {
-        _showErrorSnackBar('Lỗi: $e');
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
+        });
+      } else if (response.code == 1023) {
+        _showErrorSnackBar('Sai mật khẩu');
+      } else {
+        _showErrorSnackBar('Đăng nhập thất bại, vui lòng thử lại');
       }
+    } catch (e) {
+      _showErrorSnackBar('Lỗi: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
+}
+
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

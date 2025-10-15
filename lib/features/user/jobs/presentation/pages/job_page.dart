@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
 
+import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../domain/entities/company.dart';
 import '../../domain/entities/job_post.dart';
 import '../../domain/entities/user.dart';
@@ -11,21 +12,17 @@ import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_jobs_usecase.dart';
 import '../models/category_ui_model.dart';
 import '../widgets/category_chip.dart';
-import '../widgets/custom_app_bar.dart';
-import '../widgets/custom_bottom_nav.dart';
 import '../widgets/job_card.dart';
 import '../widgets/search_bar.dart';
 
-class HomePage extends StatefulWidget {
-  final User user; // Giữ nguyên, nhưng sẽ load lại từ my-info nếu cần
-
-  const HomePage({super.key, required this.user});
+class JobPage extends StatefulWidget {
+  const JobPage({super.key}); // Sửa lại constructor không cần user
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<JobPage> createState() => _JobPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _JobPageState extends State<JobPage> {
   late final GetJobsUseCase _getJobsUseCase;
   late final GetCategoriesUseCase _getCategoriesUseCase;
   late final JobRepository _jobRepository;
@@ -47,7 +44,7 @@ class _HomePageState extends State<HomePage> {
     _getJobsUseCase = GetIt.I<GetJobsUseCase>();
     _getCategoriesUseCase = GetIt.I<GetCategoriesUseCase>();
     _jobRepository = GetIt.I<JobRepository>();
-    _getMyInfoUseCase = GetIt.I<GetMyInfoUseCase>(); // Lấy từ DI
+    _getMyInfoUseCase = GetIt.I<GetMyInfoUseCase>();
     _loadInitialData();
   }
 
@@ -123,14 +120,17 @@ class _HomePageState extends State<HomePage> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : RefreshIndicator(
-                  onRefresh: _loadInitialData, // Pull to refresh load lại data thực
+                  onRefresh: _loadInitialData,
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         /// --- Header (dùng user load từ my-info) ---
-                        CustomAppBar(user: _loadedUser ?? widget.user), // Ưu tiên data thực
+                        if (_loadedUser != null)
+                          CustomAppBar(user: _loadedUser!)
+                        else
+                          const SizedBox.shrink(),
 
                         const SizedBox(height: 12),
 
@@ -274,13 +274,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      // 🔹 Thanh điều hướng dưới cùng
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
-      ),
-    );
+       );
   }
 }

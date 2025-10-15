@@ -8,13 +8,15 @@ import 'package:pbl6/features/shared/auth/presentation/pages/signup_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/unauthorized_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/verify_otp_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/welcome_page.dart';
+import 'package:pbl6/features/user/dashboard/presentation/pages/user_dashboard.dart';
+import 'package:pbl6/features/user/user_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/admin/dashboard/presentation/pages/admin_dashboard.dart';
 import '../features/recruiter/dashboard/presentation/pages/recruiter_dashboard.dart';
 import '../features/shared/auth/presentation/pages/login_page.dart';
 import '../features/shared/auth/presentation/pages/role_selection_screen.dart';
-import '../features/user/dashboard/presentation/pages/user_dashboard.dart';
+import '../features/user/jobs/presentation/pages/job_page.dart'; // Thêm import này
 import 'route_guard.dart';
 import 'route_names.dart';
 
@@ -172,25 +174,88 @@ final GoRouter router = GoRouter(
       },
     ),
 
-    // 🟢 Dashboards
+  ShellRoute(
+  builder: (context, state, child) => UserShell(child: child),
+  routes: [
     GoRoute(
-      path: RouteNames.USER_DASHBOARD,
-      name: RouteNames.USER_DASHBOARD,
-      pageBuilder: (context, state) => fadeTransition(UserDashboard(), state),
+      path: '/user/dashboard',
+      builder: (_, __) => const UserDashboard(),
     ),
     GoRoute(
-      path: RouteNames.RECRUITER_DASHBOARD,
-      name: RouteNames.RECRUITER_DASHBOARD,
-      pageBuilder: (context, state) =>
-          fadeTransition(RecruiterDashboard(), state),
+      path: '/user/jobs',
+      builder: (_, __) => const JobPage(), // Trang chính đã load my-info
     ),
     GoRoute(
-      path: RouteNames.ADMIN_DASHBOARD,
-      name: RouteNames.ADMIN_DASHBOARD,
-      pageBuilder: (context, state) => fadeTransition(AdminDashboard(), state),
+      path: '/user/messages',
+      builder: (_, __) => const PlaceholderScreen(title: 'Messages'),
+    ),
+    GoRoute(
+      path: '/user/profile',
+      builder: (_, __) => const PlaceholderScreen(title: 'Profile'),
     ),
   ],
+),
+
+
+ShellRoute(
+  builder: (context, state, child) => RecruiterDashboard(child: child),
+  routes: [
+    GoRoute(
+      path: '/recruiter/dashboard',
+      builder: (_, __) => const PlaceholderScreen(title: 'Recruiter Dashboard'),
+    ),
+    GoRoute(
+      path: '/recruiter/home',
+      builder: (_, __) => const PlaceholderScreen(title: 'Recruiter Home'),
+    ),
+    GoRoute(
+      path: '/recruiter/projects',
+      builder: (_, __) => const PlaceholderScreen(title: 'Projects'),
+    ),
+    GoRoute(
+      path: '/recruiter/profile',
+      builder: (_, __) => const PlaceholderScreen(title: 'Profile'),
+    ),
+  ],
+),
+
+ShellRoute(
+  builder: (context, state, child) => AdminDashboard(child: child),
+  routes: [
+    GoRoute(
+      path: '/admin/dashboard',
+      builder: (_, __) => const PlaceholderScreen(title: 'Admin Dashboard'),
+    ),
+    GoRoute(
+      path: '/admin/home',
+      builder: (_, __) => const PlaceholderScreen(title: 'Admin Home'),
+    ),
+    GoRoute(
+      path: '/admin/users',
+      builder: (_, __) => const PlaceholderScreen(title: 'Users'),
+    ),
+    GoRoute(
+      path: '/admin/settings',
+      builder: (_, __) => const PlaceholderScreen(title: 'Settings'),
+    ),
+  ],
+),
+
+
+  ],
+  
   redirect: routeGuard,
   errorBuilder: (context, state) =>
       Scaffold(body: Center(child: Text('Error: ${state.error}'))),
 );
+class PlaceholderScreen extends StatelessWidget {
+  final String title;
+  const PlaceholderScreen({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(title, style: const TextStyle(fontSize: 22)),
+    );
+  }
+}
