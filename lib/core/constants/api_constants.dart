@@ -12,4 +12,10 @@ class ApiConstants {
   static const String register = '/api/user/internal/register';
   //user
   static const String getMyInfo = '/api/user/my-info';
+  //job
+  static const String jobs = '/api/job';
+  //company
+  static const String companies = '/api/job/company';
+  //profike
+  static const String profile= 'api/profile';
 }

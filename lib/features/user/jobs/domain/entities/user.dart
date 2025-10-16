@@ -1,68 +1,107 @@
-// lib/features/jobs/domain/entities/user.dart (cập nhật để không expose password, map từ UserEntity hoặc RegisterResponse)
-import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
-import 'package:pbl6/features/shared/auth/domain/entities/user_entity.dart'; // Import UserEntity từ auth
-import 'package:uuid/uuid.dart'; // Nếu dùng UUID
+import 'package:pbl6/features/shared/auth/domain/entities/user_entity.dart'; // UserEntity từ auth
+import 'package:uuid/uuid.dart';
 
-enum UserRole { user, recruiter, admin } // Từ Role table
+/// Các vai trò có thể có
+enum UserRole { user, recruiter, admin }
 
+/// Entity User dùng trong module Jobs
 class User {
-  final String id; // UUID
-  final String name; // Từ fullName trong ERD/response
-  final String email; // Tái sử dụng từ UserEntity
-  final DateTime birthday; // Từ ERD (birthDate)
-  final UserRole role; // FK to Role
+  final String id;
+  final String username;
+  final String fullName;
+  final String email;
+  final String phone;
+  final String address;
+  final String avatarUrl;
+  final UserRole role;
+  final bool isEnabled;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const User({
     required this.id,
-    required this.name,
+    required this.username,
+    required this.fullName,
     required this.email,
-    required this.birthday,
+    required this.phone,
+    required this.address,
+    required this.avatarUrl,
     required this.role,
+    required this.isEnabled,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  // Factory để map từ UserEntity (auth) sau login/register (bỏ password)
-  factory User.fromAuthEntity(UserEntity authEntity, {String name = '', DateTime? birthday}) {
+  /// Map từ `UserEntity` của Auth (API /my-info)
+  factory User.fromAuthEntity(UserEntity entity) {
+    // Lấy role đầu tiên nếu có
+    UserRole mappedRole = UserRole.user;
+    if (entity.roles.isNotEmpty) {
+      final roleName = entity.roles.first.name.toLowerCase();
+      if (roleName.contains('recruiter')) {
+        mappedRole = UserRole.recruiter;
+      } else if (roleName.contains('admin') || roleName.contains('manager')) {
+        mappedRole = UserRole.admin;
+      }
+    }
+
     return User(
-      id: const Uuid().v4(),
-      name: name.isEmpty ? authEntity.fullName ?? 'Unknown' : name, // Sử dụng fullName nếu có
-      email: authEntity.email,
-      birthday: birthday ?? DateTime.now(),
-      role: UserRole.user, // Mặc định cho Candidates; thay bằng response.roles nếu có
+      id: entity.id.isNotEmpty ? entity.id : const Uuid().v4(),
+      username: entity.username,
+      fullName: entity.fullName ?? '',
+      email: entity.email,
+      phone: entity.phone ?? '',
+      address: entity.address ?? '',
+      avatarUrl: entity.avatarUrl ?? '',
+      role: mappedRole,
+      isEnabled: entity.isEnabled ?? true,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
 
-  // Factory để map từ RegisterResponse (sau register, nếu cần)
-  factory User.fromRegisterResponse(UserResponse response) {
-    UserRole role;
-    if (response.roles.isNotEmpty) {
-      switch (response.roles.first.name.toLowerCase()) {
-        case 'recruiter':
-          role = UserRole.recruiter;
-          break;
-        case 'manager':
-          role = UserRole.admin;
-          break;
-        default:
-          role = UserRole.user;
+  /// Nếu muốn map trực tiếp từ JSON response
+  factory User.fromJson(Map<String, dynamic> json) {
+    final result = json['result'] ?? json;
+
+    UserRole mappedRole = UserRole.user;
+    if (result['roles'] != null && result['roles'] is List && result['roles'].isNotEmpty) {
+      final roleName = result['roles'][0]['name'].toString().toLowerCase();
+      if (roleName.contains('recruiter')) {
+        mappedRole = UserRole.recruiter;
+      } else if (roleName.contains('admin') || roleName.contains('manager')) {
+        mappedRole = UserRole.admin;
       }
-    } else {
-      role = UserRole.user; // Mặc định
     }
 
     return User(
-      id: response.id,
-      name: response.fullName,
-      email: response.email,
-      birthday: DateTime.now(), // Lấy từ profile sau nếu cần
-      role: role,
+      id: result['id'] ?? const Uuid().v4(),
+      username: result['username'] ?? '',
+      fullName: result['fullName'] ?? '',
+      email: result['email'] ?? '',
+      phone: result['phone'] ?? '',
+      address: result['address'] ?? '',
+      avatarUrl: result['avatarUrl'] ?? '',
+      role: mappedRole,
+      isEnabled: result['isEnabled'] ?? true,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+      'address': address,
+      'avatarUrl': avatarUrl,
+      'role': role.name,
+      'isEnabled': isEnabled,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
   }
 }

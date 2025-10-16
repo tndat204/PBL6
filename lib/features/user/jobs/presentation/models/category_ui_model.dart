@@ -1,4 +1,4 @@
-import '../../domain/entities/category.dart';
+import '../../../../shared/category/domain/entities/category.dart';
 
 class CategoryUiModel {
   final Category category; // Wrap entity

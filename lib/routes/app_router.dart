@@ -1,6 +1,9 @@
 // lib/routes/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pbl6/features/admin/admin_shell.dart';
+import 'package:pbl6/features/recruiter/dashboard/presentation/pages/recruiter_dashboard.dart';
+import 'package:pbl6/features/recruiter/recruiter_shell.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/forgot_password_email_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/recruiter_signup_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/reset_password_page.dart';
@@ -13,7 +16,6 @@ import 'package:pbl6/features/user/user_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/admin/dashboard/presentation/pages/admin_dashboard.dart';
-import '../features/recruiter/dashboard/presentation/pages/recruiter_dashboard.dart';
 import '../features/shared/auth/presentation/pages/login_page.dart';
 import '../features/shared/auth/presentation/pages/role_selection_screen.dart';
 import '../features/user/jobs/presentation/pages/job_page.dart'; // Thêm import này
@@ -183,7 +185,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/user/jobs',
-      builder: (_, __) => const JobPage(), // Trang chính đã load my-info
+      builder: (_, __) => const JobPage(), 
     ),
     GoRoute(
       path: '/user/messages',
@@ -198,11 +200,11 @@ final GoRouter router = GoRouter(
 
 
 ShellRoute(
-  builder: (context, state, child) => RecruiterDashboard(child: child),
+  builder: (context, state, child) => RecruiterShell(child: child),
   routes: [
     GoRoute(
       path: '/recruiter/dashboard',
-      builder: (_, __) => const PlaceholderScreen(title: 'Recruiter Dashboard'),
+      builder: (_, __) => const RecruiterDashboard(),
     ),
     GoRoute(
       path: '/recruiter/home',
@@ -220,11 +222,11 @@ ShellRoute(
 ),
 
 ShellRoute(
-  builder: (context, state, child) => AdminDashboard(child: child),
+  builder: (context, state, child) => AdminShell(child: child),
   routes: [
     GoRoute(
       path: '/admin/dashboard',
-      builder: (_, __) => const PlaceholderScreen(title: 'Admin Dashboard'),
+      builder: (_, __) => const AdminDashboard(),
     ),
     GoRoute(
       path: '/admin/home',

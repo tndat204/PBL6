@@ -1,26 +1,19 @@
-import '../../domain/entities/category.dart';
-import '../../domain/entities/company.dart';
-import '../../domain/entities/job_post.dart';
+import '../../domain/entities/job.dart';
 import '../../domain/repositories/job_repository.dart';
-import '../datasources/job_local_datasource.dart'; // Sau thay remote
+import '../datasources/job_remote_datasource.dart';
 
 class JobRepositoryImpl implements JobRepository {
-  final JobLocalDataSource localDataSource; // Sau: + RemoteDataSource
+  final JobRemoteDataSource remoteDataSource;
 
-  JobRepositoryImpl(this.localDataSource);
+  JobRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<JobPost>> getJobs({String? category, String? searchQuery}) async {
-    return localDataSource.getJobs(category: category, searchQuery: searchQuery);
+  Future<List<Job>> fetchAllJobs({String? category, String? keyword}) async {
+    return remoteDataSource.fetchAllJobs(category: category, keyword: keyword);
   }
 
   @override
-  Future<Company> getCompany(String companyId) async {
-    return localDataSource.getCompany(companyId);
-  }
-
-  @override
-  Future<List<Category>> getCategories() async {
-    return localDataSource.getCategories();
+  Future<Job> fetchJobDetails(String jobId) async {
+    return remoteDataSource.fetchJobDetails(jobId);
   }
 }

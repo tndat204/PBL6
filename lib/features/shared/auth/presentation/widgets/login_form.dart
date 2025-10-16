@@ -77,16 +77,7 @@ class _LoginFormState extends State<LoginForm> {
         // Nếu rememberMe thì đánh dấu cờ remember
         await prefs.setBool('remember_me', _rememberMe);
 
-        // Tạo User tạm
-        final user = User(
-          id: userId,
-          name: 'Unknown',
-          email: email,
-          birthday: DateTime(1990, 1, 1),
-          role: role,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+        
 
         // ✅ Hiển thị toast thành công
         MotionToast(

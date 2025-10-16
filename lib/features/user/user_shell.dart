@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/widgets/custom_bottom_nav.dart';
 
 
@@ -49,13 +50,13 @@ class _UserShellState extends State<UserShell> {
                 },
                 items: const [
                   BottomNavigationBarItem(
-                      icon: Icon(Icons.home_rounded), label: ''),
+                      icon: Icon(Icons.home_rounded), label: 'Tổng quan'),
                   BottomNavigationBarItem(
-                      icon: Icon(Icons.work_outline_rounded), label: ''),
+                      icon: Icon(Icons.work_outline_rounded), label: 'Việc làm'),
                   BottomNavigationBarItem(
-                      icon: Icon(Icons.chat_bubble_outline_rounded), label: ''),
+                      icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Đánh giá'),
                   BottomNavigationBarItem(
-                      icon: Icon(Icons.person_outline_rounded), label: ''),
+                      icon: Icon(Icons.person_outline_rounded), label: 'Hồ sơ'),
                 ],
               ),
             ),
@@ -63,7 +64,7 @@ class _UserShellState extends State<UserShell> {
         ],
       ),
       extendBody: true, // ✅ Giúp nội dung phía dưới hiển thị mượt khi bar nổi
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppPallete.backgroundColor,
     );
   }
 }

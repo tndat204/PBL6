@@ -1,8 +1,7 @@
-// lib/features/jobs/presentation/widgets/custom_app_bar.dart
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/api_constants.dart';
 import '../../user/jobs/domain/entities/user.dart';
-
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final User user;
 
@@ -10,6 +9,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Base URL của server (có thể chỉnh theo Dũng dùng)
+    const String baseUrl = ApiConstants.baseUrl; // Hoặc domain thật
+
+    // Tạo đường dẫn đầy đủ cho avatar (nếu có)
+    final String? avatarUrl = (user.avatarUrl.isNotEmpty)
+        ? (user.avatarUrl.startsWith('http')
+            ? user.avatarUrl
+            : '$baseUrl${user.avatarUrl}')
+        : null;
+
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -18,8 +27,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundImage: const AssetImage('assets/images/avatar.png'),
             backgroundColor: Colors.grey.shade300,
+            backgroundImage: avatarUrl != null
+                ? NetworkImage(avatarUrl)
+                : const AssetImage('assets/images/avatar.png') as ImageProvider,
+            onBackgroundImageError: (_, __) {
+              // Nếu load lỗi thì fallback về ảnh mặc định
+            },
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -28,7 +42,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Welcome back',
+                  'Chào mừng trở lại!',
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontWeight: FontWeight.w400,
@@ -37,7 +51,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  user.name,
+                  user.fullName.isNotEmpty ? user.fullName : 'Người dùng',
                   style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.w700,
@@ -54,10 +68,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         Container(
           margin: const EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
-                       borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700, size: 30),
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: Colors.grey.shade700,
+              size: 30,
+            ),
             onPressed: () {},
           ),
         ),

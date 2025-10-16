@@ -39,6 +39,7 @@ flutter:
     - assets/images/recruiter.png
     - assets/images/student.png
     - assets/images/welcome_screen.jpg
+    - assets/images/avatar.png
   fonts:
     - family: Italianno
       fonts:

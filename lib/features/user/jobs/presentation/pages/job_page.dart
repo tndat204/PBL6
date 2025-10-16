@@ -1,107 +1,100 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
+import 'package:pbl6/features/shared/category/domain/usecases/get_all_categories_usecase.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
+import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
 
 import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../domain/entities/company.dart';
-import '../../domain/entities/job_post.dart';
+import '../../domain/entities/job.dart';
 import '../../domain/entities/user.dart';
-import '../../domain/repositories/job_repository.dart';
-import '../../domain/usecases/get_categories_usecase.dart';
-import '../../domain/usecases/get_jobs_usecase.dart';
+import '../../domain/usecases/get_all_jobs_usecase.dart';
 import '../models/category_ui_model.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/job_card.dart';
 import '../widgets/search_bar.dart';
 
 class JobPage extends StatefulWidget {
-  const JobPage({super.key}); // Sửa lại constructor không cần user
+  const JobPage({super.key});
 
   @override
   State<JobPage> createState() => _JobPageState();
 }
 
 class _JobPageState extends State<JobPage> {
-  late final GetJobsUseCase _getJobsUseCase;
-  late final GetCategoriesUseCase _getCategoriesUseCase;
-  late final JobRepository _jobRepository;
-  late final GetMyInfoUseCase _getMyInfoUseCase; // Thêm usecase cho my-info
+  late final GetAllJobsUseCase _getAllJobsUseCase;
+  late final GetAllCategoriesUseCase _getAllCategoriesUseCase;
+  late final GetMyInfoUseCase _getMyInfoUseCase;
+  late final GetCompanyDetailsUseCase _getCompanyDetailsUseCase;
 
   List<CategoryUiModel> _uiCategories = [];
-  List<JobPost> _jobs = [];
-  Map<String, Company> _companies = {};
-  User? _loadedUser; // User load từ my-info (thay vì mock)
+  List<Job> _allJobs = [];
+  List<Job> _filteredJobs = [];
+  User? _loadedUser;
 
   String? _selectedCategory;
   String? _searchQuery;
   bool _isLoading = true;
-  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _getJobsUseCase = GetIt.I<GetJobsUseCase>();
-    _getCategoriesUseCase = GetIt.I<GetCategoriesUseCase>();
-    _jobRepository = GetIt.I<JobRepository>();
+    _getAllJobsUseCase = GetIt.I<GetAllJobsUseCase>();
+    _getAllCategoriesUseCase = GetIt.I<GetAllCategoriesUseCase>();
     _getMyInfoUseCase = GetIt.I<GetMyInfoUseCase>();
+    _getCompanyDetailsUseCase = GetIt.I<GetCompanyDetailsUseCase>();
     _loadInitialData();
   }
 
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
-
     try {
-      // Load user info thực từ my-info API (UserEntity)
-      final loadedUserEntity = await _getMyInfoUseCase(); // Gọi API my-info
+      final userEntity = await _getMyInfoUseCase();
+      _loadedUser = User.fromAuthEntity(userEntity);
+      final categories = await _getAllCategoriesUseCase();
+      final jobs = await _getAllJobsUseCase();
 
-      // Map UserEntity sang User (jobs entity)
-      _loadedUser = User.fromAuthEntity(loadedUserEntity); // Map để dùng trong jobs
+      final jobsWithCompany = await Future.wait(
+        jobs.map((job) async {
+          final company = await _getCompanyDetailsUseCase(job.companyId);
+          return job.copyWith(
+      companyName: company.name,
+      logoUrl: company.logoUrl, // thêm dòng này
+    );
+        }),
+      );
 
-      // Load categories và jobs
-      final categories = await _getCategoriesUseCase();
-      final jobs = await _getJobsUseCase();
+      _allJobs = jobsWithCompany;
+      _filteredJobs = List.from(_allJobs);
 
       _uiCategories = categories
-          .map((entity) => CategoryUiModel.fromEntity(
-                entity,
-                isSelected: entity.name == 'All',
-              ))
+          .map((c) => CategoryUiModel.fromEntity(c, isSelected: false))
           .toList();
-
-      _selectedCategory = 'All';
-      _jobs = jobs;
-
-      // Load companies cho jobs
-      for (final job in jobs) {
-        _companies[job.companyId] = await _jobRepository.getCompany(job.companyId);
-      }
     } catch (e) {
-      // Xử lý lỗi (e.g., show snackbar)
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi load data: $e')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi tải dữ liệu: $e')));
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _loadFilteredJobs({String? category, String? query}) async {
-    setState(() => _isLoading = true);
-
+  void _filterJobs({String? category, String? query}) {
     _selectedCategory = category ?? _selectedCategory;
     _searchQuery = query ?? _searchQuery;
 
-    _jobs = await _getJobsUseCase(
-      category: _selectedCategory,
-      searchQuery: _searchQuery,
-    );
-
-    for (final job in _jobs) {
-      _companies[job.companyId] = await _jobRepository.getCompany(job.companyId);
-    }
-
-    setState(() => _isLoading = false);
+    setState(() {
+      _filteredJobs = _allJobs.where((job) {
+        final matchCategory =
+            (_selectedCategory == null ||
+            _selectedCategory == 'Tất cả' ||
+            job.categoryIds.contains(_selectedCategory));
+        final matchQuery =
+            (_searchQuery == null ||
+            job.title.toLowerCase().contains(_searchQuery!.toLowerCase()));
+        return matchCategory && matchQuery;
+      }).toList();
+    });
   }
 
   @override
@@ -126,143 +119,126 @@ class _JobPageState extends State<JobPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        /// --- Header (dùng user load từ my-info) ---
                         if (_loadedUser != null)
                           CustomAppBar(user: _loadedUser!)
                         else
-                          const SizedBox.shrink(),
-
-                        const SizedBox(height: 12),
-
+                          const SizedBox(height: 60),
+                        const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'Let\'s get you hired for the job\nyou deserve!',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
+                            'Chúng tôi giúp bạn nhận được\ncông việc bạn xứng đáng!',
+                            style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 26,
+                                  fontSize: 24,
                                   color: AppPallete.textColor,
                                   height: 1.3,
                                 ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
                         CustomSearchBar(
-                          onSearchChanged: (query) =>
-                              _loadFilteredJobs(query: query),
+                          onSearchChanged: (query) => _filterJobs(query: query),
                         ),
-
-                        const SizedBox(height: 24),
-
-                        /// --- Nền trắng cho phần Category trở xuống ---
+                        const SizedBox(height: 20),
                         Container(
-                          width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(28),
-                              topRight: Radius.circular(28),
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
                             ),
                             border: Border.all(
-                              color: Colors.grey.shade300,
-                              width: 2,
+                              color: Colors.grey.shade200,
+                              width: 1,
                             ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 20),
-
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Text(
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
                                   'Danh mục',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black87,
                                   ),
                                 ),
                               ),
-
                               const SizedBox(height: 12),
-
                               SizedBox(
-                                height: 48,
+                                height: 44,
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
                                   itemCount: _uiCategories.length,
                                   itemBuilder: (context, index) {
                                     final uiModel = _uiCategories[index];
                                     return CategoryChip(
                                       uiModel: uiModel,
-                                      onSelected: (selectedModel) {
+                                      onSelected: (selected) {
                                         setState(() {
-                                          _uiCategories = _uiCategories.map((m) {
-                                            return m.copyWith(
-                                              isSelected: m.category.id ==
-                                                  selectedModel.category.id,
-                                            );
-                                          }).toList();
+                                          for (
+                                            var i = 0;
+                                            i < _uiCategories.length;
+                                            i++
+                                          ) {
+                                            _uiCategories[i] = _uiCategories[i]
+                                                .copyWith(
+                                                  isSelected:
+                                                      _uiCategories[i] ==
+                                                      selected,
+                                                );
+                                          }
                                         });
-                                        _loadFilteredJobs(
-                                            category: selectedModel.category.name);
+                                        _filterJobs(
+                                          category: selected.category.id,
+                                        );
                                       },
                                     );
                                   },
                                 ),
                               ),
-
-                              const SizedBox(height: 20),
-
+                              const SizedBox(height: 24),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 child: Text(
-                                  'Tin tuyển dụng phù hợp với bạn',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
+                                  'Công việc phù hợp với bạn',
+                                  style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.w600,
-                                        fontSize: 16,
+                                        fontSize: 15,
                                         color: Colors.black87,
                                       ),
                                 ),
                               ),
-
                               const SizedBox(height: 12),
 
-                              if (_jobs.isEmpty)
-                                const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(24),
+                              if (_filteredJobs.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Center(
                                     child: Text(
                                       'Không có công việc phù hợp.',
-                                      style: TextStyle(color: Colors.grey),
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
                                 )
                               else
-                                ..._jobs.map((job) => JobCard(
-                                      job: job,
-                                      company: _companies[job.companyId] ??
-                                          const Company(
-                                            id: '',
-                                            name: '',
-                                            taxCode: '',
-                                            address: '',
-                                          ),
-                                    )),
-
+                                ..._filteredJobs
+                                    .map((job) => JobCard(job: job))
+                                    .toList(),
                               const SizedBox(height: 100),
                             ],
                           ),
@@ -273,7 +249,6 @@ class _JobPageState extends State<JobPage> {
                 ),
         ),
       ),
-
-       );
+    );
   }
 }
