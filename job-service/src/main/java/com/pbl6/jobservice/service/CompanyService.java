@@ -3,7 +3,9 @@ package com.pbl6.jobservice.service;
 import com.pbl6.jobservice.dto.request.CreateCompanyRequest;
 import com.pbl6.jobservice.dto.request.UpdateCompanyRequest;
 import com.pbl6.jobservice.dto.response.CompanyResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface CompanyService {
@@ -14,4 +16,5 @@ public interface CompanyService {
     public void deleteCompanyById(String id);
     public void activateCompanyById(String id);
     public void deactivateCompanyById(String id);
+    public String uploadLogo(MultipartFile file,String companyId);
 }

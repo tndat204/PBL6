@@ -1,5 +1,6 @@
 package com.pbl6.jobservice.service.impl;
 
+import com.pbl6.jobservice.client.FileClient;
 import com.pbl6.jobservice.dto.request.CreateCompanyRequest;
 import com.pbl6.jobservice.dto.request.UpdateCompanyRequest;
 import com.pbl6.jobservice.dto.response.CompanyResponse;
@@ -23,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +38,7 @@ public class CompanyServiceImpl implements CompanyService {
     ModelMapper modelMapper;
     CompanyUserRepository  companyUserRepository;
     JobRepository   jobRepository;
+    FileClient fileClient;
     @Override
     public CompanyResponse createCompany(CreateCompanyRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -144,6 +147,30 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
         company.setActive(false);
         companyRepository.save(company);
+    }
+
+    @Override
+    public String uploadLogo(MultipartFile file,String companyId) {
+        UUID userId = getCurrentUserId();
+
+        Company company = companyRepository.findById(UUID.fromString(companyId))
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        // Chỉ owner mới xóa được
+        boolean isOwner = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(
+                company.getId(),
+                userId,
+                List.of(CompanyUser.Status.ACTIVE),
+                List.of(CompanyUser.Role.OWNER)
+        );
+
+        if (!isOwner) {
+            throw new AppException(ErrorCode.NOT_ALLOW_TO_UPLOAD_LOGO);
+        }
+        String url=fileClient.uploadFile(file,"company_logo").getResult();
+        company.setLogoUrl(url);
+        companyRepository.save(company);
+        return url;
     }
 
     private UUID getCurrentUserId() {

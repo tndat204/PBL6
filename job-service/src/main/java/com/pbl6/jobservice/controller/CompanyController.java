@@ -8,6 +8,7 @@ import com.pbl6.jobservice.service.CompanyService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -71,6 +72,13 @@ public class CompanyController {
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Company deactivated successfully")
+                .build();
+    }
+    @PutMapping("/logo/{companyId}")
+    public APIResponse<String> uploadLogo(MultipartFile file, @PathVariable String companyId){
+        return APIResponse.<String>builder()
+                .code(200)
+                .result(companyService.uploadLogo(file,companyId))
                 .build();
     }
 }
