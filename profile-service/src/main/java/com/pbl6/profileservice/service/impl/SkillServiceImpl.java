@@ -43,14 +43,14 @@ public class SkillServiceImpl implements SkillService {
         return modelMapper.map(savedSkill, SkillResponse.class);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @Override
     public SkillResponse getSkillById(String id) {
         Skill skill=skillRepository.findById(UUID.fromString(id))
                 .orElseThrow(()->new AppException(ErrorCode.SKILL_NOT_FOUND));
         return modelMapper.map(skill, SkillResponse.class);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @Override
     public List<SkillResponse> getAllSkills(String categoryId) {
         List<Skill> skills;
 

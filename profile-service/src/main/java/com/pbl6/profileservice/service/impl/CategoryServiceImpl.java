@@ -54,7 +54,7 @@ public class CategoryServiceImpl implements CategoryService {
         return modelMapper.map(savedCategory, CategoryResponse.class);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @Override
     public CategoryResponse getCategoryById(String id) {
         Category category = categoryRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
