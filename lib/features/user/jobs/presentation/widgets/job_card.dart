@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // 💡 Cần import GoRouter
 import 'package:intl/intl.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 
@@ -6,9 +7,10 @@ import '../../domain/entities/job.dart';
 
 class JobCard extends StatelessWidget {
   final Job job;
-  final VoidCallback? onTap;
 
-  const JobCard({super.key, required this.job, this.onTap});
+  // ❌ Loại bỏ final VoidCallback? onTap;
+
+  const JobCard({super.key, required this.job}); // ❌ Loại bỏ onTap khỏi constructor
 
   String _formatCurrency(int value) {
     final format = NumberFormat("#,##0", "vi_VN");
@@ -21,7 +23,8 @@ class JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseUrl = ApiConstants.baseUrl; // 🔹 Dũng có thể thay bằng BASE_URL backend của mình
+    // 💡 Logic xử lý imageUrl đã được khôi phục
+    final baseUrl = ApiConstants.baseUrl; 
     final imageUrl = job.logoUrl != null && job.logoUrl!.isNotEmpty
         ? (job.logoUrl!.startsWith('http')
             ? job.logoUrl!
@@ -29,7 +32,10 @@ class JobCard extends StatelessWidget {
         : null;
 
     return InkWell(
-      onTap: onTap,
+      // 💡 Thêm logic go_router chuyển trang vào onTap
+      onTap: () {
+        context.push('/user/jobs/${job.id}');
+      },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -54,6 +60,7 @@ class JobCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 💡 Khôi phục logic hiển thị Image/Placeholder
                   if (imageUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
@@ -82,6 +89,7 @@ class JobCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // 💡 Tiêu đề công việc
                         Text(
                           job.title,
                           style: const TextStyle(
@@ -93,6 +101,7 @@ class JobCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        // 💡 Tên công ty
                         if (job.companyName != null &&
                             job.companyName!.isNotEmpty)
                           Padding(
@@ -119,6 +128,7 @@ class JobCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               /// --- Location & Type Pills ---
+              // 💡 Khôi phục sử dụng Wrap
               Wrap(
                 spacing: 8,
                 runSpacing: 6,
@@ -129,8 +139,6 @@ class JobCard extends StatelessWidget {
                 ],
               ),
 
-              
-              
               const SizedBox(height: 14),
 
               /// --- Salary ---
@@ -144,7 +152,7 @@ class JobCard extends StatelessWidget {
                       '${_formatCurrency(job.salaryMin)} - ${_formatCurrency(job.salaryMax)} VND',
                       style: const TextStyle(
                         fontSize: 15,
-                        color: Colors.green,
+                        color: Colors.green, // 💡 Màu xanh lá cây
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -185,25 +193,26 @@ class JobCard extends StatelessWidget {
   }
 
   /// --- Widget pill tag (bo góc, có icon) ---
+  // 💡 Khôi phục style cho _buildTag
   Widget _buildTag(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), // 💡 Padding ban đầu
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20), // 💡 Corner radius ban đầu
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // 💡 mainAxisSize.min
         children: [
           Icon(icon, size: 14, color: Colors.grey.shade700),
-          const SizedBox(width: 5),
+          const SizedBox(width: 5), // 💡 SizedBox width ban đầu
           Text(
             text,
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey.shade800,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w500, // 💡 FontWeight ban đầu
             ),
           ),
         ],

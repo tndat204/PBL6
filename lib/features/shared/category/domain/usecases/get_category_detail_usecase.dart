@@ -7,5 +7,5 @@ class GetCategoryDetailUseCase {
   final CategoryRepository repository;
   GetCategoryDetailUseCase(this.repository);
 
-  Future<Category> call(String id) async => await repository.getCategoryById(id);
+  Future<Category?> call(String id) async => await repository.getCategoryById(id);
 }

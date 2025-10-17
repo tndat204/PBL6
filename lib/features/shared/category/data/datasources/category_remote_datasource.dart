@@ -4,7 +4,7 @@ import 'package:pbl6/features/shared/category/domain/entities/category.dart';
 
 abstract class CategoryRemoteDataSource {
   Future<List<Category>> fetchAllCategories();
-  Future<Category> fetchCategory(String id);
+  Future<Category?> fetchCategory(String id); // 🌟 Đã sửa thành trả về Category?
   Future<Category> createCategory(Map<String, dynamic> body);
   Future<Category> updateCategory(String id, Map<String, dynamic> body);
   Future<void> deleteCategory(String id);
@@ -14,32 +14,66 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   final Dio _dio;
 
   CategoryRemoteDataSourceImpl(this._dio) {
+    // Đảm bảo Base URL được thiết lập
     _dio.options.baseUrl = ApiConstants.baseUrl;
   }
 
   @override
   Future<List<Category>> fetchAllCategories() async {
     final response = await _dio.get("${ApiConstants.profile}/category/all");
-    final List<dynamic> data = response.data['result'];
-    return data.map((json) => Category.fromJson(json)).toList();
+    final data = response.data;
+
+    if (data == null || data['result'] == null) return [];
+
+    final List<dynamic> list = data['result'];
+    return list
+        .map((json) => Category.fromJson(Map<String, dynamic>.from(json as Map))) 
+        .toList();
   }
 
   @override
-  Future<Category> fetchCategory(String id) async {
-    final response = await _dio.get("${ApiConstants.profile}/category/$id");
-    return Category.fromJson(response.data['result']);
+  Future<Category?> fetchCategory(String id) async { 
+    try {
+      final response = await _dio.get("${ApiConstants.profile}/category/$id");
+      print(response.data);
+      final dynamic rawData = response.data?['result'];
+     
+      if (rawData is Map) {
+        final Map<String, dynamic> categoryData = Map<String, dynamic>.from(rawData);
+        return Category.fromJson(categoryData);
+      }
+    } on DioException catch (e) {
+      // Bắt lỗi HTTP (ví dụ: 404) do Dio ném ra.
+      print("Dio Error fetching Category $id: $e");
+    } catch (e) {
+      // Bắt các lỗi khác
+      print("Error fetching Category $id: $e");
+    }
+    
+    // Trả về null khi API không tìm thấy (result: null) hoặc gặp lỗi Dio
+    return null; 
   }
 
   @override
   Future<Category> createCategory(Map<String, dynamic> body) async {
-    final response = await _dio.post("${ApiConstants.profile}/category", data: body);
-    return Category.fromJson(response.data['result']);
+    final response =
+        await _dio.post("${ApiConstants.profile}/category", data: body);
+        
+    final dynamic rawData = response.data?['result'] ?? {};
+    final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
+    
+    return Category.fromJson(data);
   }
 
   @override
   Future<Category> updateCategory(String id, Map<String, dynamic> body) async {
-    final response = await _dio.put("${ApiConstants.profile}/category/$id", data: body);
-    return Category.fromJson(response.data['result']);
+    final response =
+        await _dio.put("${ApiConstants.profile}/category/$id", data: body);
+        
+    final dynamic rawData = response.data?['result'] ?? {};
+    final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
+    
+    return Category.fromJson(data);
   }
 
   @override

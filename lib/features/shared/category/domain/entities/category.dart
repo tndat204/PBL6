@@ -1,6 +1,5 @@
 import 'package:pbl6/features/shared/skill/domain/entities/skill.dart';
 
-
 class Category {
   final String id;
   final String name;
@@ -15,21 +14,29 @@ class Category {
   });
 
   factory Category.fromJson(Map<String, dynamic> json) {
+    // ✅ SỬA: Dùng Map.from() để ép kiểu an toàn cho đối tượng chính
+    final rawData = json['result'] ?? json;
+    final data = Map<String, dynamic>.from(rawData as Map); 
+
     return Category(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'],
-      skills: (json['skills'] as List<dynamic>?)
-              ?.map((e) => Skill.fromJson(e))
-              .toList() ??
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
+      description: data['description'],
+      skills: (data['skills'] as List?)
+          ?.map((e) {
+            // ✅ SỬA: Dùng Map.from() để ép kiểu an toàn cho từng Skill bên trong list
+            final skillJson = Map<String, dynamic>.from(e as Map); 
+            return Skill.fromJson(skillJson);
+          })
+          .toList() ??
           [],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'skills': skills.map((s) => s.toJson()).toList(),
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'skills': skills.map((s) => s.toJson()).toList(),
+  };
 }

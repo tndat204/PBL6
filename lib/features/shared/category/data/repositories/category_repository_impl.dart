@@ -11,7 +11,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   Future<List<Category>> getAllCategories() => remoteDataSource.fetchAllCategories();
 
   @override
-  Future<Category> getCategoryById(String id) => remoteDataSource.fetchCategory(id);
+  Future<Category?> getCategoryById(String id) => remoteDataSource.fetchCategory(id);
 
   @override
   Future<Category> createCategory(Map<String, dynamic> data) => remoteDataSource.createCategory(data);

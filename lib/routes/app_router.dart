@@ -12,6 +12,7 @@ import 'package:pbl6/features/shared/auth/presentation/pages/unauthorized_page.d
 import 'package:pbl6/features/shared/auth/presentation/pages/verify_otp_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/welcome_page.dart';
 import 'package:pbl6/features/user/dashboard/presentation/pages/user_dashboard.dart';
+import 'package:pbl6/features/user/jobs/presentation/pages/job_detail_page.dart';
 import 'package:pbl6/features/user/user_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -175,6 +176,15 @@ final GoRouter router = GoRouter(
         }
       },
     ),
+    GoRoute(
+  path: '/user/jobs/:id',
+  name: 'job_detail',
+  builder: (context, state) {
+    final jobId = state.pathParameters['id']!;
+    return JobDetailPage(jobId: jobId);
+  },
+),
+
 
   ShellRoute(
   builder: (context, state, child) => UserShell(child: child),

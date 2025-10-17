@@ -1,4 +1,5 @@
 enum JobStatus { ACTIVE, INACTIVE, CLOSED }
+
 enum JobType { FULL_TIME, PART_TIME, CONTRACT, INTERNSHIP }
 
 class Job {
@@ -58,11 +59,13 @@ class Job {
         (e) => e.name == (json['jobType'] ?? 'FULL_TIME'),
         orElse: () => JobType.FULL_TIME,
       ),
-      categoryIds: (json['categoryIds'] as List<dynamic>?)
+      categoryIds:
+          (json['categoryIds'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      skillIds: (json['skillIds'] as List<dynamic>?)
+      skillIds:
+          (json['skillIds'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -72,10 +75,7 @@ class Job {
     );
   }
 
-  Job copyWith({
-    String? companyName,
-    String? logoUrl,
-  }) {
+  Job copyWith({String? companyName, String? logoUrl}) {
     return Job(
       id: id,
       companyId: companyId,
@@ -95,4 +95,3 @@ class Job {
     );
   }
 }
-

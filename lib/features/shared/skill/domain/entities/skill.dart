@@ -10,16 +10,20 @@ class Skill {
   });
 
   factory Skill.fromJson(Map<String, dynamic> json) {
+    // ✅ SỬA: Dùng Map.from() để ép kiểu an toàn cho đối tượng chính
+    final rawData = json['result'] ?? json;
+    final data = Map<String, dynamic>.from(rawData as Map); 
+
     return Skill(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      categoryId: json['categoryId'],
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
+      categoryId: data['categoryId'],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'categoryId': categoryId,
-      };
+    'id': id,
+    'name': name,
+    'categoryId': categoryId,
+  };
 }

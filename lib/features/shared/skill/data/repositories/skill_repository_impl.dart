@@ -13,7 +13,7 @@ class SkillRepositoryImpl implements SkillRepository {
       remoteDataSource.fetchAllSkills(categoryId: categoryId);
 
   @override
-  Future<Skill> getSkillById(String id) =>
+  Future<Skill?> getSkillById(String id) =>
       remoteDataSource.fetchSkill(id);
 
   @override
