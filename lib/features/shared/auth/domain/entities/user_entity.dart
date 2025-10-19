@@ -1,4 +1,4 @@
-import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart'; // Import shared model
+import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
 
 enum UserRole { candidate, recruiter, manager }
 
@@ -27,7 +27,33 @@ class UserEntity {
     this.birthDate,
   });
 
-  // Factory chung cho register/my-info (map từ UserApiResponse.result)
+  // ✅ Thêm copyWith
+  UserEntity copyWith({
+    String? id,
+    String? username,
+    String? email,
+    String? fullName,
+    String? phone,
+    String? address,
+    String? avatarUrl,
+    List<RoleEntity>? roles,
+    bool? isEnabled,
+    DateTime? birthDate,
+  }) {
+    return UserEntity(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      roles: roles ?? this.roles,
+      isEnabled: isEnabled ?? this.isEnabled,
+      birthDate: birthDate ?? this.birthDate,
+    );
+  }
+
   factory UserEntity.fromUserApiResponse(UserApiResponse response) {
     if (response.result == null) throw Exception('No user data in response');
     final userRes = response.result!;
@@ -41,13 +67,26 @@ class UserEntity {
       avatarUrl: userRes.avatarUrl,
       roles: userRes.roles.map((role) => RoleEntity.fromRole(role)).toList(),
       isEnabled: userRes.isEnabled,
-      birthDate: null, // Lấy từ profile nếu cần
+      birthDate: null,
     );
   }
-  
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'email': email,
+      'fullName': fullName,
+      'phone': phone,
+      'address': address,
+      'avatarUrl': avatarUrl,
+      'roles': roles.map((r) => r.name).toList(),
+      'isEnabled': isEnabled,
+      'birthDate': birthDate?.toIso8601String(),
+    };
+  }
 }
 
-// Giữ nguyên RoleEntity, PermissionEntity (map từ Role/Permission)
 class RoleEntity {
   final String name;
   final List<PermissionEntity> permissions;
@@ -60,7 +99,8 @@ class RoleEntity {
   factory RoleEntity.fromRole(Role role) {
     return RoleEntity(
       name: role.name,
-      permissions: role.permissions.map((perm) => PermissionEntity(name: perm.name)).toList(),
+      permissions:
+          role.permissions.map((perm) => PermissionEntity(name: perm.name)).toList(),
     );
   }
 }

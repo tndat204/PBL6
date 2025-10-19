@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../user/jobs/domain/entities/user.dart';
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final User user;
 
@@ -15,29 +17,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     // Tạo đường dẫn đầy đủ cho avatar (nếu có)
     final String? avatarUrl = (user.avatarUrl.isNotEmpty)
         ? (user.avatarUrl.startsWith('http')
-            ? user.avatarUrl
-            : '$baseUrl${user.avatarUrl}')
+              ? user.avatarUrl
+              : '$baseUrl${user.avatarUrl}')
         : null;
 
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
       toolbarHeight: 80,
-      title: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.grey.shade300,
-            backgroundImage: avatarUrl != null
-                ? NetworkImage(avatarUrl)
-                : const AssetImage('assets/images/avatar.png') as ImageProvider,
-            onBackgroundImageError: (_, __) {
-              // Nếu load lỗi thì fallback về ảnh mặc định
-            },
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+      title: // Trong CustomAppBar
+      GestureDetector(
+        onTap: () => context.push('/user/my-info'), // 🔹 Dẫn sang trang MyInfo
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.grey.shade300,
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl)
+                  : const AssetImage('assets/images/avatar.png')
+                        as ImageProvider,
+            ),
+            const SizedBox(width: 12),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -61,15 +63,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+
       actions: [
         Container(
           margin: const EdgeInsets.only(right: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
           child: IconButton(
             icon: Icon(
               Icons.notifications_outlined,

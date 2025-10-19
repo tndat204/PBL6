@@ -19,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../features/admin/dashboard/presentation/pages/admin_dashboard.dart';
 import '../features/shared/auth/presentation/pages/login_page.dart';
 import '../features/shared/auth/presentation/pages/role_selection_screen.dart';
+import '../features/shared/user/presentation/pages/my_info_page.dart';
 import '../features/user/jobs/presentation/pages/job_page.dart'; // Thêm import này
 import 'route_guard.dart';
 import 'route_names.dart';
@@ -184,7 +185,11 @@ final GoRouter router = GoRouter(
     return JobDetailPage(jobId: jobId);
   },
 ),
-
+GoRoute(
+  path: '/user/my-info',
+  name: 'my_info',
+  builder: (_, __) => const MyInfoPage(),
+),
 
   ShellRoute(
   builder: (context, state, child) => UserShell(child: child),

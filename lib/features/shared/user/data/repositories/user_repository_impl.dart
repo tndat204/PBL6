@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
 
 import '../../domain/repositories/user_repository.dart';
@@ -13,5 +15,14 @@ class UserRepositoryImpl implements UserRepository {
   Future<UserApiResponse> getMyInfo() async {
     return await remoteDataSource.getMyInfo();
   }
+  @override
+  Future<UserApiResponse> updateMyInfo(Map<String, dynamic> updatedData) async {
+    return await remoteDataSource.updateMyInfo(updatedData);
+  }
+   @override 
+  Future<String> uploadAvatar(File imageFile) async {
+    return await remoteDataSource.uploadAvatar(imageFile);
+  }
+  
 }
 

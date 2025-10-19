@@ -47,6 +47,9 @@ import 'package:pbl6/features/user/jobs/domain/usecases/get_all_jobs_usecase.dar
 import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_job_details_usecase.dart';
 
+import '../features/shared/user/domain/usecases/update_my_info_usecase.dart';
+import '../features/shared/user/domain/usecases/upload_avatar_usecase.dart';
+
 final sl = GetIt.instance;
 
 void init() {
@@ -81,6 +84,12 @@ void init() {
   );
   sl.registerLazySingleton<GetMyInfoUseCase>(
     () => GetMyInfoUseCase(sl<UserRepository>()),
+  );
+  sl.registerLazySingleton<UpdateMyInfoUseCase>(
+    () => UpdateMyInfoUseCase(sl<UserRepository>()),
+  );
+  sl.registerLazySingleton<UploadAvatarUseCase>(
+    () => UploadAvatarUseCase(sl<UserRepository>()),
   );
 
   // ================= JOB =================

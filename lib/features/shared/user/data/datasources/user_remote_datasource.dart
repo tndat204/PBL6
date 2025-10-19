@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 import 'package:pbl6/core/services/api_service.dart';
@@ -7,6 +9,8 @@ import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
 
 abstract class UserRemoteDataSource {
   Future<UserApiResponse> getMyInfo();
+  Future<UserApiResponse> updateMyInfo(Map<String, dynamic> updatedData);
+  Future<String> uploadAvatar(File imageFile);
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -24,6 +28,42 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       return UserApiResponse.fromJson(response.data);
     } catch (e) {
       throw Exception('Get my info failed: $e');
+    }
+  }
+  @override
+  Future<UserApiResponse> updateMyInfo(Map<String, dynamic> updatedData) async {
+    try {
+      final response = await _dio.patch(
+        ApiConstants.updateMyInfo,
+        data: updatedData,
+      );
+      return UserApiResponse.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Update user info failed: $e');
+    }
+  }
+  @override
+   @override
+  Future<String> uploadAvatar(File imageFile) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(imageFile.path),
+      });
+
+      final response = await _dio.post(
+        ApiConstants.uploadAvatar, 
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+
+      // Kiểm tra phản hồi
+      if (response.data['code'] == 0) {
+        return response.data['result']; 
+      } else {
+        throw Exception(response.data['message'] ?? 'Upload avatar failed');
+      }
+    } catch (e) {
+      throw Exception('Upload avatar failed: $e');
     }
   }
 }
