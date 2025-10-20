@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pbl6/core/injection_container.dart';
 import 'package:pbl6/core/theme/theme.dart';
 import 'package:pbl6/features/shared/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +17,7 @@ void main() async {
     MultiProvider(
       providers: [
         Provider<AuthRemoteDataSource>(create: (_) => sl<AuthRemoteDataSource>()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: const MyApp(),
     ),

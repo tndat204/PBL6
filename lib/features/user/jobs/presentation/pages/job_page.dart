@@ -3,7 +3,9 @@ import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/category/domain/usecases/get_all_categories_usecase.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
+import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../domain/entities/job.dart';
@@ -13,7 +15,6 @@ import '../models/category_ui_model.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/job_card.dart';
 import '../widgets/search_bar.dart';
-
 class JobPage extends StatefulWidget {
   const JobPage({super.key});
 
@@ -51,6 +52,10 @@ class _JobPageState extends State<JobPage> {
     try {
       final userEntity = await _getMyInfoUseCase();
       _loadedUser = User.fromAuthEntity(userEntity);
+       if (mounted) {
+      context.read<UserProvider>().setUser(User.fromAuthEntity(userEntity));
+
+    }
       final categories = await _getAllCategoriesUseCase();
       final jobs = await _getAllJobsUseCase();
 
@@ -58,9 +63,9 @@ class _JobPageState extends State<JobPage> {
         jobs.map((job) async {
           final company = await _getCompanyDetailsUseCase(job.companyId);
           return job.copyWith(
-      companyName: company.name,
-      logoUrl: company.logoUrl, // thêm dòng này
-    );
+            companyName: company.name,
+            logoUrl: company.logoUrl, // thêm dòng này
+          );
         }),
       );
 
@@ -119,10 +124,7 @@ class _JobPageState extends State<JobPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_loadedUser != null)
-                          CustomAppBar(user: _loadedUser!)
-                        else
-                          const SizedBox(height: 60),
+                        const CustomAppBar(),
                         const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),

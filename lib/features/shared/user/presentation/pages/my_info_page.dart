@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
+import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
 import 'package:pbl6/features/shared/user/presentation/widgets/my_info_avatar.dart';
 import 'package:pbl6/features/shared/user/presentation/widgets/my_info_tab_personal.dart';
+import 'package:pbl6/features/user/jobs/domain/entities/user.dart';
+import 'package:provider/provider.dart';
 
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/get_my_info_usecase.dart';
@@ -42,6 +46,9 @@ class _MyInfoPageState extends State<MyInfoPage>
     try {
       final user = await _getMyInfoUseCase();
       setState(() => _user = user);
+      if (mounted) {
+        context.read<UserProvider>().setUser(User.fromAuthEntity(user));
+      }
     } catch (e) {
       MotionToast.error(
         description: Text('Không thể tải thông tin: $e'),
@@ -82,6 +89,7 @@ class _MyInfoPageState extends State<MyInfoPage>
       setState(() {
         _user = _user?.copyWith(avatarUrl: uploadedUrl);
       });
+      context.read<UserProvider>().updateAvatar(uploadedUrl);
     } catch (e) {
       MotionToast.error(description: Text('Upload thất bại: $e')).show(context);
     }
@@ -103,7 +111,7 @@ class _MyInfoPageState extends State<MyInfoPage>
                       children: [
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => context.pop(),
                         ),
                         const Expanded(
                           child: Center(
@@ -165,6 +173,12 @@ class _MyInfoPageState extends State<MyInfoPage>
                           onSave: (data) async {
                             try {
                               await _updateMyInfoUseCase(data);
+                              context.read<UserProvider>().updateInfo({
+                                'fullName': data['fullName'],
+                                'phone': data['phone'],
+                                'address': data['address'],
+                              });
+
                               MotionToast(
                                 icon: Icons.check_circle,
                                 primaryColor: AppPallete.lightGradient,

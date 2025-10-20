@@ -31,7 +31,33 @@ class User {
     required this.createdAt,
     required this.updatedAt,
   });
-
+  User copyWith({
+    String? id,
+    String? username,
+    String? fullName,
+    String? email,
+    String? phone,
+    String? address,
+    String? avatarUrl,
+    UserRole? role,
+    bool? isEnabled,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      role: role ?? this.role,
+      isEnabled: isEnabled ?? this.isEnabled,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
   /// Map từ `UserEntity` của Auth (API /my-info)
   factory User.fromAuthEntity(UserEntity entity) {
     // Lấy role đầu tiên nếu có
