@@ -1,5 +1,6 @@
 package com.pbl6.userservice.controller.external;
 
+import com.pbl6.userservice.dto.request.ChangePasswordRequest;
 import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.response.APIResponse;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
@@ -82,6 +83,14 @@ public class UserController {
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Upgrade Role Successfully")
+                .build();
+    }
+    @PutMapping("/change-password")
+    public APIResponse<String> changePassword(@RequestBody ChangePasswordRequest request){
+        userService.changePassword(request);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Change Password Successfully")
                 .build();
     }
 }

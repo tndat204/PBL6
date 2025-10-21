@@ -27,7 +27,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = true)
 public class AuthenticationFilter implements GlobalFilter, Ordered {
-    AuthService  authService;
+
+    AuthService authService;
     ObjectMapper objectMapper;
 
     List<String> publicEndpoints = List.of(
@@ -46,8 +47,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
 
-        // 🚀 Nếu request trùng public endpoint thì bỏ qua filter
-        if (publicEndpoints.stream().anyMatch(path::startsWith)) {
+        // 🚀 Nếu request trùng public endpoint hoặc WebSocket thì bỏ qua filter
+        boolean isPublic = publicEndpoints.stream().anyMatch(path::startsWith)
+                || path.startsWith("/ws"); // <-- tất cả /ws/** là public
+
+        if (isPublic) {
             return chain.filter(exchange);
         }
 
@@ -59,28 +63,29 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String token = authHeader.get(0).replace("Bearer ", "");
         log.info("Token: {}", token);
 
-        return authService.introspect(token).flatMap(introspectResponse -> {
-            if (introspectResponse.getResult().isValid()) {
-                return chain.filter(exchange);
-            } else {
-                return unauthenticated(exchange.getResponse());
-            }
-        }).onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
+        return authService.introspect(token)
+                .flatMap(introspectResponse -> {
+                    if (introspectResponse.getResult().isValid()) {
+                        return chain.filter(exchange);
+                    } else {
+                        return unauthenticated(exchange.getResponse());
+                    }
+                })
+                .onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
     }
-
 
     @Override
     public int getOrder() {
         return -1;
     }
 
-    Mono<Void> unauthenticated(ServerHttpResponse response){
+    private Mono<Void> unauthenticated(ServerHttpResponse response) {
         APIResponse<?> apiResponse = APIResponse.builder()
                 .code(1401)
                 .message("Unauthenticated")
                 .build();
 
-        String body = null;
+        String body;
         try {
             body = objectMapper.writeValueAsString(apiResponse);
         } catch (JsonProcessingException e) {
@@ -88,9 +93,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
-        response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        response.getHeaders().set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-        return response.writeWith(
-                Mono.just(response.bufferFactory().wrap(body.getBytes())));
+        return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes())));
     }
 }

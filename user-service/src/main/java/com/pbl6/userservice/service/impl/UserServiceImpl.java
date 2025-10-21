@@ -1,7 +1,10 @@
 package com.pbl6.userservice.service.impl;
 
 import com.pbl6.event.dto.NotificationEvent;
+import com.pbl6.userservice.client.CompanyClient;
 import com.pbl6.userservice.client.FileClient;
+import com.pbl6.userservice.dto.request.ChangePasswordRequest;
+import com.pbl6.userservice.dto.request.CreateCompanyRequest;
 import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
@@ -41,12 +44,12 @@ public class UserServiceImpl implements UserService {
     ModelMapper modelMapper;
     KafkaTemplate<String, Object> kafkaTemplate;
     FileClient  fileClient;
+    CompanyClient companyClient;
     public UserResponse register(CreateUserRequest request) {
         User user = modelMapper.map(request, User.class);
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        roleRepository.findByName("USER").ifPresent(user.getRoles()::add);
         user.setEnabled(true);
         try {
             User savedUser = userRepository.save(user);
@@ -60,6 +63,19 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             kafkaTemplate.send("notification-delivery", notificationEvent);
+            if(request.getNameCompany() != null){
+                roleRepository.findByName("RECRUITER").ifPresent(user.getRoles()::add);
+                CreateCompanyRequest createCompanyRequest= CreateCompanyRequest.builder()
+                        .ownerID(savedUser.getId())
+                        .name(request.getNameCompany())
+                        .taxCode(request.getTaxCode())
+                        .build();
+
+                companyClient.createCompany(createCompanyRequest);
+            }
+            else{
+                roleRepository.findByName("USER").ifPresent(user.getRoles()::add);
+            }
             return modelMapper.map(savedUser, UserResponse.class);
         } catch (DataIntegrityViolationException e) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -184,6 +200,23 @@ public class UserServiceImpl implements UserService {
             throw new AppException(ErrorCode.ROLE_ALREADY_ASSIGNED);
         }
 
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        if(!passwordEncoder.matches(request.getOldPassword(),user.getPassword())){
+            throw new AppException(ErrorCode.OLDPASSWORD_INCORRECT);
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
 }

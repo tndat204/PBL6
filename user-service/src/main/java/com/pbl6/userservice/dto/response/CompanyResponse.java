@@ -1,4 +1,4 @@
-package com.pbl6.jobservice.dto.request;
+package com.pbl6.userservice.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,12 +10,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateCompanyRequest {
+public class CompanyResponse {
+    UUID id;
     String name;
-    UUID ownerID;
     String taxCode;
     String address;
     String phone;
     String email;
     String description;
+    boolean active;
+    String logoUrl;
 }

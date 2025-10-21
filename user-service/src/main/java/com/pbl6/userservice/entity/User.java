@@ -44,12 +44,6 @@ public class User extends Base {
     @Column
     Date birthDate;
 
-    @Column
-    String taxCode;
-
-    @Column
-    String nameCompany;
-
     @Column(nullable = false)
     boolean isEnabled=true;
 

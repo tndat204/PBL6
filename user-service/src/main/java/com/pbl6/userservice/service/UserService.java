@@ -1,6 +1,7 @@
 package com.pbl6.userservice.service;
 
 
+import com.pbl6.userservice.dto.request.ChangePasswordRequest;
 import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
@@ -31,4 +32,6 @@ public interface UserService {
     public void deleteUser(String id);
 
     public void upgradeRole(String userId,String roleId);
+
+    public void changePassword(ChangePasswordRequest request);
 }

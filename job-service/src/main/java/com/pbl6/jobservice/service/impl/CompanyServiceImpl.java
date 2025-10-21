@@ -41,19 +41,12 @@ public class CompanyServiceImpl implements CompanyService {
     FileClient fileClient;
     @Override
     public CompanyResponse createCompany(CreateCompanyRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
-            throw new RuntimeException("Cannot get userId from token");
-        }
-        UUID ownerId= UUID.fromString(jwt.getClaimAsString("userId"));
         Company company = modelMapper.map(request, Company.class);
-        company.setOwnerId(ownerId);
 
         Company saved = companyRepository.save(company);
         CompanyUser companyUser = CompanyUser.builder()
                 .company(saved)
-                .userId(ownerId)
+                .userId(request.getOwnerID())
                 .role(CompanyUser.Role.OWNER)
                 .status(CompanyUser.Status.ACTIVE)
                 .build();

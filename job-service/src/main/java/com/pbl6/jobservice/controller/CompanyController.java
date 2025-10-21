@@ -22,7 +22,7 @@ public class CompanyController {
         this.companyService = companyService;
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public APIResponse<CompanyResponse> createCompany(@RequestBody CreateCompanyRequest request){
         return APIResponse.<CompanyResponse>builder()
                 .code(200)
