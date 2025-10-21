@@ -7,7 +7,7 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getProvinces() async {
     try {
-      final response = await _dio.get('/v2/p/').timeout(const Duration(seconds: 30));
+      final response = await _dio.get('https://provinces.open-api.vn/api/v2/').timeout(const Duration(seconds: 30));
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(response.data);
       } else {
@@ -20,7 +20,7 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getWards(int provinceCode) async {
     try {
-      final response = await _dio.get('/v2/p/$provinceCode?depth=2').timeout(const Duration(seconds: 30));
+      final response = await _dio.get('https://provinces.open-api.vn/api/v2/p/$provinceCode?depth=2').timeout(const Duration(seconds: 30));
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(response.data['wards'] ?? []);
       } else {

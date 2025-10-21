@@ -44,6 +44,8 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _birthDateController = TextEditingController();
+  // 💡 Thêm Controller cho địa chỉ chi tiết
+  final _detailedAddressController = TextEditingController();
 
   DateTime? _selectedBirthDate;
 
@@ -102,6 +104,16 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
     }
   }
 
+  // 💡 Thêm hàm này để cập nhật tên Phường/Xã khi chọn
+  void _onWardChanged(int? code) {
+    setState(() {
+      _selectedWardCode = code;
+      _selectedWardName = code == null
+          ? null
+          : _wards.firstWhere((w) => w['code'] == code)['name'];
+    });
+  }
+
   Future<void> _selectBirthDate() async {
     FocusScope.of(context).unfocus();
 
@@ -139,11 +151,31 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
   }
 
   Future<void> _handleRegister() async {
-    if (_formKey.currentState!.validate() && _agreeTerms) {
+    // 💡 Thêm kiểm tra validation cho Dropdown Tỉnh/Thành phố và Phường/Xã
+    if (_formKey.currentState!.validate() &&
+        _agreeTerms &&
+        _selectedProvinceCode != null &&
+        (_wards.isEmpty || _selectedWardCode != null)) {
       setState(() => _isRegistering = true);
       try {
-        final address =
-            '${_selectedProvinceName ?? ''}, ${_selectedWardName ?? ''}';
+        // 💡 Logic kết hợp địa chỉ: Địa chỉ chi tiết, Phường/Xã, Tỉnh/Thành phố
+        final detailedPart = _detailedAddressController.text.trim();
+        final wardPart =
+            _selectedWardName != null && _selectedWardName!.isNotEmpty
+            ? _selectedWardName!
+            : '';
+        final provincePart =
+            _selectedProvinceName != null && _selectedProvinceName!.isNotEmpty
+            ? _selectedProvinceName!
+            : '';
+
+        // Nối các phần lại, chỉ thêm dấu phẩy nếu có phần tử đứng trước
+        final addressParts = [
+          detailedPart,
+          wardPart,
+          provincePart,
+        ].where((s) => s.isNotEmpty).toList();
+        final address = addressParts.join(', ');
 
         final request = RegisterRequest(
           username: _emailController.text,
@@ -151,7 +183,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           email: _emailController.text,
           phone: _phoneController.text,
           fullName: _fullNameController.text,
-          address: address,
+          address: address, // 💡 Sử dụng địa chỉ đã kết hợp
           taxCode: _taxCodeController.text,
           nameCompany: _companyNameController.text,
           avatarUrl: '',
@@ -185,20 +217,71 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
 
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-           context.pushReplacementNamed(RouteNames.LOGIN);
+            context.pushReplacementNamed(RouteNames.LOGIN);
           }
         });
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Đăng ký thất bại: $e')));
+        MotionToast.error(
+          title: const Text(
+            "Đăng ký thất bại",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          description: Text(
+            "Đã xảy ra lỗi: ${e.toString()}", // Bao quát lỗi backend trả về
+            maxLines: 2,
+          ),
+          animationType: AnimationType.slideInFromLeft, // ✅
+          toastDuration: const Duration(seconds: 3),
+          toastAlignment: Alignment.topLeft, // ✅
+          borderRadius: 12,
+          width: 320,
+          height: 90,
+        ).show(context);
       } finally {
         if (mounted) setState(() => _isRegistering = false);
       }
     } else if (!_agreeTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bạn phải đồng ý điều khoản')),
-      );
+      MotionToast.warning(
+        title: const Text(
+          "Lỗi điều khoản",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        description: const Text("Bạn phải đồng ý với điều khoản sử dụng."),
+        animationType: AnimationType.slideInFromLeft, // ✅
+        toastDuration: const Duration(seconds: 2),
+        toastAlignment: Alignment.topLeft, // ✅
+        borderRadius: 12,
+        width: 320,
+        height: 90,
+      ).show(context);
+    } else if (_selectedProvinceCode == null) {
+      MotionToast.warning(
+        title: const Text(
+          "Lỗi địa chỉ",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        description: const Text("Vui lòng chọn Tỉnh/Thành phố."),
+        animationType: AnimationType.slideInFromLeft, // ✅
+        toastDuration: const Duration(seconds: 2),
+        toastAlignment: Alignment.topLeft, // ✅
+        borderRadius: 12,
+        width: 320,
+        height: 90,
+      ).show(context);
+    } else if (_wards.isNotEmpty && _selectedWardCode == null) {
+      MotionToast.warning(
+        title: const Text(
+          "Lỗi địa chỉ",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        description: const Text("Vui lòng chọn Phường/Xã."),
+        animationType: AnimationType.slideInFromLeft, // ✅
+        toastDuration: const Duration(seconds: 2),
+        toastAlignment: Alignment.topLeft, // ✅
+        borderRadius: 12,
+        width: 320,
+        height: 90,
+      ).show(context);
     }
   }
 
@@ -212,6 +295,8 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _birthDateController.dispose();
+    // 💡 Dispose controller địa chỉ chi tiết
+    _detailedAddressController.dispose();
     super.dispose();
   }
 
@@ -323,6 +408,8 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             },
           ),
           const SizedBox(height: 20),
+          // 💡 Thêm trường địa chỉ chi tiết
+         
           if (_loadingProvinces)
             const CircularProgressIndicator()
           else
@@ -354,21 +441,24 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
                 final String name = ward['name'] as String;
                 return DropdownMenuItem<int>(value: code, child: Text(name));
               }).toList(),
+              // 💡 Chỉnh sửa onChanged để gọi _onWardChanged
               onChanged: _wards.isEmpty
                   ? null
-                  : (value) {
-                      setState(() {
-                        _selectedWardCode = value;
-                        _selectedWardName = _wards.firstWhere(
-                          (w) => w['code'] == value,
-                        )['name'];
-                      });
-                    },
+                  : (value) => _onWardChanged(value),
               validator: (value) => value == null && _wards.isNotEmpty
                   ? 'Vui lòng chọn phường/xã'
                   : null,
             ),
 
+          const SizedBox(height: 20),
+           CustomTextField(
+            label: 'Địa chỉ chi tiết (VD: số nhà, tên đường)',
+            icon: Icons.place_outlined,
+            obscureText: false,
+            controller: _detailedAddressController,
+            validator: (value) =>
+                value!.isEmpty ? 'Vui lòng nhập địa chỉ chi tiết' : null,
+          ),
           const SizedBox(height: 20),
           Row(
             children: [
