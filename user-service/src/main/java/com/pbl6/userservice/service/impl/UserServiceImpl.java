@@ -138,7 +138,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void uploadAvatar(MultipartFile file) {
+    public String uploadAvatar(MultipartFile file) {
         String url=fileClient.uploadFile(file,"avatars").getResult();
         var context = SecurityContextHolder.getContext();
         String email = context.getAuthentication().getName();
@@ -150,6 +150,7 @@ public class UserServiceImpl implements UserService {
         User user = userOptional.get();
         user.setAvatarUrl(url);
         userRepository.save(user);
+        return url;
     }
 
     @Override

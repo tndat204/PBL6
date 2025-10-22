@@ -1,0 +1,68 @@
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  application:
+    name: chat-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/chat_service
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: 123456
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+
+
+springdoc:
+  api-docs:
+    enabled: true  # B?t endpoint /v3/api-docs
+  swagger-ui:
+    enabled: true # T?t UI n?u mu?n
+
+logging:
+  level:
+    org.springframework.data.mongodb.core: info
+    org.springframework: info
+server:
+  port: 8087
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  application:
+    name: chat-service
+
+logging:
+  level:
+    root: warn

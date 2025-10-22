@@ -56,10 +56,9 @@ public class UserController {
     }
     @PutMapping("/upload-avatar")
     public APIResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file){
-        userService.uploadAvatar(file);
         return APIResponse.<String>builder()
                 .code(200)
-                .result("Upload Avatar Successfully")
+                .result(userService.uploadAvatar(file))
                 .build();
     }
     @PatchMapping("/update-my-info")

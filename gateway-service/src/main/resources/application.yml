@@ -57,18 +57,9 @@ spring:
         - id: chat-service
           uri: lb://chat-service
           predicates:
-            - Path=/api/chat/**
-          filters:
-            - StripPrefix=0  # Don't strip prefix
-
-        - id: chat-service-ws
-          uri: lb://chat-service
-          predicates:
-            - Path=/ws/**
+            - Path=/api/chat/**, /ws/**
           filters:
             - StripPrefix=0
-          metadata:
-            websocket: true
 # Eureka Server Configuration
 eureka:
   client:

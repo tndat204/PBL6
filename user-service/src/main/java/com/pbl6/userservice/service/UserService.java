@@ -25,7 +25,7 @@ public interface UserService {
 
     public void changeStatus(String id);
 
-    public void uploadAvatar(MultipartFile file);
+    public String uploadAvatar(MultipartFile file);
 
     public UserResponse updateMyInfo(UpdateUserRequest request);
 
