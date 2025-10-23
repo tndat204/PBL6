@@ -1,5 +1,9 @@
 package com.pbl6.chatservice.configuration;
 
+import com.pbl6.chatservice.client.AuthClient;
+import com.pbl6.chatservice.dto.request.IntrospectRequest;
+import com.pbl6.chatservice.exception.AppException;
+import com.pbl6.chatservice.exception.ErrorCode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -18,9 +22,10 @@ import java.util.Collections;
 public class WebSocketAuthConfig {
 
     private final JwtDecoder jwtDecoder;
-
-    public WebSocketAuthConfig(JwtDecoder jwtDecoder) {
+    private final AuthClient authClient;
+    public WebSocketAuthConfig(JwtDecoder jwtDecoder, AuthClient authClient) {
         this.jwtDecoder = jwtDecoder;
+        this.authClient = authClient;
     }
 
     @Bean
@@ -37,9 +42,11 @@ public class WebSocketAuthConfig {
 
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String token = authHeader.substring(7);
-
+                        IntrospectRequest request =IntrospectRequest.builder().token(token).build();
+                        if(!authClient.introspect(request).getResult().isValid()){
+                            throw new AppException(ErrorCode.UNAUTHENTICATED);
+                        }
                         try {
-                            // DECODE THỦ CÔNG
                             Jwt jwt = jwtDecoder.decode(token);
 
                             String userId = jwt.getClaimAsString("userId");
@@ -50,7 +57,7 @@ public class WebSocketAuthConfig {
                             ));
 
                         } catch (Exception e) {
-                            throw new RuntimeException("Invalid token");
+                            throw new AppException(ErrorCode.UNAUTHENTICATED);
                         }
                     }
                 }
