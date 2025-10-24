@@ -18,6 +18,6 @@ class ApiConstants {
   static const String jobs = '/api/job';
   //company
   static const String companies = '/api/job/company';
-  //profike
+  //profile
   static const String profile= 'api/profile';
 }

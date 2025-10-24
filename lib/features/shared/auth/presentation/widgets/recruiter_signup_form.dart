@@ -307,6 +307,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
       child: Column(
         children: [
           CustomTextField(
+            key: const ValueKey('email_field'),
             label: 'Nhập email',
             icon: Icons.email_outlined,
             obscureText: false,
@@ -320,6 +321,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            key: const ValueKey('fullname_field'),
             label: 'Họ và Tên',
             icon: Icons.person_outline,
             obscureText: false,
@@ -332,6 +334,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             onTap: _selectBirthDate,
             child: AbsorbPointer(
               child: CustomTextField(
+                key: const ValueKey('birth_date_field'),
                 label: 'Ngày sinh',
                 icon: Icons.cake_outlined,
                 obscureText: false,
@@ -345,6 +348,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            key: const ValueKey('password_field'),
             label: 'Nhập mật khẩu',
             icon: Icons.lock_outline,
             obscureText: true,
@@ -362,6 +366,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            key: const ValueKey('confirm_password_field'),
             label: 'Nhập lại mật khẩu',
             icon: Icons.lock_outline,
             obscureText: true,
@@ -376,6 +381,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            key: const ValueKey('company_name_field'),
             label: 'Tên công ty',
             icon: Icons.business_outlined,
             obscureText: false,
@@ -385,6 +391,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            key: const ValueKey('tax_code_field'),
             label: 'Mã số thuế',
             icon: Icons.confirmation_number_outlined,
             obscureText: false,
@@ -394,6 +401,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            key: const ValueKey('phone_field'),
             label: 'Số điện thoại',
             icon: Icons.phone_outlined,
             obscureText: false,
@@ -414,6 +422,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             const CircularProgressIndicator()
           else
             CustomDropdownField<int>(
+              key: const ValueKey('province_dropdown'),
               label: 'Tỉnh/Thành phố',
               icon: Icons.location_on_outlined,
               value: _selectedProvinceCode,
@@ -432,6 +441,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             const CircularProgressIndicator()
           else
             CustomDropdownField<int>(
+              key: const ValueKey('ward_dropdown'),
               label: 'Phường/Xã',
               icon: Icons.location_city_outlined,
               value: _selectedWardCode,
@@ -452,6 +462,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
 
           const SizedBox(height: 20),
            CustomTextField(
+            key: const ValueKey('detailed_address_field'),
             label: 'Địa chỉ chi tiết (VD: số nhà, tên đường)',
             icon: Icons.place_outlined,
             obscureText: false,
@@ -465,6 +476,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
               Transform.scale(
                 scale: 1.2,
                 child: Checkbox(
+                  key: const ValueKey('agree_terms_checkbox'),
                   value: _agreeTerms,
                   onChanged: (value) {
                     setState(() => _agreeTerms = value ?? false);
@@ -491,6 +503,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           _isRegistering
               ? const Center(child: CircularProgressIndicator())
               : CustomElevatedButton(
+                key: const ValueKey('register_button'),
                   text: 'Đăng ký',
                   onPressed: _handleRegister,
                 ),

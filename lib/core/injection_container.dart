@@ -46,6 +46,14 @@ import 'package:pbl6/features/user/jobs/domain/usecases/get_all_companies_usecas
 import 'package:pbl6/features/user/jobs/domain/usecases/get_all_jobs_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_job_details_usecase.dart';
+import 'package:pbl6/features/user/profile/data/datasources/profile_remote_datasource.dart';
+import 'package:pbl6/features/user/profile/data/repositories/profile_repository_impl.dart';
+import 'package:pbl6/features/user/profile/domain/repositories/profile_repository.dart';
+import 'package:pbl6/features/user/profile/domain/usecases/create_profile_usecase.dart';
+import 'package:pbl6/features/user/profile/domain/usecases/get_cv_url_usecase.dart';
+import 'package:pbl6/features/user/profile/domain/usecases/get_my_profile_usecase.dart';
+import 'package:pbl6/features/user/profile/domain/usecases/update_profile_usecase.dart';
+import 'package:pbl6/features/user/profile/domain/usecases/upload_cv_usecase.dart';
 
 import '../features/shared/user/domain/usecases/update_my_info_usecase.dart';
 import '../features/shared/user/domain/usecases/upload_avatar_usecase.dart';
@@ -165,4 +173,26 @@ void init() {
   sl.registerLazySingleton<DeleteSkillUseCase>(
     () => DeleteSkillUseCase(sl<SkillRepository>()),
   );
+// 💡 ================= PROFILE =================
+sl.registerLazySingleton<ProfileRemoteDataSource>(
+ () => ProfileRemoteDataSourceImpl(sl<DioClient>().instance),
+ );
+ sl.registerLazySingleton<ProfileRepository>(
+ () => ProfileRepositoryImpl(remoteDataSource: sl<ProfileRemoteDataSource>()),
+);
+sl.registerLazySingleton<GetMyProfileUseCase>(
+() => GetMyProfileUseCase(sl<ProfileRepository>()),
+ );
+sl.registerLazySingleton<CreateProfileUseCase>(
+ () => CreateProfileUseCase(sl<ProfileRepository>()),
+ );
+sl.registerLazySingleton<UpdateProfileUseCase>(
+ () => UpdateProfileUseCase(sl<ProfileRepository>()),
+ );
+sl.registerLazySingleton<UploadCVUseCase>(
+() => UploadCVUseCase(sl<ProfileRepository>()),
+ );
+ sl.registerLazySingleton<GetCVUrlUseCase>(
+ () => GetCVUrlUseCase(sl<ProfileRepository>()),
+ );
 }

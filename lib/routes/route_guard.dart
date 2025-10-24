@@ -14,6 +14,8 @@ Future<String?> routeGuard(BuildContext context, GoRouterState state) async {
 
   // 🔓 Danh sách các route public
   const publicRoutes = [
+    RouteNames.WELCOME,         
+    RouteNames.ROLE_SELECTION,
     RouteNames.LOGIN,
     RouteNames.SIGNUP,
     RouteNames.RECRUITER_SIGNUP,
