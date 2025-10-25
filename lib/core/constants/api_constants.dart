@@ -1,8 +1,8 @@
 class ApiConstants {
   // 👉 chỉ cần sửa dòng này khi đổi server (VD: khi build release, deploy AWS,...)
 
-  static const String baseUrl = 'http://10.0.2.2:8080/';
-  // static const String baseUrl ='http://192.168.1.195:8080/';
+  // static const String baseUrl = 'http://10.0.2.2:8080/';
+  static const String baseUrl ='http://192.168.1.195:8080/';
   // Auth
   static const String login = '/api/auth/login';
   static const String googleLogin = '/api/auth/google-app';

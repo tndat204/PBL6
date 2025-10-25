@@ -39,106 +39,229 @@ class _ProfileCVTabState extends State<ProfileCVTab> {
   Future<void> _pickAndUploadCV() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'doc', 'docx'],
+      allowedExtensions: ['pdf'],
     );
 
     if (result == null || result.files.single.path == null) return;
 
     final file = File(result.files.single.path!);
+    // Kiểm tra phần mở rộng
+    final fileName = result.files.single.name.toLowerCase();
+    if (!fileName.endsWith('.pdf')) {
+      MotionToast.error(
+        description: const Text('Chỉ chấp nhận tệp định dạng PDF.'),
+      ).show(context);
+      return;
+    }
+
+    // Optional: Check file size (example: max 5MB)
+    final fileSize = await file.length();
+    if (fileSize > 5 * 1024 * 1024) {
+      MotionToast.error(
+        description: const Text('Kích thước file vượt quá 5MB.'),
+      ).show(context);
+      return;
+    }
+
     setState(() => _isUploading = true);
 
     try {
-      final uploadResult = await widget.uploadCVUseCase(UploadCVParams(cvFile: file));
+      final uploadResult = await widget.uploadCVUseCase(
+        UploadCVParams(cvFile: file),
+      );
 
       uploadResult.fold(
         (failure) {
-          MotionToast.error(description: Text('Tải lên thất bại: ${failure.message}')).show(context);
+          MotionToast.error(
+            description: Text('Tải lên thất bại: ${failure.message}'),
+          ).show(context);
         },
         (newUrl) {
           setState(() => _currentCvUrl = newUrl);
-          MotionToast.success(description: const Text('CV đã được tải lên thành công!')).show(context);
+          MotionToast.success(
+            description: const Text('CV đã được tải lên thành công!'),
+          ).show(context);
         },
       );
     } catch (e) {
       MotionToast.error(description: Text('Lỗi tải lên CV: $e')).show(context);
     } finally {
-      setState(() => _isUploading = false);
+      if (mounted) {
+        // Check if widget is still mounted
+        setState(() => _isUploading = false);
+      }
     }
   }
 
+  // ✅ HÀM _viewCV ĐÃ ĐƯỢC CẢI THIỆN
   Future<void> _viewCV() async {
-    if (_currentCvUrl == null || _currentCvUrl!.isEmpty) return;
-    final url = Uri.parse(_currentCvUrl!);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      MotionToast.error(description: Text('Không thể mở liên kết: $_currentCvUrl')).show(context);
+    if (_currentCvUrl == null || _currentCvUrl!.isEmpty) {
+      MotionToast.warning(
+        description: const Text('Chưa có CV nào được tải lên.'),
+      ).show(context);
+      return;
+    }
+
+    // Ghi log URL để kiểm tra
+    print("Attempting to launch URL: $_currentCvUrl");
+
+    // Chuyển đổi thành Uri và kiểm tra tính hợp lệ
+    final Uri? url = Uri.tryParse(_currentCvUrl!);
+    if (url == null) {
+      MotionToast.error(
+        description: Text('URL không hợp lệ: $_currentCvUrl'),
+      ).show(context);
+      return;
+    }
+
+    // Kiểm tra scheme (http/https)
+    if (!url.isScheme('HTTP') && !url.isScheme('HTTPS')) {
+      MotionToast.error(
+        description: Text('URL scheme không được hỗ trợ: ${url.scheme}'),
+      ).show(context);
+      return;
+    }
+
+    try {
+      // Kiểm tra xem có thể mở URL không
+      bool canLaunch = await canLaunchUrl(url);
+      print("canLaunchUrl returned: $canLaunch for $url"); // Thêm log
+
+      if (canLaunch) {
+        // Mở URL (thử dùng platformDefault)
+        bool launched = await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication, // Hoặc externalApplication
+        );
+
+        if (!launched) {
+          MotionToast.error(
+            description: Text(
+              'Không thể khởi chạy liên kết (launchUrl failed).',
+            ),
+          ).show(context);
+        }
+      } else {
+        MotionToast.error(
+          description: Text(
+            'Không thể mở liên kết (canLaunchUrl failed). Vui lòng kiểm tra cấu hình AndroidManifest/Info.plist.',
+          ),
+        ).show(context);
+      }
+    } catch (e) {
+      // Bắt lỗi nếu launchUrl gây ra exception
+      print("Error launching URL: $e");
+      MotionToast.error(
+        description: Text('Đã xảy ra lỗi khi mở CV: $e'),
+      ).show(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Cập nhật lại _currentCvUrl nếu widget được rebuild với url mới
+    // (ví dụ: sau khi update profile ở tab khác)
+    if (widget.cvFileUrl != _currentCvUrl) {
+      _currentCvUrl = widget.cvFileUrl;
+    }
+
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0), // Tăng padding
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center, // Căn giữa nội dung
         children: [
           const Text(
-            'Quản lý Hồ sơ & Tài liệu',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            'Quản lý CV', // Rút gọn tiêu đề
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 20),
-          
-          // --- Xem CV hiện tại ---
-          ListTile(
-            leading: const Icon(Icons.file_present, color: AppPallete.primaryColor),
-            title: Text(
-              _currentCvUrl != null && _currentCvUrl!.isNotEmpty
-                  ? 'CV hiện tại đã có'
-                  : 'Chưa có CV được tải lên',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: _currentCvUrl != null && _currentCvUrl!.isNotEmpty ? Colors.black : Colors.red,
-              ),
-            ),
-            trailing: _currentCvUrl != null && _currentCvUrl!.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.visibility),
-                    onPressed: _viewCV,
-                  )
-                : null,
-            onTap: _currentCvUrl != null && _currentCvUrl!.isNotEmpty ? _viewCV : null,
-          ),
-          const Divider(),
-          
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
+          // --- Khung thông tin CV ---
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.description_outlined,
+                  color: AppPallete.primaryColor,
+                  size: 30,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    _currentCvUrl != null && _currentCvUrl!.isNotEmpty
+                        ? 'CV đã được tải lên' // Text ngắn gọn hơn
+                        : 'Chưa có CV nào',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: _currentCvUrl != null && _currentCvUrl!.isNotEmpty
+                          ? Colors
+                                .black87 // Màu chữ bình thường
+                          : Colors.redAccent, // Màu đỏ nổi bật hơn
+                    ),
+                  ),
+                ),
+                // Nút xem chỉ hiển thị khi có CV
+                if (_currentCvUrl != null && _currentCvUrl!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.visibility_outlined,
+                      color: Colors.blueAccent,
+                    ),
+                    tooltip: 'Xem CV', // Thêm tooltip
+                    onPressed: _viewCV,
+                  ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 30), // Tăng khoảng cách
           // --- Tải lên CV mới ---
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _isUploading ? null : _pickAndUploadCV,
-              icon: _isUploading 
-                  ? const SizedBox(
-                      width: 18, 
-                      height: 18, 
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                    ) 
-                  : const Icon(Icons.upload_file),
-              label: Text(_isUploading ? 'Đang tải lên...' : 'Tải lên CV mới'),
+              icon: _isUploading
+                  ? Container(
+                      // Container để cố định kích thước spinner
+                      width: 20,
+                      height: 20,
+                      margin: const EdgeInsets.only(
+                        right: 8,
+                      ), // Khoảng cách với text
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.upload_file_rounded),
+              label: Text(
+                _isUploading ? 'Đang tải lên...' : 'Tải lên hoặc cập nhật CV',
+                style: TextStyle(fontSize: 16),
+              ),
               style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white, // Màu chữ và icon
                 backgroundColor: AppPallete.primaryColor,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                ), // Tăng padding nút
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 3, // Thêm đổ bóng nhẹ
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12), // Tăng khoảng cách
           const Text(
-            'Chỉ hỗ trợ file PDF, DOC, DOCX. Kích thước tối đa 5MB.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            'Hỗ trợ: PDF (Tối đa 5MB)', // Text ngắn gọn
+            style: TextStyle(fontSize: 13, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
