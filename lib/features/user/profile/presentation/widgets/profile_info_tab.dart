@@ -1,27 +1,58 @@
-// file: features/shared/profile/presentation/widgets/profile_info_tab.dart
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
-// 💡 Import CustomElevatedButton and CustomTextField from correct paths
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_elevated_button.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_text_field.dart';
-// 💡 Correct imports for Skill and UseCase based on your structure
 import 'package:pbl6/features/shared/skill/domain/entities/skill.dart';
 import 'package:pbl6/features/shared/skill/domain/usecases/get_all_skills_usecase.dart';
 import 'package:pbl6/features/user/profile/data/models/profile_models.dart';
 import 'package:pbl6/features/user/profile/domain/entities/profile_entity.dart';
-import 'package:pbl6/features/user/profile/domain/usecases/create_profile_usecase.dart';
 import 'package:pbl6/features/user/profile/domain/usecases/update_profile_usecase.dart';
 
+import '../../domain/usecases/create_profile_usecase.dart';
+
+class ThousandsInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    // Bỏ dấu phẩy cũ
+    String newText = newValue.text.replaceAll(',', '');
+
+    // Kiểm tra nếu không phải số thì trả về giá trị cũ
+    if (int.tryParse(newText) == null) {
+      return oldValue;
+    }
+
+    final formatter = NumberFormat('#,###');
+    String formattedText = formatter.format(int.parse(newText));
+
+    return newValue.copyWith(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
+
+
 class ProfileInfoTab extends StatefulWidget {
-  final ProfileEntity profile;
+
+  final ProfileEntity? profile;
+  final CreateProfileUseCase createProfileUseCase;
   final UpdateProfileUseCase updateProfileUseCase;
   final GetAllSkillsUseCase getAllSkillsUseCase;
 
   const ProfileInfoTab({
     super.key,
-    required this.profile,
+    this.profile, 
+    required this.createProfileUseCase, 
     required this.updateProfileUseCase,
     required this.getAllSkillsUseCase,
   });
@@ -37,74 +68,179 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
   late TextEditingController _linkedinController;
   late TextEditingController _portfolioController;
   late TextEditingController _salaryController;
-
-  List<Skill> _availableSkills = []; // List Skill có thể chọn
-  List<SkillEntity> _selectedSkills = []; // Skills hiện tại của User
+    List<UserSkillEntity> _selectedUserSkills = [];
+  List<Skill> _availableSkills = [];
 
   bool _isSaving = false;
   bool _isLoadingSkills = true;
+  bool _isCreating = false; 
+
+  
+  final List<String> _skillLevels = [
+    'BEGINNER',
+    'INTERMEDIATE',
+    'ADVANCED',
+    'EXPERT',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _headlineController = TextEditingController(text: widget.profile.headline);
-    _summaryController = TextEditingController(text: widget.profile.summary);
-    _linkedinController = TextEditingController(text: widget.profile.linkedinUrl);
-    _portfolioController = TextEditingController(text: widget.profile.portfolioUrl);
-    _salaryController =
-        TextEditingController(text: widget.profile.desiredSalary.toString());
-    _selectedSkills =
-        List.from(widget.profile.skills.map((s) => s.skill)); // Lấy skills hiện tại
+    
+    _isCreating = widget.profile == null;
+
+    final formatter = NumberFormat(
+      '#,###',
+    );
+
+    _headlineController = TextEditingController(
+      text: widget.profile?.headline ?? '',
+    );
+    _summaryController = TextEditingController(
+      text: widget.profile?.summary ?? '',
+    );
+    _linkedinController = TextEditingController(
+      text: widget.profile?.linkedinUrl ?? '',
+    );
+    _portfolioController = TextEditingController(
+      text: widget.profile?.portfolioUrl ?? '',
+    );
+
+    // ✅ YÊU CẦU 3: Định dạng lương ban đầu
+    _salaryController = TextEditingController(
+      text:
+          widget.profile?.desiredSalary == null ||
+              widget.profile?.desiredSalary == 0
+          ? ''
+          : formatter.format(widget.profile?.desiredSalary),
+    );
+
+    
+    _selectedUserSkills = _isCreating ? [] : List.from(widget.profile!.skills);
+
     _loadAvailableSkills();
   }
 
   Future<void> _loadAvailableSkills() async {
-    // 💡 Assume GetAllSkillsUseCase uses NoParams or handle its params if needed
-    // final result = await widget.getAllSkillsUseCase(NoParams());
-    // result.fold(
-    //    (failure) { /* Handle error */ },
-    //    (skillsList) {
-    //       setState(() => _availableSkills = skillsList);
-    //    }
-    // );
-    // 💡 Temporary fix assuming it returns List<Skill> directly as per your previous code
     try {
-      final result = await widget
-          .getAllSkillsUseCase(); // Remove NoParams if not needed by your implementation
-      if (result is List<Skill>) { // Or handle Either result
+      final result = await widget.getAllSkillsUseCase();
+      if (result is List<Skill>) {
         setState(() => _availableSkills = result);
       }
     } catch (e) {
-      // Handle error loading skills
       print("Error loading skills: $e");
     }
     setState(() => _isLoadingSkills = false);
   }
 
-  Future<void> _handleUpdate() async {
+  // ✅ YÊU CẦU 1: Hàm save chung
+  Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_isCreating) {
+      await _handleCreate();
+    } else {
+      await _handleUpdate();
+    }
+  }
+
+  // ✅ YÊU CẦU 1: Logic tạo mới
+  Future<void> _handleCreate() async {
     setState(() => _isSaving = true);
 
     try {
+      // ✅ YÊU CẦU 3: Lấy giá trị salary đã loại bỏ dấu phẩy
+      final salaryString = _salaryController.text.trim().replaceAll(',', '');
+
       final requestModel = ProfileRequestModel(
         headline: _headlineController.text.trim(),
         summary: _summaryController.text.trim(),
         linkedinUrl: _linkedinController.text.trim(),
         portfolioUrl: _portfolioController.text.trim(),
-        desiredSalary: int.tryParse(_salaryController.text.trim()) ?? 0,
-        cvFile: widget.profile.cvFile, // Giữ nguyên CV file URL
-        skills: _selectedSkills
-            .map((s) => UserSkillRequest(
-                  skillId: s.id,
-                  experienceYears: 1, // Placeholder: Needs UI to input these
-                  level: 'BEGINNER', // Placeholder: Needs UI to input these
-                  isPrimary: true, // Placeholder: Needs UI to input these
-                ))
+        desiredSalary: int.tryParse(salaryString) ?? 0,
+        cvFile: '', // Khi tạo mới, chưa có UI upload file
+        // ✅ YÊU CẦU 2: Map từ state _selectedUserSkills
+        skills: _selectedUserSkills
+            .map(
+              (s) => UserSkillRequest(
+                skillId: s.skill.id,
+                experienceYears: s.experienceYears,
+                level: s.level,
+                isPrimary: s.isPrimary,
+              ),
+            )
+            .toList(),
+      );
+
+      final result = await widget.createProfileUseCase(
+        ProfileRequestParams(requestModel: requestModel),
+      );
+
+      result.fold(
+        (failure) {
+          MotionToast.error(
+            title: const Text("Lỗi"),
+            description: Text(failure.message),
+            animationType: AnimationType.slideInFromLeft,
+            toastAlignment: Alignment.topLeft,
+          ).show(context);
+        },
+        (createdProfile) {
+          setState(() {
+            _selectedUserSkills = createdProfile.skills;
+            _isCreating = false; // Chuyển sang chế độ update
+          });
+          MotionToast.success(
+            title: const Text("Thành công"),
+            description: const Text('Tạo Profile thành công!'),
+            animationType: AnimationType.slideInFromLeft,
+            toastAlignment: Alignment.topLeft,
+          ).show(context);
+        },
+      );
+    } catch (e) {
+      MotionToast.error(
+        title: const Text("Lỗi"),
+        description: Text('Lỗi tạo Profile: $e'),
+        animationType: AnimationType.slideInFromLeft,
+        toastAlignment: Alignment.topLeft,
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  // ✅ YÊU CẦU 1: Logic cập nhật (đã chỉnh sửa)
+  Future<void> _handleUpdate() async {
+    setState(() => _isSaving = true);
+
+    try {
+      // ✅ YÊU CẦU 3: Lấy giá trị salary đã loại bỏ dấu phẩy
+      final salaryString = _salaryController.text.trim().replaceAll(',', '');
+
+      final requestModel = ProfileRequestModel(
+        headline: _headlineController.text.trim(),
+        summary: _summaryController.text.trim(),
+        linkedinUrl: _linkedinController.text.trim(),
+        portfolioUrl: _portfolioController.text.trim(),
+        desiredSalary: int.tryParse(salaryString) ?? 0,
+        cvFile: widget.profile!.cvFile, // Giữ CV file cũ
+        // ✅ YÊU CẦU 2: Map từ state _selectedUserSkills
+        skills: _selectedUserSkills
+            .map(
+              (s) => UserSkillRequest(
+                skillId: s.skill.id,
+                experienceYears: s.experienceYears,
+                level: s.level,
+                isPrimary: s.isPrimary,
+              ),
+            )
             .toList(),
       );
 
       final result = await widget.updateProfileUseCase(
-          ProfileRequestParams(requestModel: requestModel));
+        ProfileRequestParams(requestModel: requestModel),
+      );
 
       result.fold(
         (failure) {
@@ -116,9 +252,7 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
           ).show(context);
         },
         (updatedProfile) {
-          // You might want to update the profile state globally here if using a Provider
-          setState(() =>
-              _selectedSkills = updatedProfile.skills.map((s) => s.skill).toList());
+          setState(() => _selectedUserSkills = updatedProfile.skills);
           MotionToast.success(
             title: const Text("Thành công"),
             description: const Text('Cập nhật Profile thành công!'),
@@ -135,9 +269,7 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
         toastAlignment: Alignment.topLeft,
       ).show(context);
     } finally {
-      if (mounted) { // Check if the widget is still in the tree
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -151,170 +283,311 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
     super.dispose();
   }
 
+  // Giao diện
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Basic Info Fields ---
-            const Text('Thông tin cơ bản',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            _buildSectionHeader('Thông tin cơ bản'),
+            const SizedBox(height: 16),
             CustomTextField(
-              label: 'Vị trí mong muốn (Headline)',
+              label: 'Vị trí mong muốn',
               icon: Icons.work_outline,
               obscureText: false,
               controller: _headlineController,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             CustomTextField(
-              label: 'Tóm tắt bản thân (Summary)',
+              label: 'Tóm tắt bản thân',
               icon: Icons.notes_outlined,
               obscureText: false,
               controller: _summaryController,
               keyboardType: TextInputType.multiline,
-              // ❌ Removed maxLines: 4, as CustomTextField doesn't support it
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             CustomTextField(
-                label: 'Mức lương mong muốn (USD)',
-                icon: Icons.attach_money,
-                obscureText: false,
-                controller: _salaryController,
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Vui lòng nhập lương';
-                  if (int.tryParse(v) == null) return 'Vui lòng nhập số hợp lệ';
-                  return null;
-                }),
-            const SizedBox(height: 24),
-
-            // --- Links ---
-            const Text('Liên kết',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+              label: 'Mức lương mong muốn (VNĐ)',
+              icon: Icons.attach_money,
+              obscureText: false,
+              controller: _salaryController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                ThousandsInputFormatter(),
+              ],
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Vui lòng nhập lương';
+                final salaryString = v.replaceAll(',', '');
+                if (int.tryParse(salaryString) == null) {
+                  return 'Vui lòng nhập số hợp lệ';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 28),
+            _buildSectionHeader('Liên kết'),
+            const SizedBox(height: 16),
             CustomTextField(
               label: 'Liên kết LinkedIn',
               icon: Icons.link,
               obscureText: false,
               controller: _linkedinController,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             CustomTextField(
               label: 'Liên kết Portfolio',
               icon: Icons.web,
               obscureText: false,
               controller: _portfolioController,
             ),
-            const SizedBox(height: 24),
-
-            // --- Skills Selection ---
-            // ✅ YÊU CẦU 1: Đưa nút "Thêm" lên cạnh tiêu đề "Kỹ năng"
+            const SizedBox(height: 28),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text('Kỹ năng',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                // Di chuyển nút "Thêm kỹ năng" lên đây
+                _buildSectionHeader('Kỹ năng'),
                 ElevatedButton.icon(
-                  // Vô hiệu hóa nút khi đang tải skills
-                  onPressed: _isLoadingSkills ? null : _showSkillSelectionDialog,
-                  icon: const Icon(Icons.add_circle_outline,
-                      color: Colors.black54, size: 20),
-                  // Có thể rút gọn text để vừa vặn hơn
+                  onPressed: _isLoadingSkills
+                      ? null
+                      : _showSkillSelectionDialog,
+                  icon: const Icon(Icons.add_circle_outline, size: 20),
                   label: const Text('Thêm'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey.shade100,
                     foregroundColor: Colors.black87,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     elevation: 0,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12), // Khoảng cách giữa tiêu đề và chip
+            const SizedBox(height: 14),
             _isLoadingSkills
                 ? const Center(child: CircularProgressIndicator())
-                // ✅ _buildSkillsChipInput() bây giờ chỉ hiển thị các chip
                 : _buildSkillsChipInput(),
-            const SizedBox(height: 32),
-
-            // --- Save Button ---
+            const SizedBox(height: 36),
             CustomElevatedButton(
-              text: 'Cập nhật Profile',
-              // ✅ Corrected onPressed to wrap async call
-              onPressed: _isSaving ? null : () => _handleUpdate(),
-              // ✅ Pass isLoading state
+              // ✅ YÊU CẦU 1: Đổi text nút
+              text: _isCreating ? 'Tạo Profile' : 'Cập nhật Profile',
+              onPressed: _isSaving ? null : _handleSave, // Gọi hàm save chung
               isLoading: _isSaving,
             ),
-            
-            // ✅ YÊU CẦU 2: Thêm khoảng đệm ở dưới cùng
-            // Giúp người dùng cuộn qua khỏi bottom bar để thấy nút
-            const SizedBox(height: 100), 
+            const SizedBox(height: 100),
           ],
         ),
       ),
     );
   }
 
-  // ✅ YÊU CẦU 1 (Tiếp theo): Cập nhật widget này để CHỈ hiển thị Chip
-  // Widget cho phần chọn và hiển thị Skills dưới dạng Chip
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+        letterSpacing: 0.3,
+      ),
+    );
+  }
+
+  // ✅ YÊU CẦU 2: Giao diện ListView được cải thiện
   Widget _buildSkillsChipInput() {
-    // Thêm trường hợp nếu chưa chọn skill nào
-    if (_selectedSkills.isEmpty && !_isLoadingSkills) {
+    if (_selectedUserSkills.isEmpty && !_isLoadingSkills) {
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         alignment: Alignment.center,
         child: const Text(
-          'Chưa có kỹ năng. Nhấn "Thêm" để chọn.',
+          'Chưa có kỹ năng nào. Nhấn "Thêm" để chọn.',
           style: TextStyle(color: Colors.grey),
         ),
       );
     }
-    
-    // Chỉ trả về Wrap, không có Column hay Button
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: _selectedSkills
-          .map((skill) => Chip(
-                label: Text(skill.name),
-                backgroundColor:
-                    AppPallete.lightGradient, // Use a consistent theme color
-                labelStyle: const TextStyle(color: Colors.white),
-                deleteIcon:
-                    const Icon(Icons.close, size: 18, color: Colors.white),
-                onDeleted: () {
-                  setState(() {
-                    _selectedSkills.removeWhere((s) => s.id == skill.id);
-                  });
-                },
-              ))
-          .toList(),
+
+    // Dùng ListView.builder thay vì Wrap để có giao diện danh sách
+    return ListView.builder(
+      itemCount: _selectedUserSkills.length,
+      shrinkWrap:
+          true, // Quan trọng: Để ListView nằm trong SingleChildScrollView
+      physics:
+          const NeverScrollableScrollPhysics(), // Không cho ListView cuộn riêng
+      itemBuilder: (context, index) {
+        final userSkill = _selectedUserSkills[index];
+
+        return Card(
+          margin: const EdgeInsets.only(
+            bottom: 10.0,
+          ), // Khoảng cách giữa các item
+          elevation: 2,
+          shadowColor: Colors.grey.withOpacity(0.2),
+          color: Colors.white, // Nền trắng sạch sẽ
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey.shade200), // Viền nhẹ
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 16,
+            ),
+
+            // ✅ YÊU CẦU 2: Thêm icon đầu dòng
+            leading: CircleAvatar(
+              backgroundColor: AppPallete.primaryColor.withOpacity(
+                0.1,
+              ), // Màu nền nhẹ từ theme
+              child: const Icon(
+                Icons.star_border_rounded,
+                color: AppPallete.primaryColor, // Màu icon từ theme
+              ),
+            ),
+
+            // Tiêu đề: Tên kỹ năng
+            title: Text(
+              userSkill.skill.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+
+            // ✅ YÊU CẦU 2: Subtitle rõ ràng hơn với Row và Icon
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 6.0), // Thêm khoảng cách
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // Không chiếm hết chiều ngang
+                children: [
+                  // Số năm
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 14,
+                    color: Colors.black54,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${userSkill.experienceYears} năm',
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+
+                  // Dấu ngăn cách
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text('•', style: TextStyle(color: Colors.grey)),
+                  ),
+
+                  // Cấp độ
+                  const Icon(
+                    Icons.bar_chart_rounded,
+                    size: 16,
+                    color: Colors.black54,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    userSkill.level,
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+
+            
+            trailing: IconButton(
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.redAccent,
+              ),
+              tooltip: 'Xóa kỹ năng',
+              onPressed: () {
+               
+                _showDeleteSkillConfirmationDialog(userSkill);
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
-  // Dialog cho phép người dùng chọn Skill từ danh sách
+  void _showDeleteSkillConfirmationDialog(UserSkillEntity userSkill) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Xác nhận xóa'),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                'Bạn có chắc muốn xóa kỹ năng:',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '${userSkill.skill.name}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              // Tô màu đỏ cho nút xóa
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              onPressed: () {
+                Navigator.pop(context); // Đóng dialog
+                // Thực thi xóa
+                setState(() {
+                  _selectedUserSkills.removeWhere(
+                    (s) => s.skill.id == userSkill.skill.id,
+                  );
+                });
+              },
+              child: const Text('Xóa'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Dialog chọn skill (vẫn như cũ)
   void _showSkillSelectionDialog() {
     showDialog(
       context: context,
       builder: (context) {
+        // ✅ YÊU CẦU 2: Lọc dựa trên _selectedUserSkills
         final availableToSelect = _availableSkills
-            .where((availableSkill) => !_selectedSkills
-                .any((selectedSkill) => selectedSkill.id == availableSkill.id))
+            .where(
+              (availableSkill) => !_selectedUserSkills.any(
+                (selectedSkill) => selectedSkill.skill.id == availableSkill.id,
+              ),
+            )
             .toList();
 
         return AlertDialog(
-          title: const Text('Chọn Kỹ năng'),
+          title: const Text('Chọn kỹ năng'),
           content: availableToSelect.isEmpty
               ? const Text('Đã chọn hết tất cả kỹ năng.')
               : SizedBox(
@@ -327,17 +600,154 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
                       return ListTile(
                         title: Text(skill.name),
                         onTap: () {
-                          setState(() {
-                            // Make sure Skill and SkillEntity are compatible or map appropriately
-                            _selectedSkills.add(
-                                SkillEntity(id: skill.id, name: skill.name));
-                          });
-                          Navigator.pop(context); // Close the dialog
+                          Navigator.pop(context); // Đóng dialog chọn
+                          // ✅ YÊU CẦU 2: Mở dialog nhập chi tiết
+                          _showSkillDetailsDialog(skill);
                         },
                       );
                     },
                   ),
                 ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ✅ YÊU CẦU 2, 3, 4: Dialog mới để nhập năm kinh nghiệm và level
+  void _showSkillDetailsDialog(Skill skill) {
+    int selectedYears = 0; // Mặc định 0 năm
+    String selectedLevel = _skillLevels.first; // Mặc định là BEGINNER
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          // Dùng để cập nhật UI cho Năm và Cấp độ
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('Chi tiết kỹ năng: ${skill.name}'),
+              // Giảm padding mặc định của content
+              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ✅ YÊU CẦU 3: Giao diện chọn Năm
+                  const Text(
+                    'Số năm kinh nghiệm',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () {
+                          if (selectedYears > 0) {
+                            setDialogState(() => selectedYears--);
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        '$selectedYears năm',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: () {
+                          // Giới hạn 30 năm
+                          if (selectedYears < 30) {
+                            setDialogState(() => selectedYears++);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+
+                  // ✅ YÊU CẦU 4: Giao diện chọn Cấp độ (dạng ListTile)
+                  ListTile(
+                    title: const Text('Cấp độ'),
+                    subtitle: Text(selectedLevel),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // Mở dialog chọn level
+                      _showLevelSelectionDialog(context, (newLevel) {
+                        setDialogState(() => selectedLevel = newLevel);
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Tạo UserSkillEntity (tạm thời, bạn cần thay bằng Entity thật)
+                    // ** GIẢ ĐỊNH **: Bạn có một UserSkillEntity
+                    final newUserSkill = UserSkillEntity(
+                      skill: SkillEntity(id: skill.id, name: skill.name),
+                      experienceYears: selectedYears,
+                      level: selectedLevel,
+                      isPrimary: true, // Mặc định là true
+                    );
+
+                    setState(() {
+                      _selectedUserSkills.add(newUserSkill);
+                    });
+                    Navigator.pop(context); // Đóng dialog chi tiết
+                  },
+                  child: const Text('Thêm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ✅ YÊU CẦU 4: Dialog CHỈ để chọn Level (giống chọn Skill)
+  void _showLevelSelectionDialog(
+    BuildContext dialogContext,
+    ValueChanged<String> onLevelSelected,
+  ) {
+    showDialog(
+      context: dialogContext, // Dùng context của dialog trước đó
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Chọn cấp độ'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _skillLevels.length,
+              itemBuilder: (context, index) {
+                final level = _skillLevels[index];
+                return ListTile(
+                  title: Text(level),
+                  onTap: () {
+                    onLevelSelected(level); // Trả kết quả về
+                    Navigator.pop(context); // Đóng dialog chọn level
+                  },
+                );
+              },
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),

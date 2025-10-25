@@ -1,4 +1,7 @@
+// file: features/shared/auth/presentation/widgets/custom_text_field.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ✅ THÊM IMPORT NÀY
 import 'package:pbl6/core/theme/app_pallete.dart';
 
 class CustomTextField extends StatefulWidget {
@@ -8,6 +11,7 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters; // ✅ THÊM DÒNG NÀY
 
   const CustomTextField({
     super.key,
@@ -17,6 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.controller,
     this.validator,
     this.keyboardType,
+    this.inputFormatters, // ✅ THÊM DÒNG NÀY
   });
 
   @override
@@ -59,6 +64,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           controller: widget.controller,
           obscureText: _isObscured,
           keyboardType: widget.keyboardType,
+          inputFormatters: widget.inputFormatters, // ✅ THÊM DÒNG NÀY
           style: TextStyle(
             color: AppPallete.textColor,
             fontSize: 16,
