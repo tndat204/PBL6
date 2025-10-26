@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name = "job-service",
-        path = "/api/job/company",
+        path = "/api/companies",
         configuration = FeignClientConfig.class
 )
 public interface CompanyClient {
-    @PostMapping("/create")
+    @PostMapping
     public APIResponse<CompanyResponse> createCompany(@RequestBody CreateCompanyRequest request);
 }

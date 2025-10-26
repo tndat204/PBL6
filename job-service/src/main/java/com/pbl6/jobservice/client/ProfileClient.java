@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @FeignClient(
         name = "profile-service",
-        path = "/api/profile",
+        path = "/api/profiles",
         configuration = {AuthenticationRequestInterceptor.class}
 )
 public interface ProfileClient {
-    @GetMapping("/cv")
+    @GetMapping("/me/cv")
     public APIResponse<String> getCv();
 }

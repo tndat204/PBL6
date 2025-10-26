@@ -13,14 +13,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/file")
+@RequestMapping("/api/files")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class FileController {
     FileService fileService;
     public FileController(FileService fileService) {
         this.fileService = fileService;
     }
-    @PostMapping("/upload")
+    @PostMapping
     APIResponse<String> uploadFile(@RequestParam("file") MultipartFile file,
                                    @RequestParam(value = "folder", defaultValue = "uploads") String folderName) throws IOException {
         return APIResponse.<String>builder()

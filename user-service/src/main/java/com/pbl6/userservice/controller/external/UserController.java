@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class UserController {
     UserService userService;
@@ -23,7 +23,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/password/reset")
     public APIResponse<String> resetPassword(@RequestBody ResetPasswordRequest request) {
         userService.resetPassword(request);
         return APIResponse.<String>builder()
@@ -32,36 +32,36 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/my-info")
+    @GetMapping("/me")
     public APIResponse<UserResponse> getMyInfo() {
         return APIResponse.<UserResponse>builder()
                 .code(200)
                 .result(userService.getMyInfo())
                 .build();
     }
-    @GetMapping("/all")
+    @GetMapping
     public APIResponse<List<UserResponse>> getAllUsers() {
         return APIResponse.<List<UserResponse>>builder()
                 .code(200)
                 .result(userService.getAllUsers())
                 .build();
     }
-    @PutMapping("/change-status")
-    public APIResponse<String> changeStatus(@RequestParam("id") String id){
+    @PutMapping("/{id}/status")
+    public APIResponse<String> changeStatus(@PathVariable("id") String id){
         userService.changeStatus(id);
         return APIResponse.<String>builder()
                 .code(200)
                 .result("Change Status Successfully")
                 .build();
     }
-    @PutMapping("/upload-avatar")
+    @PutMapping("/me/avatar")
     public APIResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file){
         return APIResponse.<String>builder()
                 .code(200)
                 .result(userService.uploadAvatar(file))
                 .build();
     }
-    @PatchMapping("/update-my-info")
+    @PatchMapping("/me")
     public APIResponse<UserResponse> updateMyInfo(@RequestBody UpdateUserRequest request){
         return APIResponse.<UserResponse>builder()
                 .code(200)
@@ -76,7 +76,7 @@ public class UserController {
                 .result("Delete User Successfully")
                 .build();
     }
-    @PutMapping("/{userId}/upgrade-role/{roleId}")
+    @PutMapping("/{userId}/role/{roleId}")
     public APIResponse<String> upgradeRole(@PathVariable String userId, @PathVariable String roleId){
         userService.upgradeRole(userId,roleId);
         return APIResponse.<String>builder()
@@ -84,7 +84,7 @@ public class UserController {
                 .result("Upgrade Role Successfully")
                 .build();
     }
-    @PutMapping("/change-password")
+    @PutMapping("/me/password")
     public APIResponse<String> changePassword(@RequestBody ChangePasswordRequest request){
         userService.changePassword(request);
         return APIResponse.<String>builder()

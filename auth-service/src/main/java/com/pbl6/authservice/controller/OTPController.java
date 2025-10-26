@@ -21,7 +21,7 @@ public class OTPController {
         this.otpService = otpService;
     }
 
-    @PostMapping("/forgot-password")
+    @PostMapping("/password/send")
     public APIResponse<String> sendOTP(@RequestBody SendMailRequest request){
         otpService.sendOTP(request);
         return APIResponse.<String>builder()
@@ -29,7 +29,7 @@ public class OTPController {
                 .result("Send OTP successfully!")
                 .build();
     }
-    @PostMapping("/verify-otp")
+    @PostMapping("/verify")
     public APIResponse<String> verifyOTP(@RequestBody VerifyOTPRequest request) {
         return APIResponse.<String>builder()
                 .code(200)

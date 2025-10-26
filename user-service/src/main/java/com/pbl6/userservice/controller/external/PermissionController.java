@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user/permission")
+@RequestMapping("/api/permissions")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal = true)
 public class PermissionController {
     PermissionService permissionService;
@@ -20,7 +20,7 @@ public class PermissionController {
         this.permissionService = permissionService;
     }
 
-    @PostMapping("/add")
+    @PostMapping
     APIResponse<PermissionResponse> createPermission(@RequestBody PermissionRequest request){
         return APIResponse.<PermissionResponse>builder()
                 .code(200)

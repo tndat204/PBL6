@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/job/application")
+@RequestMapping("/api/applications")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class ApplicationController {
     ApplicationService applicationService;
@@ -27,7 +27,7 @@ public class ApplicationController {
                 .result(applicationService.createApplication(applicationRequest))
                 .build();
     }
-    @GetMapping("/by-job/{jobId}")
+    @GetMapping("/job/{jobId}")
     public APIResponse<List<ApplicationResponse>> getApplicationsByJobId(@PathVariable String jobId) {
         return APIResponse.<List<ApplicationResponse>>builder()
                 .code(200)

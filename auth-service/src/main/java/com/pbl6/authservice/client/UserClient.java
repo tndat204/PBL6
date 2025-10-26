@@ -7,17 +7,17 @@ import com.pbl6.authservice.dto.shared.UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "user-service",path="/api/user/internal",configuration = {AuthenticationRequestInterceptor.class})
+@FeignClient(name = "user-service",path="/api/internal/users",configuration = {AuthenticationRequestInterceptor.class})
 public interface UserClient {
-    @GetMapping("/by-email")
+    @GetMapping("/email")
     APIResponse<UserResponse> getUserByEmail(@RequestParam("email") String email);
 
-    @GetMapping("/check-email")
+    @GetMapping("/email/exists")
     APIResponse<Boolean> checkEmail(@RequestParam("email") String email);
 
-    @PostMapping("/reset-password")
+    @PostMapping("/password/reset")
     APIResponse<String> resetPassword(@RequestBody ResetPasswordRequest request);
 
-    @PostMapping("/register")
+    @PostMapping
     APIResponse<UserResponse>  registerUser(@RequestBody CreateUserRequest request);
 }

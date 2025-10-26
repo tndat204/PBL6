@@ -12,6 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
         path = "/api/auth"
 )
 public interface AuthClient {
-    @PostMapping("/verify")
+    @PostMapping("/introspect")
     public APIResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request);
 }

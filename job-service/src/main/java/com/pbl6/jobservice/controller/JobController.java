@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/job")
+@RequestMapping("/api/jobs")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class JobController {
 
@@ -38,7 +38,7 @@ public class JobController {
                 .result(jobService.getJobById(id))
                 .build();
     }
-    @GetMapping("/all")
+    @GetMapping
     public APIResponse<List<JobResponse>> getAllJobs( @RequestParam(value = "companyId", required = false) String companyId,
                                                       @RequestParam(value = "status", required = false) Job.JobStatus status){
         return APIResponse.<List<JobResponse>>builder()

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/profile/skill")
+@RequestMapping("/api/skills")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class SkillController {
     SkillService skillService;
@@ -32,7 +32,7 @@ public class SkillController {
                 .result(skillService.getSkillById(id))
                 .build();
     }
-    @GetMapping("/all")
+    @GetMapping
     public APIResponse<List<SkillResponse>> getAllSkills(@RequestParam(required = false) String categoryId){
         return APIResponse.<List<SkillResponse>>builder()
                 .code(200)

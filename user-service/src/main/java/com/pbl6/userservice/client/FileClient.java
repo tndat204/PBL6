@@ -11,12 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 @FeignClient(
         name = "file-service",
-        path = "/api/file",
+        path = "/api/files",
         configuration = {AuthenticationRequestInterceptor.class, FeignMultipartConfig.class}
 )
 public interface FileClient {
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     APIResponse<String> uploadFile(
             @RequestPart("file") MultipartFile file,
             @RequestPart("folder") String folderName

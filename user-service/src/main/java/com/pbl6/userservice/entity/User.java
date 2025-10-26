@@ -1,8 +1,7 @@
 package com.pbl6.userservice.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 
@@ -13,6 +12,9 @@ import java.util.UUID;
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "users")
 public class User extends Base {
     @Id

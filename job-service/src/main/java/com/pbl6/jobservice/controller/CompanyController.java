@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/job/company")
+@RequestMapping("/api/companies")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class CompanyController {
     CompanyService companyService;
@@ -22,7 +22,7 @@ public class CompanyController {
         this.companyService = companyService;
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public APIResponse<CompanyResponse> createCompany(@RequestBody CreateCompanyRequest request){
         return APIResponse.<CompanyResponse>builder()
                 .code(200)
@@ -36,7 +36,7 @@ public class CompanyController {
                 .result(companyService.getCompanyById(id))
                 .build();
     }
-    @GetMapping("/all")
+    @GetMapping
     public APIResponse<List<CompanyResponse>> getAllCompanies(){
         return APIResponse.<List<CompanyResponse>>builder()
                 .code(200)
@@ -58,7 +58,7 @@ public class CompanyController {
                 .result("Company deleted successfully")
                 .build();
     }
-    @PutMapping("/activate/{id}")
+    @PutMapping("/{id}/activate")
     public APIResponse<String> activateCompany(@PathVariable String id){
         companyService.activateCompanyById(id);
         return APIResponse.<String>builder()
@@ -66,7 +66,7 @@ public class CompanyController {
                 .result("Company activated successfully")
                 .build();
     }
-    @PutMapping("/deactivate/{id}")
+    @PutMapping("/{id}/deactivate")
     public APIResponse<String> deactivateCompany(@PathVariable String id){
         companyService.deactivateCompanyById(id);
         return APIResponse.<String>builder()
@@ -74,7 +74,7 @@ public class CompanyController {
                 .result("Company deactivated successfully")
                 .build();
     }
-    @PutMapping("/logo/{companyId}")
+    @PutMapping("/{companyId}/logo")
     public APIResponse<String> uploadLogo(MultipartFile file, @PathVariable String companyId){
         return APIResponse.<String>builder()
                 .code(200)

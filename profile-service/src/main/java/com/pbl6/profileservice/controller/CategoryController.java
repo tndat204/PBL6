@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/profile/category")
+@RequestMapping("/api/categories")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class CategoryController {
     CategoryService categoryService;
@@ -36,7 +36,7 @@ public class CategoryController {
                 .build();
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public APIResponse<List<CategoryResponse>> getAllCategories() {
         return APIResponse.<List<CategoryResponse>>builder()
                 .code(200)

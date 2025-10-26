@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/api/profiles")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class ProfileController {
     ProfileService profileService;
@@ -26,7 +26,7 @@ public class ProfileController {
                 .build();
     }
 
-    @GetMapping("/my-profile")
+    @GetMapping("/me")
     public APIResponse<ProfileResponse> getMyProfile() {
         return APIResponse.<ProfileResponse>builder()
                 .code(200)
@@ -41,7 +41,7 @@ public class ProfileController {
                 .result(profileService.getProfileByUserId(userId))
                 .build();
     }
-    @GetMapping("/cv")
+    @GetMapping("/me/cv")
     public APIResponse<String> getCv()
     {
         return APIResponse.<String>builder()
@@ -50,7 +50,7 @@ public class ProfileController {
                 .build();
     }
 
-    @PutMapping
+    @PutMapping("/me")
     public APIResponse<ProfileResponse> updateProfile(@RequestBody ProfileRequest profileRequest) {
         return APIResponse.<ProfileResponse>builder()
                 .code(200)
@@ -58,7 +58,7 @@ public class ProfileController {
                 .build();
     }
 
-    @PutMapping("/toggle-status")
+    @PutMapping("/me/status")
     public APIResponse<String> toggleStatus()
     {
         profileService.toggleActive();
@@ -67,7 +67,7 @@ public class ProfileController {
                 .result("Toggle status successfully")
                 .build();
     }
-    @PutMapping("/upload-cv")
+    @PutMapping("/me/cv")
     public APIResponse<String>  uploadCV(@RequestParam("file") MultipartFile file)
     {
         return APIResponse.<String>builder()

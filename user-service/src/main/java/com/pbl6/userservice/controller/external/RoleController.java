@@ -12,7 +12,7 @@ import com.pbl6.userservice.dto.shared.RoleResponse;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user/role")
+@RequestMapping("/api/roles")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal = true)
 public class RoleController {
     RoleService roleService;
@@ -21,7 +21,7 @@ public class RoleController {
         this.roleService = roleService;
     }
 
-    @PostMapping("/add")
+    @PostMapping
     APIResponse<RoleResponse> createRole(@RequestBody CreateRoleRequest request){
         return APIResponse.<RoleResponse>builder()
                 .code(200)

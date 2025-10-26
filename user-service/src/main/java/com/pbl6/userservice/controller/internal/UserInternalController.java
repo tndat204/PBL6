@@ -9,7 +9,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 @RestController
-@RequestMapping("/api/user/internal")
+@RequestMapping("/api/internal/users")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class UserInternalController {
     UserService userService;
@@ -18,7 +18,7 @@ public class UserInternalController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
+    @PostMapping
     public APIResponse<UserResponse> register(@RequestBody CreateUserRequest request){
         return APIResponse.<UserResponse>builder()
                 .code(200)
@@ -26,7 +26,7 @@ public class UserInternalController {
                 .build();
     }
 
-    @GetMapping("/by-email")
+    @GetMapping("/email")
     public APIResponse<UserResponse> getUserByEmail(@RequestParam("email") String email) {
         return APIResponse.<UserResponse>builder()
                 .code(200)
@@ -34,7 +34,7 @@ public class UserInternalController {
                 .build();
     }
 
-    @GetMapping("/check-email")
+    @GetMapping("/email/exists")
     public APIResponse<Boolean> checkEmail(@RequestParam("email") String email) {
         boolean exists = userService.existsByEmail(email);
         return APIResponse.<Boolean>builder()
@@ -44,7 +44,7 @@ public class UserInternalController {
                 .build();
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/password/reset")
     public APIResponse<String> resetPassword(@RequestBody ResetPasswordRequest request) {
         userService.resetPassword(request);
         return APIResponse.<String>builder()

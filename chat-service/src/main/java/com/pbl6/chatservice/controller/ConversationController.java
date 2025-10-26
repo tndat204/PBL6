@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/chat/conversation")
+@RequestMapping("/api/conversations")
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal = true)
 public class ConversationController {
     ConversationService conversationService;
     public ConversationController(ConversationService conversationService) {
         this.conversationService = conversationService;
     }
-    @PostMapping("/start/{targetUserId}")
+    @PostMapping("/{targetUserId}")
     public APIResponse<ConversationResponse> startConversation(@PathVariable("targetUserId") UUID targetUserId){
         return APIResponse.<ConversationResponse>builder()
                 .code(200)
@@ -28,7 +28,7 @@ public class ConversationController {
                 .build();
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public APIResponse<List<ConversationResponse>> getUserConversations(){
         return APIResponse.<List<ConversationResponse>>builder()
                 .code(200)

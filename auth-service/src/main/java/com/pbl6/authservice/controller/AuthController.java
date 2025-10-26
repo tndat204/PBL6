@@ -26,7 +26,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/login")
+    @PostMapping("/token")
     public APIResponse<AuthenticationResponse> login(@RequestBody LoginRequest request) {
         var result = authService.login(request);
         return APIResponse.<AuthenticationResponse>builder()
@@ -43,7 +43,7 @@ public class AuthController {
                 .code(200)
                 .build();
     }
-    @PostMapping("/refresh")
+    @PostMapping("/token/refresh")
     APIResponse<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequest request)
             throws ParseException, JOSEException {
         var result = authService.refreshToken(request);
@@ -52,7 +52,7 @@ public class AuthController {
                 .result(result)
                 .build();
     }
-    @PostMapping("/verify")
+    @PostMapping("/introspect")
     public APIResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
             throws JOSEException, ParseException {
         var result = authService.introspect(request);
@@ -62,7 +62,7 @@ public class AuthController {
                 .build();
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/password/reset")
     public APIResponse<String> resetPassword(@RequestBody NewPasswordRequest request){
         authService.resetPassword(request);
         return APIResponse.<String>builder()
