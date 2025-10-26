@@ -3,6 +3,7 @@ package com.pbl6.jobservice.configuration;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,8 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/api/job/company/create"
+            "/swagger-ui/**"
     };
 
     private final CustomJwtDecoder customJwtDecoder;
@@ -31,6 +31,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(PUBLIC_ENDPOINTS)
                 .permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/companies").permitAll()
                 .anyRequest()
                 .authenticated());
 

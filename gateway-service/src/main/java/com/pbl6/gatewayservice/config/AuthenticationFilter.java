@@ -32,24 +32,29 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     ObjectMapper objectMapper;
 
     List<String> publicEndpoints = List.of(
-            "/api/auth/login",
-            "/api/user/internal/register",
+            "/api/auth/token",
             "/api/auth/google-web",
             "/api/auth/google-app",
             "/api/auth/logout",
             "/api/auth/refresh",
-            "/api/auth/reset-password",
-            "/api/auth/otp/forgot-password",
-            "/api/auth/otp/verify-otp"
+            "/api/auth/password/reset",
+            "/api/auth/otp/password/send",
+            "/api/internal/users",
+            "/api/auth/otp/verify"
     );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
-
+        String method = exchange.getRequest().getMethod().name();
         // 🚀 Nếu request trùng public endpoint hoặc WebSocket thì bỏ qua filter
         boolean isPublic = publicEndpoints.stream().anyMatch(path::startsWith)
                 || path.startsWith("/ws"); // <-- tất cả /ws/** là public
+
+
+        if (path.startsWith("/api/internal/users") && !"POST".equalsIgnoreCase(method)) {
+            isPublic = false;
+        }
 
         if (isPublic) {
             return chain.filter(exchange);
