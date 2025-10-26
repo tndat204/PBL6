@@ -5,6 +5,9 @@ import 'package:jwt_decode/jwt_decode.dart'; // Decode token
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
+import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
+import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -12,7 +15,6 @@ import '../../../../../routes/route_names.dart'; // Import route names
 import '../../../../user/jobs/domain/entities/user.dart'; // Import User từ user domain (mở rộng từ auth)
 import '../widgets/custom_elevated_button.dart';
 import '../widgets/custom_text_field.dart';
-
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
 
@@ -28,11 +30,12 @@ class _LoginFormState extends State<LoginForm> {
   bool _rememberMe = false;
 
   late final LoginUseCase _loginUseCase;
-
+  late final GetMyInfoUseCase _getMyInfoUseCase;
   @override
   void initState() {
     super.initState();
     _loginUseCase = GetIt.I<LoginUseCase>();
+    _getMyInfoUseCase = GetIt.I<GetMyInfoUseCase>();
   }
 
   Future<void> _handleLogin() async {
@@ -76,7 +79,19 @@ class _LoginFormState extends State<LoginForm> {
 
         // Nếu rememberMe thì đánh dấu cờ remember
         await prefs.setBool('remember_me', _rememberMe);
-
+        try {
+            // Fetch user info immediately after successful login
+            final userEntity = await _getMyInfoUseCase();
+            // Update the global UserProvider
+            if (mounted) {
+                 // Use read here as we are inside a button handler
+                 context.read<UserProvider>().setUser(User.fromAuthEntity(userEntity));
+            }
+          } catch (e) {
+             // Handle error fetching user info if needed, but don't block login
+             print("Error fetching user info after login: $e");
+             // Maybe show a less intrusive warning later
+          }
         
 
         // ✅ Hiển thị toast thành công

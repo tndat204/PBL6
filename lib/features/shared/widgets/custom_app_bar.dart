@@ -1,31 +1,40 @@
+// file: features/shared/widgets/custom_app_bar.dart
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/api_constants.dart';
-import '../../user/jobs/domain/entities/user.dart';
 import '../user/presentation/providers/user_provider.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final User? user; // ✅ nhận user từ bên ngoài (có thể null)
-
-  const CustomAppBar({super.key, this.user});
+  // Remove the user parameter
+  // final User? user;
+  const CustomAppBar({super.key}); // Update constructor
 
   @override
   Widget build(BuildContext context) {
+    // Directly watch the provider
+    final effectiveUser = context.watch<UserProvider>().user;
 
-   
-    final effectiveUser = context.watch<UserProvider>().user ?? user;
-
+    // Show a basic AppBar while user is loading (or handle null differently)
     if (effectiveUser == null) {
-      return AppBar(title: const Text('Đang tải...'));
+      // You could return an empty AppBar or a placeholder
+      return AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        toolbarHeight: 80,
+        title: const Text('Đang tải...'), // Or keep it blank
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, size: 30),
+            onPressed: () {},
+          ),
+        ],
+      );
     }
 
-    final avatarUrl = effectiveUser.avatarUrl.isNotEmpty
-        ? (effectiveUser.avatarUrl.startsWith('http')
-            ? effectiveUser.avatarUrl
-            : '${ApiConstants.baseUrl}${effectiveUser.avatarUrl}')
-        : null;
+    // ✅ SIMPLIFIED URL LOGIC (as done previously)
+    final avatarUrl = effectiveUser.avatarUrl.isNotEmpty ? effectiveUser.avatarUrl : null;
 
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -59,7 +68,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 Text(
                   effectiveUser.fullName.isNotEmpty
                       ? effectiveUser.fullName
-                      : 'Người dùng',
+                      : 'Người dùng', // Fallback name
                   style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.w700,

@@ -29,7 +29,7 @@ class _AppLayoutState extends State<AppLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(user: widget.user),
+      appBar: CustomAppBar(),
       body: widget.child,
       bottomNavigationBar: CustomBottomNav(
         currentIndex: currentIndex,
