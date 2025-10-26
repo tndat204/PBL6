@@ -1,5 +1,8 @@
+// file: features/shared/user/presentation/widgets/my_info_avatar.dart
+
 import 'package:flutter/material.dart';
-import 'package:pbl6/core/constants/api_constants.dart';
+// Remove the ApiConstants import if it's not used elsewhere in this file
+// import 'package:pbl6/core/constants/api_constants.dart';
 
 class MyInfoAvatar extends StatelessWidget {
   final String avatarUrl;
@@ -9,17 +12,15 @@ class MyInfoAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final url = avatarUrl.isNotEmpty
-        ? (avatarUrl.startsWith('http')
-            ? avatarUrl
-            : '${ApiConstants.baseUrl}$avatarUrl')
-        : null;
+    // ✅ SIMPLIFIED LOGIC: Use avatarUrl directly if not empty
+    final url = avatarUrl.isNotEmpty ? avatarUrl : null;
 
     return GestureDetector(
       onTap: onTap,
       child: CircleAvatar(
         radius: 55,
         backgroundColor: Colors.grey.shade300,
+        // Use NetworkImage directly with the potentially null 'url'
         backgroundImage: url != null
             ? NetworkImage(url)
             : const AssetImage('assets/images/avatar.png') as ImageProvider,
