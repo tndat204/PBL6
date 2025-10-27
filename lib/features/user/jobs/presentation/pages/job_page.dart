@@ -313,9 +313,10 @@ class _JobPageState extends State<JobPage> {
                                 child: Text(
                                   'Chúng tôi giúp bạn nhận được\ncông việc bạn xứng đáng!',
                                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                        fontWeight: FontWeight.w700, fontSize: 24,
-                                        color: AppPallete.textColor, height: 1.3,
+                                        fontWeight: FontWeight.w400, fontSize: 40,
+                                        color: AppPallete.textColor, height: 1.3,fontFamily: 'Italianno',
                                       ),
+                                      
                                 ),
                               ),
                               const SizedBox(height: 18),
@@ -327,7 +328,7 @@ class _JobPageState extends State<JobPage> {
                             ],
                           ),
                         ),
-                        expandedHeight: 250,
+                        expandedHeight: 300,
                       ),
 
                       // --- Main Content ---

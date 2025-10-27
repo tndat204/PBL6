@@ -20,7 +20,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
 
   @override
   Future<List<Category>> fetchAllCategories() async {
-    final response = await _dio.get("${ApiConstants.profile}/category/all");
+    final response = await _dio.get(ApiConstants.categories);
     final data = response.data;
 
     if (data == null || data['result'] == null) return [];
@@ -34,7 +34,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   @override
   Future<Category?> fetchCategory(String id) async { 
     try {
-      final response = await _dio.get("${ApiConstants.profile}/category/$id");
+      final response = await _dio.get("${ApiConstants.categories}/$id");
       print(response.data);
       final dynamic rawData = response.data?['result'];
      
@@ -57,7 +57,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   @override
   Future<Category> createCategory(Map<String, dynamic> body) async {
     final response =
-        await _dio.post("${ApiConstants.profile}/category", data: body);
+        await _dio.post(ApiConstants.categories, data: body);
         
     final dynamic rawData = response.data?['result'] ?? {};
     final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
@@ -68,7 +68,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   @override
   Future<Category> updateCategory(String id, Map<String, dynamic> body) async {
     final response =
-        await _dio.put("${ApiConstants.profile}/category/$id", data: body);
+        await _dio.put("${ApiConstants.categories}/$id", data: body);
         
     final dynamic rawData = response.data?['result'] ?? {};
     final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
@@ -78,6 +78,6 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
 
   @override
   Future<void> deleteCategory(String id) async {
-    await _dio.delete("${ApiConstants.profile}/category/$id");
+    await _dio.delete("${ApiConstants.categories}/$id");
   }
 }

@@ -18,7 +18,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   @override
   Future<List<Job>> fetchAllJobs({String? category, String? keyword}) async {
     final response = await _dio.get(
-      "${ApiConstants.jobs}/all",
+      ApiConstants.jobs,
       queryParameters: {
         if (category != null) "category": category,
         if (keyword != null) "q": keyword,

@@ -49,13 +49,17 @@ class CategoryChip extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20), // Standard chip radius
           // ✅ No border
-          side: BorderSide.none,
+         side: BorderSide(
+    color: Colors.grey.shade300, // viền xám nhẹ
+    width: 1,
+  ),
         ),
         // Adjust padding for a better look
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         // Remove elevation for a flatter look
         pressElevation: 0,
         elevation: 0,
+        
       ),
     );
   }

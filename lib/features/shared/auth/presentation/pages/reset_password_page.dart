@@ -38,7 +38,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        print('🔹 Reset password với token: ${widget.token}');
+      
         final response = await _useCase.resetPassword(
           _passwordController.text,
           widget.token,

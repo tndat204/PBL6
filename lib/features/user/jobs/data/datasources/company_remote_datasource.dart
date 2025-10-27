@@ -22,7 +22,7 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   @override
   Future<List<Company>> fetchAllCompanies() async {
     try {
-      final response = await _dio.get("${ApiConstants.companies}/all");
+      final response = await _dio.get(ApiConstants.companies);
       final List<dynamic> data = response.data['result'];
       return data.map((json) => Company.fromJson(json)).toList();
     } catch (e) {

@@ -183,13 +183,14 @@ class _MyProfilePageState extends State<MyProfilePage>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'Hoàn thiện hồ sơ để tăng cơ hội việc làm!', 
+                  'Hoàn thiện hồ sơ của bạn\n để tăng cơ hội việc làm!', 
                   style: Theme.of(context).textTheme.headlineSmall
                       ?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 24,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 42,
                         color: AppPallete.textColor,
                         height: 1.3,
+                        fontFamily: 'Italianno',
                       ),
                 ),
               ),

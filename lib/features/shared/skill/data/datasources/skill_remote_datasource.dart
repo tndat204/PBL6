@@ -21,7 +21,7 @@ class SkillRemoteDataSourceImpl implements SkillRemoteDataSource {
   @override
   Future<List<Skill>> fetchAllSkills({String? categoryId}) async {
     final response = await _dio.get(
-      "${ApiConstants.profile}/skill/all",
+      ApiConstants.skills,
       queryParameters: categoryId != null ? {'categoryId': categoryId} : null,
     );
 
@@ -37,8 +37,7 @@ class SkillRemoteDataSourceImpl implements SkillRemoteDataSource {
   @override
   Future<Skill?> fetchSkill(String id) async { // 🌟 Logic trả về null
     try {
-      // ⚠️ Đảm bảo API Constants tạo ra URL đúng: http://localhost:8080/api/profile/skill/$id
-      final response = await _dio.get("${ApiConstants.profile}/skill/$id"); 
+      final response = await _dio.get("${ApiConstants.skills}/$id"); 
       final dynamic rawData = response.data?['result'];
       
       // ✅ FIX: Chuyển đổi an toàn và kiểm tra dữ liệu
@@ -62,7 +61,7 @@ class SkillRemoteDataSourceImpl implements SkillRemoteDataSource {
   @override
   Future<Skill> createSkill(Map<String, dynamic> body) async {
     final response =
-        await _dio.post("${ApiConstants.profile}/skill", data: body);
+        await _dio.post(ApiConstants.skills, data: body);
         
     final dynamic rawData = response.data?['result'] ?? {};
     final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
@@ -73,7 +72,7 @@ class SkillRemoteDataSourceImpl implements SkillRemoteDataSource {
   @override
   Future<Skill> updateSkill(String id, Map<String, dynamic> body) async {
     final response =
-        await _dio.put("${ApiConstants.profile}/skill/$id", data: body);
+        await _dio.put("${ApiConstants.skills}/$id", data: body);
         
     final dynamic rawData = response.data?['result'] ?? {};
     final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
@@ -83,6 +82,6 @@ class SkillRemoteDataSourceImpl implements SkillRemoteDataSource {
 
   @override
   Future<void> deleteSkill(String id) async {
-    await _dio.delete("${ApiConstants.profile}/skill/$id");
+    await _dio.delete("${ApiConstants.skills}/$id");
   }
 }

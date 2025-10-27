@@ -25,7 +25,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<ProfileApiResponse> getMyProfile() async {
     try {
-      final response = await _dio.get("${ApiConstants.profile}/my-profile");
+      final response = await _dio.get("${ApiConstants.profiles}/me");
       
       // Trả về ProfileApiResponse chứa ProfileResponse
       return ProfileApiResponse.fromJson(response.data);
@@ -46,7 +46,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       });
 
       final response = await _dio.put(
-        "${ApiConstants.profile}/upload-cv",
+        "${ApiConstants.profiles}/me/cv",
         data: formData,
         options: Options(contentType: 'multipart/form-data'),
       );
@@ -65,7 +65,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<ProfileApiResponse> getCVUrl() async {
     try {
-      final response = await _dio.get("${ApiConstants.profile}/cv");
+      final response = await _dio.get("${ApiConstants.profiles}/me/cv");
       
       // Trả về ProfileApiResponse chứa String (CV URL)
       return ProfileApiResponse.fromJson(response.data);
@@ -82,7 +82,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<ProfileApiResponse> createProfile(ProfileRequestModel request) async {
     try {
       final response = await _dio.post(
-        ApiConstants.profile, // /api/profile
+        ApiConstants.profiles, // /api/profile
         data: request.toJson(),
       );
       return ProfileApiResponse.fromJson(response.data);
@@ -99,7 +99,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<ProfileApiResponse> updateProfile(ProfileRequestModel request) async {
     try {
       final response = await _dio.put(
-        ApiConstants.profile, // /api/profile
+"${ApiConstants.profiles}/me", // /api/profile
         data: request.toJson(),
       );
       return ProfileApiResponse.fromJson(response.data);
