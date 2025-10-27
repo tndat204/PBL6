@@ -14,6 +14,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/get_my_info_usecase.dart';
 import '../../domain/usecases/update_my_info_usecase.dart';
 import '../../domain/usecases/upload_avatar_usecase.dart';
+import '../widgets/my_info_tab_change_password.dart';
 
 class MyInfoPage extends StatefulWidget {
   const MyInfoPage({super.key});
@@ -31,13 +32,13 @@ class _MyInfoPageState extends State<MyInfoPage>
   UserEntity? _user;
   bool _isLoading = true;
   late TabController _tabController;
-
-  @override
+  
   void initState() {
     super.initState();
     _getMyInfoUseCase = GetIt.I<GetMyInfoUseCase>();
     _updateMyInfoUseCase = GetIt.I<UpdateMyInfoUseCase>();
     _uploadAvatarUseCase = GetIt.I<UploadAvatarUseCase>();
+   
     _tabController = TabController(length: 2, vsync: this);
     _loadUser();
   }
@@ -94,7 +95,11 @@ class _MyInfoPageState extends State<MyInfoPage>
       MotionToast.error(description: Text('Upload thất bại: $e')).show(context);
     }
   }
-
+@override
+  void dispose() { 
+    _tabController.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -217,9 +222,7 @@ class _MyInfoPageState extends State<MyInfoPage>
                             }
                           },
                         ),
-                        const Center(
-                          child: Text('Tab Đổi mật khẩu — sẽ thêm sau'),
-                        ),
+                        const MyInfoTabChangePassword(),
                       ],
                     ),
                   ),

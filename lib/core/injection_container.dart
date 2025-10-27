@@ -35,6 +35,7 @@ import 'package:pbl6/features/shared/skill/domain/usecases/update_skill_usecase.
 import 'package:pbl6/features/shared/user/data/datasources/user_remote_datasource.dart';
 import 'package:pbl6/features/shared/user/data/repositories/user_repository_impl.dart';
 import 'package:pbl6/features/shared/user/domain/repositories/user_repository.dart';
+import 'package:pbl6/features/shared/user/domain/usecases/change_my_password_usecase.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
 import 'package:pbl6/features/user/jobs/data/datasources/company_remote_datasource.dart';
 import 'package:pbl6/features/user/jobs/data/datasources/job_remote_datasource.dart';
@@ -98,6 +99,9 @@ void init() {
   );
   sl.registerLazySingleton<UploadAvatarUseCase>(
     () => UploadAvatarUseCase(sl<UserRepository>()),
+  );
+sl.registerLazySingleton<ChangeMyPasswordUsecase>(
+    () => ChangeMyPasswordUsecase(sl<UserRepository>()),
   );
 
   // ================= JOB =================
@@ -195,4 +199,5 @@ sl.registerLazySingleton<UploadCVUseCase>(
  sl.registerLazySingleton<GetCVUrlUseCase>(
  () => GetCVUrlUseCase(sl<ProfileRepository>()),
  );
+
 }

@@ -23,6 +23,9 @@ class UserRepositoryImpl implements UserRepository {
   Future<String> uploadAvatar(File imageFile) async {
     return await remoteDataSource.uploadAvatar(imageFile);
   }
-  
+  @override
+  Future<void> changePassword({required String oldPassword, required String newPassword}) async {
+    return await remoteDataSource.changePassword(oldPassword: oldPassword, newPassword: newPassword);
+  }
 }
 

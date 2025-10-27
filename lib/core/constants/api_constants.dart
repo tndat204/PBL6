@@ -14,6 +14,7 @@ class ApiConstants {
   static const String getMyInfo = '/api/users/me';
   static const String updateMyInfo = '/api/users/me';
   static const String uploadAvatar = '/api/users/me/avatar';
+  static const String changePassword = '/api/users/me/password';
   //job
   static const String jobs = '/api/jobs';
   //company

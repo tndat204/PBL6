@@ -9,6 +9,7 @@ abstract class UserRemoteDataSource {
   Future<UserApiResponse> getMyInfo();
   Future<UserApiResponse> updateMyInfo(Map<String, dynamic> updatedData);
   Future<String> uploadAvatar(File imageFile);
+  Future<void> changePassword({required String oldPassword, required String newPassword});
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -70,4 +71,46 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       throw Exception('Upload avatar failed: $e');
     }
   }
+  @override
+  Future<void> changePassword({required String oldPassword, required String newPassword}) async {
+    try {
+      final response = await _dio.put( 
+        ApiConstants.changePassword, 
+        data: {
+          "oldPassword": oldPassword,
+          "newPassword": newPassword,
+        },
+      );
+
+      
+       if (response.statusCode == 200 && response.data != null && response.data is Map) {
+          final responseData = response.data as Map<String, dynamic>;
+          final code = responseData['code'];
+          // Check for success code (0 or 200)
+          if (code != 0 && code != 200) {
+             // Throw exception with the message from the API if available
+             throw Exception(responseData['message'] ?? 'Change password failed with code $code');
+          }
+          // If code is 0 or 200, operation was successful, return void
+          print("Password changed successfully: ${responseData['result']}"); // Log success message
+       } else {
+          // Handle non-200 status codes or invalid data structure
+          throw DioException(
+             requestOptions: response.requestOptions,
+             response: response,
+             error: 'Invalid response data or status code (${response.statusCode})',
+           );
+       }
+    } on DioException catch (e) {
+      // Handle Dio-specific errors (network, timeout, etc.)
+      print('🟥 Dio error [changePassword]: ${e.response?.data ?? e.message}');
+      // Re-throw with a user-friendly message, potentially using the API's error message
+      throw Exception('Change password failed: ${e.response?.data?['message'] ?? e.message}');
+    } catch (e) {
+       // Handle other unexpected errors
+       print('🟥 Unexpected error [changePassword]: $e');
+       throw Exception('Change password failed: $e');
+    }
+  }
+
 }
