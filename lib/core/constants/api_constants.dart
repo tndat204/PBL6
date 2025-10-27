@@ -25,4 +25,6 @@ class ApiConstants {
   static const String skills= '/api/skills';
   //category
   static const String categories= '/api/categories';
+  //application
+  static const String applications= '/api/applications';
 }

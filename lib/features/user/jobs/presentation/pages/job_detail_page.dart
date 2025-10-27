@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/user/jobs/domain/entities/job.dart';
+import 'package:pbl6/features/user/jobs/domain/usecases/apply_job_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_job_details_usecase.dart';
 
 import '../../../../shared/category/domain/usecases/get_category_detail_usecase.dart';
 import '../../../../shared/skill/domain/usecases/get_skill_detail_usecase.dart';
+import '../widgets/apply_note_dialog.dart'; // ✅ thêm dòng này ở đầu file
 import '../widgets/job_company_tab.dart';
 import '../widgets/job_description_tab.dart';
 import '../widgets/job_detail_header.dart';
@@ -177,9 +180,35 @@ class _JobDetailPageState extends State<JobDetailPage>
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () async {
+                          final note = await showApplyNoteDialog(context);
+                          if (note == null) return; // người dùng nhấn Hủy
+
+                          final applyJobUsecase = GetIt.I<ApplyJobUsecase>();
+
+                          try {
+                            final result = await applyJobUsecase.call(
+                              jobId: widget.jobId,
+                              notes: note,
+                            );
+
+                            MotionToast.success(
+                              title: const Text("Thành công"),
+                              description: const Text(
+                                'Ứng tuyển thành công!',
+                              ),
+                              animationType: AnimationType.slideInFromLeft,
+                              toastAlignment: Alignment.topLeft,
+                            ).show(context);
+                          } catch (e) {
+                            MotionToast.error(
+                              description: Text("Ứng tuyển thất bại: $e"),
+                            ).show(context);
+                          }
+                        },
+
                         child: const Text(
-                          "Apply this job",
+                          "Ứng tuyển",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

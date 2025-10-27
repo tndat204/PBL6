@@ -37,12 +37,16 @@ import 'package:pbl6/features/shared/user/data/repositories/user_repository_impl
 import 'package:pbl6/features/shared/user/domain/repositories/user_repository.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/change_my_password_usecase.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
+import 'package:pbl6/features/user/jobs/data/datasources/application_remote_datasource.dart';
 import 'package:pbl6/features/user/jobs/data/datasources/company_remote_datasource.dart';
 import 'package:pbl6/features/user/jobs/data/datasources/job_remote_datasource.dart';
+import 'package:pbl6/features/user/jobs/data/repositories/application_repository_impl.dart';
 import 'package:pbl6/features/user/jobs/data/repositories/company_repository_impl.dart';
 import 'package:pbl6/features/user/jobs/data/repositories/job_repository_impl.dart';
+import 'package:pbl6/features/user/jobs/domain/repositories/application_repository.dart';
 import 'package:pbl6/features/user/jobs/domain/repositories/company_repository.dart';
 import 'package:pbl6/features/user/jobs/domain/repositories/job_repository.dart';
+import 'package:pbl6/features/user/jobs/domain/usecases/apply_job_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_all_companies_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_all_jobs_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
@@ -198,6 +202,16 @@ sl.registerLazySingleton<UploadCVUseCase>(
  );
  sl.registerLazySingleton<GetCVUrlUseCase>(
  () => GetCVUrlUseCase(sl<ProfileRepository>()),
+ );
+// ======================APPLICATION=================
+sl.registerLazySingleton<ApplicationRemoteDataSource>(
+ () => ApplicationRemoteDataSourceImpl(sl<DioClient>().instance),
+ );
+ sl.registerLazySingleton<ApplicationRepository>(
+ () => ApplicationRepositoryImpl(sl<ApplicationRemoteDataSource>()),
+);
+sl.registerLazySingleton<ApplyJobUsecase>(
+() => ApplyJobUsecase(sl<ApplicationRepository>()),
  );
 
 }
