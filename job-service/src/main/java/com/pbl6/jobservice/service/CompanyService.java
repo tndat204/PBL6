@@ -17,4 +17,5 @@ public interface CompanyService {
     public void activateCompanyById(String id);
     public void deactivateCompanyById(String id);
     public String uploadLogo(MultipartFile file,String companyId);
+    public CompanyResponse getMyCompany();
 }

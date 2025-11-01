@@ -81,4 +81,11 @@ public class CompanyController {
                 .result(companyService.uploadLogo(file,companyId))
                 .build();
     }
+    @GetMapping("/me")
+    public APIResponse<CompanyResponse> getMyCompany(){
+        return APIResponse.<CompanyResponse>builder()
+                .code(200)
+                .result(companyService.getMyCompany())
+                .build();
+    }
 }

@@ -17,7 +17,8 @@ public enum ErrorCode {
     NOT_ALLOW_TO_DELETE(2004,"Bạn không được phép xóa công việc của công ty này", HttpStatus.FORBIDDEN),
     COMPANY_NOT_ACTIVE(2005,"Công ty chưa được kích hoạt", HttpStatus.FORBIDDEN),
     APPLICATION_NOT_FOUND(2006,"Đơn ứng tuyển không tồn tại", HttpStatus.NOT_FOUND),
-    NOT_ALLOW_TO_UPLOAD_LOGO(2007,"Không có quyền cập nhật logo cho công ty này", HttpStatus.FORBIDDEN);
+    NOT_ALLOW_TO_UPLOAD_LOGO(2007,"Không có quyền cập nhật logo cho công ty này", HttpStatus.FORBIDDEN),
+    USER_NOT_ASSOCIATED_WITH_COMPANY(2008,"Bạn không thuộc công ty này", HttpStatus.FORBIDDEN);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;
