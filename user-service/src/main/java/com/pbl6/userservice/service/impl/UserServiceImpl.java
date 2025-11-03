@@ -52,21 +52,20 @@ public class UserServiceImpl implements UserService {
 
         user.setEnabled(true);
         try {
-            User savedUser = userRepository.save(user);
             NotificationEvent notificationEvent = NotificationEvent.builder()
                     .channel("EMAIL")
-                    .recipient(savedUser.getEmail())
+                    .recipient(user.getEmail())
                     .templateCode("welcome_template")
                     .subject("Chào mừng đến với IT Job Hunt!")
-                    .param(Map.of( "name", savedUser.getFullName(),
-                            "email", savedUser.getEmail()))
+                    .param(Map.of( "name", user.getFullName(),
+                            "email", user.getEmail()))
                     .build();
 
             kafkaTemplate.send("notification-delivery", notificationEvent);
             if(request.getNameCompany() != null){
                 roleRepository.findByName("RECRUITER").ifPresent(user.getRoles()::add);
                 CreateCompanyRequest createCompanyRequest= CreateCompanyRequest.builder()
-                        .ownerID(savedUser.getId())
+                        .ownerID(user.getId())
                         .name(request.getNameCompany())
                         .taxCode(request.getTaxCode())
                         .build();
@@ -76,6 +75,7 @@ public class UserServiceImpl implements UserService {
             else{
                 roleRepository.findByName("USER").ifPresent(user.getRoles()::add);
             }
+            User savedUser=userRepository.save(user);
             return modelMapper.map(savedUser, UserResponse.class);
         } catch (DataIntegrityViolationException e) {
             throw new AppException(ErrorCode.USER_EXISTED);
