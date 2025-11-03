@@ -78,7 +78,7 @@ class _CustomElevatedButtonState extends State<CustomElevatedButton>
               ),
               child: ElevatedButton(
                 // 💡 Disable button if onPressed is null OR isLoading is true
-                onPressed: (widget.onPressed == null || widget.isLoading)
+               onPressed: (widget.onPressed == null || widget.isLoading)
                     ? null
                     : () {
                         _controller.forward().then((_) {

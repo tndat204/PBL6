@@ -15,6 +15,7 @@ import '../../../../../routes/route_names.dart'; // Import route names
 import '../../../../user/jobs/domain/entities/user.dart'; // Import User từ user domain (mở rộng từ auth)
 import '../widgets/custom_elevated_button.dart';
 import '../widgets/custom_text_field.dart';
+
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
 
@@ -29,6 +30,8 @@ class _LoginFormState extends State<LoginForm> {
   bool _isLoading = false;
   bool _rememberMe = false;
 
+  String? _serverError;
+
   late final LoginUseCase _loginUseCase;
   late final GetMyInfoUseCase _getMyInfoUseCase;
   @override
@@ -39,112 +42,105 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   Future<void> _handleLogin() async {
-  if (_formKey.currentState!.validate()) {
-    setState(() => _isLoading = true);
-    try {
-      final response = await _loginUseCase(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
+    if (_formKey.currentState!.validate()) {
+      // ⭐ Xóa lỗi cũ và đặt loading
+      if (mounted)
+        setState(() {
+          _isLoading = true;
+          _serverError = null;
+        });
 
-      if (response.code == 200 && response.result?.token != null) {
-        final token = response.result!.token;
-        final prefs = await SharedPreferences.getInstance();
+      try {
+        final response = await _loginUseCase(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
-        // ✅ Luôn lưu token (dù không rememberMe)
-        await prefs.setString('auth_token', token);
+        if (response.code == 200 && response.result?.token != null) {
+          final token = response.result!.token;
+          final prefs = await SharedPreferences.getInstance();
 
-        // Decode token để lấy role, userId, email
-        final decodedToken = Jwt.parseJwt(token);
-        final email = decodedToken['sub'] ?? _emailController.text;
-        final userId = decodedToken['userId'] ?? const Uuid().v4().toString();
-        final scope = decodedToken['scope'] ?? 'ROLE_USER';
+          // ✅ Luôn lưu token (dù không rememberMe)
+          await prefs.setString('auth_token', token);
 
-        // Map scope sang UserRole
-        UserRole role;
-        switch (scope) {
-          case 'ROLE_RECRUITER':
-            role = UserRole.recruiter;
-            break;
-          case 'ROLE_ADMIN':
-            role = UserRole.admin;
-            break;
-          default:
-            role = UserRole.user;
-        }
+          // Decode token để lấy role, userId, email
+          final decodedToken = Jwt.parseJwt(token);
+          final email = decodedToken['sub'] ?? _emailController.text;
+          final userId = decodedToken['userId'] ?? const Uuid().v4().toString();
+          final scope = decodedToken['scope'] ?? 'ROLE_USER';
 
-        // Lưu role & userId vào prefs để guard dùng
-        await prefs.setString('user_role', role.toString());
-        await prefs.setString('user_id', userId);
+          // Map scope sang UserRole
+          UserRole role;
+          switch (scope) {
+            case 'ROLE_RECRUITER':
+              role = UserRole.recruiter;
+              break;
+            case 'ROLE_ADMIN':
+              role = UserRole.admin;
+              break;
+            default:
+              role = UserRole.user;
+          }
 
-        // Nếu rememberMe thì đánh dấu cờ remember
-        await prefs.setBool('remember_me', _rememberMe);
-        try {
+          // Lưu role & userId vào prefs để guard dùng
+          await prefs.setString('user_role', role.toString());
+          await prefs.setString('user_id', userId);
+
+          // Nếu rememberMe thì đánh dấu cờ remember
+          await prefs.setBool('remember_me', _rememberMe);
+          try {
             // Fetch user info immediately after successful login
             final userEntity = await _getMyInfoUseCase();
             // Update the global UserProvider
             if (mounted) {
-                 // Use read here as we are inside a button handler
-                 context.read<UserProvider>().setUser(User.fromAuthEntity(userEntity));
+              // Use read here as we are inside a button handler
+              context.read<UserProvider>().setUser(
+                User.fromAuthEntity(userEntity),
+              );
             }
           } catch (e) {
-             // Handle error fetching user info if needed, but don't block login
-             print("Error fetching user info after login: $e");
-             // Maybe show a less intrusive warning later
+            // Handle error fetching user info if needed, but don't block login
+            print("Error fetching user info after login: $e");
+            // Maybe show a less intrusive warning later
           }
-        
 
-        // ✅ Hiển thị toast thành công
-        MotionToast(
-          icon: Icons.check_circle,
-          primaryColor: AppPallete.lightGradient,
-          secondaryColor: const Color.fromARGB(255, 74, 98, 138),
-          title: const Text(
-            "Thành công",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          description: const Text(
-            "Đăng nhập thành công",
-            style: TextStyle(color: AppPallete.backgroundColor),
-          ),
-          animationType: AnimationType.slideInFromLeft,
-          toastDuration: const Duration(seconds: 2),
-          toastAlignment: Alignment.topLeft,
-          borderRadius: 12,
-          width: 320,
-          height: 90,
-        ).show(context);
+          MotionToast.success(
+            title: const Text("Thành công"),
+            description: const Text("Đăng nhập thành công"),
+            animationType: AnimationType.slideInFromLeft,
+            toastDuration: const Duration(seconds: 2),
+            toastAlignment: Alignment.topLeft,
+          ).show(context);
 
-        // Điều hướng đến dashboard sau 2 giây
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            context.go('/dashboard');
-          }
-        });
-      } else if (response.code == 1023) {
-        _showErrorSnackBar('Sai mật khẩu');
-      } else {
-        _showErrorSnackBar('Đăng nhập thất bại, vui lòng thử lại');
+          // Điều hướng đến dashboard sau 2 giây
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              context.go('/dashboard');
+            }
+          });
+        } else if (response.code == 1023) {
+          // ⭐ Gán lỗi server thay vì snackbar
+          if (mounted) setState(() => _serverError = 'Sai mật khẩu');
+        } else {
+          // ⭐ Gán lỗi server thay vì snackbar
+          if (mounted)
+            setState(
+              () => _serverError = 'Đăng nhập thất bại, vui lòng thử lại',
+            );
+        }
+      } catch (e) {
+        // ⭐ Gán lỗi server thay vì snackbar
+        if (mounted)
+          setState(
+            () => _serverError = 'Lỗi không xác định. Vui lòng thử lại.',
+          );
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
-    } catch (e) {
-      _showErrorSnackBar('Lỗi: $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
-}
 
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: Colors.red[700],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
+  // ⭐ Đã xóa hàm _showErrorSnackBar(String message)
 
   @override
   void dispose() {
@@ -160,21 +156,40 @@ class _LoginFormState extends State<LoginForm> {
       child: Column(
         children: [
           CustomTextField(
+            semanticsLabel: "emailField",
             label: 'Nhập email',
             icon: Icons.email_outlined,
             obscureText: false,
             controller: _emailController,
-            validator: (value) => value!.isEmpty ? 'Vui lòng nhập email' : null,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Vui lòng nhập email';
+              }
+              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+              if (!emailRegex.hasMatch(value)) {
+                return 'Email không đúng định dạng';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            semanticsLabel: "passwordField",
             label: 'Nhập mật khẩu',
             icon: Icons.lock_outline,
             obscureText: true,
             controller: _passwordController,
-            validator: (value) =>
-                value!.isEmpty ? 'Vui lòng nhập mật khẩu' : null,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Vui lòng nhập mật khẩu';
+              }
+              if (value.length < 8) {
+                return 'Mật khẩu phải có ít nhất 8 ký tự';
+              }
+              return null;
+            },
           ),
+
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -219,7 +234,9 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 child: TextButton(
                   onPressed: () {
-                    context.go(RouteNames.FORGOT_PASSWORD_EMAIL); // Dùng GoRouter
+                    context.go(
+                      RouteNames.FORGOT_PASSWORD_EMAIL,
+                    ); // Dùng GoRouter
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -239,12 +256,42 @@ class _LoginFormState extends State<LoginForm> {
               ),
             ],
           ),
-          const SizedBox(height: 32),
+
+          // ⭐ Widget hiển thị lỗi server (thay cho SizedBox(height: 32))
+          if (_serverError != null) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+              child: Semantics(
+                label: _serverError!, // ✅ Appium sẽ đọc được nội dung này
+                child: ExcludeSemantics(
+                  // ✅ Ngăn text hiển thị lặp trong accessibility
+                  child: Text(
+                    _serverError!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red[700],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 32),
+          ],
+
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : CustomElevatedButton(
-                  text: 'Đăng nhập',
-                  onPressed: _handleLogin,
+              : Semantics(
+                  label: "LoginButton",
+                  button: true,
+                  child: ExcludeSemantics(
+                    child: CustomElevatedButton(
+                      text: 'Đăng nhập',
+                      onPressed: _handleLogin,
+                    ),
+                  ),
                 ),
         ],
       ),

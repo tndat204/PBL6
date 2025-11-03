@@ -54,7 +54,8 @@ class _WelcomePageState extends State<WelcomePage>
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween, // 👈 Quan trọng
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween, // 👈 Quan trọng
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Phần tiêu đề trên
@@ -75,9 +76,9 @@ class _WelcomePageState extends State<WelcomePage>
                       Text(
                         'Hãy bắt đầu hành trình cùng với IT Job Hunt',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppPallete.backgroundColor,
-                              fontSize: 16,
-                            ),
+                          color: AppPallete.backgroundColor,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -88,7 +89,9 @@ class _WelcomePageState extends State<WelcomePage>
                       CustomElevatedButton(
                         text: 'Đăng ký',
                         onPressed: () {
-                          context.push(RouteNames.ROLE_SELECTION); // Dùng GoRouter thay Navigator
+                          context.push(
+                            RouteNames.ROLE_SELECTION,
+                          ); // Dùng GoRouter thay Navigator
                         },
                       ),
                       const SizedBox(height: 20),
@@ -102,30 +105,41 @@ class _WelcomePageState extends State<WelcomePage>
                               fontSize: 16,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              context.push(RouteNames.LOGIN); // Dùng GoRouter thay Navigator
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 2),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
+                          Semantics(
+                            label:
+                                "LoginButton", 
+                            button: true,
+                            child: ExcludeSemantics(
+                            child: GestureDetector(
+                              onTap: () {
+                                context.push(
+                                  RouteNames.LOGIN,
+                                ); 
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: AppPallete.primaryColor,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Đăng nhập',
+                                  style: TextStyle(
                                     color: AppPallete.primaryColor,
-                                    width: 2,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ),
-                              child: Text(
-                                'Đăng nhập',
-                                style: TextStyle(
-                                  color: AppPallete.primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
                             ),
+                          ),
                           ),
                         ],
                       ),
