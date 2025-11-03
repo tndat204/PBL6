@@ -8,13 +8,17 @@ import 'package:pbl6/features/shared/auth/data/models/reset_password_request_mod
 import 'package:pbl6/features/shared/auth/data/models/send_otp_request_model.dart';
 import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
 import 'package:pbl6/features/shared/auth/data/models/verify_otp_request_model.dart';
+
 abstract class AuthRemoteDataSource {
   Future<List<Map<String, dynamic>>> fetchProvinces();
-  Future<List<Map<String, dynamic>>> fetchWards(int provinceCode);
+  Future<List<Map<String, dynamic>>> fetchWards(String provinceName);
   Future<LoginResponse> login(String email, String password);
   Future<APIResponse<String>> sendOTP(SendOTPRequest request);
   Future<APIResponse<String>> verifyOTP(VerifyOTPRequest request);
-  Future<APIResponse<String>> resetPassword(ResetPasswordRequest request, String token);
+  Future<APIResponse<String>> resetPassword(
+    ResetPasswordRequest request,
+    String token,
+  );
   Future<LoginResponse> googleLogin(String idToken);
   Future<UserApiResponse> register(RegisterRequest request);
 }
@@ -24,7 +28,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Dio _dio;
 
   AuthRemoteDataSourceImpl(this._apiService, this._dio) {
-    _dio.options.baseUrl = ApiConstants.baseUrl; 
+    _dio.options.baseUrl = ApiConstants.baseUrl;
   }
 
   @override
@@ -33,8 +37,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchWards(int provinceCode) async {
-    return await _apiService.getWards(provinceCode);
+  Future<List<Map<String, dynamic>>> fetchWards(String provinceName) async {
+    return await _apiService.getWards(provinceName);
   }
 
   @override
@@ -65,11 +69,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<APIResponse<String>> resetPassword(ResetPasswordRequest request, String token) async {
-    _dio.options.headers['Authorization'] = 'Bearer $token';
+  Future<APIResponse<String>> resetPassword(
+    ResetPasswordRequest request,
+    String token,
+  ) async {
     final response = await _dio.post(
       ApiConstants.resetPassword,
       data: request.toJson(),
+      // 💡 Chỉ áp dụng header cho request này
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return APIResponse.fromJson(response.data, (json) => json.toString());
   }
@@ -81,25 +89,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
     return LoginResponse.fromJson(response.data);
   }
- @override
-@override
-Future<UserApiResponse> register(RegisterRequest request) async {
-  try {
-    final response = await _dio.post(
-      ApiConstants.register,
-      data: request.toJson(),
-      options: Options(
-        headers: {'Content-Type': 'application/json'},
-      ),
-    );
-    if (response.data is String) {
-      print('⚠️ Server trả về HTML hoặc chuỗi không hợp lệ!');
-      throw Exception('Phản hồi không phải JSON: ${response.data}');
+
+  @override
+  @override
+  Future<UserApiResponse> register(RegisterRequest request) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.register,
+        data: request.toJson(),
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+      if (response.data is String) {
+        print('⚠️ Server trả về HTML hoặc chuỗi không hợp lệ!');
+        throw Exception('Phản hồi không phải JSON: ${response.data}');
+      }
+      return UserApiResponse.fromJson(response.data);
+    } catch (e) {
+      print('❌ Đăng ký thất bại: $e');
+      rethrow;
     }
-    return UserApiResponse.fromJson(response.data);
-  } catch (e) {
-    print('❌ Đăng ký thất bại: $e');
-    rethrow;
   }
-}
 }

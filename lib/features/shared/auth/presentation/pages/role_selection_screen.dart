@@ -31,10 +31,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 const Text(
                   'Để tối ưu trải nghiệm của bạn với IT Job Hunt,\nvui lòng lựa chọn nhóm phù hợp nhất với bạn.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppPallete.textColor,
-                  ),
+                  style: TextStyle(fontSize: 16, color: AppPallete.textColor),
                 ),
                 const SizedBox(height: 40),
                 Image.asset(
@@ -45,11 +42,17 @@ class RoleSelectionScreen extends StatelessWidget {
                 const SizedBox(height: 40),
                 SizedBox(
                   width: 300,
-                  child: CustomElevatedButton(
-                    text: 'Tôi là nhà tuyển dụng',
-                    onPressed: () {
-                     context.push(RouteNames.RECRUITER_SIGNUP); 
-                    },
+                  child: Semantics(
+                    label: "recruiterButton",
+                    button: true,
+                    child: ExcludeSemantics(
+                      child: CustomElevatedButton(
+                        text: 'Tôi là nhà tuyển dụng',
+                        onPressed: () {
+                          context.push(RouteNames.RECRUITER_SIGNUP);
+                        },
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -61,11 +64,17 @@ class RoleSelectionScreen extends StatelessWidget {
                 const SizedBox(height: 40),
                 SizedBox(
                   width: 300,
-                  child: CustomElevatedButton(
-                    text: 'Tôi là ứng viên',
-                    onPressed: () {
-                      context.push(RouteNames.SIGNUP); 
-                    },
+                  child: Semantics(
+                    label: "userButton",
+                    button: true,
+                    child: ExcludeSemantics(
+                      child: CustomElevatedButton(
+                        text: 'Tôi là ứng viên',
+                        onPressed: () {
+                          context.push(RouteNames.SIGNUP);
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ],

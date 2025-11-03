@@ -23,10 +23,9 @@ class RecruiterSignupForm extends StatefulWidget {
 class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
   bool _agreeTerms = false;
 
-  int? _selectedProvinceCode;
-  int? _selectedWardCode;
+  String? _selectedProvinceId; 
+  String? _selectedWardName; 
   String? _selectedProvinceName;
-  String? _selectedWardName;
 
   List<Map<String, dynamic>> _provinces = [];
   List<Map<String, dynamic>> _wards = [];
@@ -77,21 +76,27 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
     }
   }
 
-  Future<void> _onProvinceChanged(int? code) async {
-    if (code == null) return;
+  // 💡 LOGIC ĐÃ SỬA: Nhận ID tỉnh (String), dùng TÊN tỉnh để gọi API phường/xã
+  Future<void> _onProvinceChanged(String? id) async {
+    if (id == null) return;
+    
+    // 1. Tìm tên tỉnh (provinceName) dựa trên ID
+    final selectedProvince = _provinces.firstWhere(
+      (p) => p['id'] == id, // Dùng 'id' (String)
+    );
+    final String provinceName = selectedProvince['province']; // Lấy tên tỉnh từ 'province'
+
     setState(() {
-      _selectedProvinceCode = code;
-      _selectedWardCode = null;
-      _selectedWardName = null;
+      _selectedProvinceId = id;
+      _selectedProvinceName = provinceName; // Cập nhật tên tỉnh
+      _selectedWardName = null; // Reset phường/xã
       _wards = [];
       _loadingWards = true;
-      _selectedProvinceName = _provinces.firstWhere(
-        (p) => p['code'] == code,
-      )['name'];
     });
 
     try {
-      final wards = await _authDataSource.fetchWards(code);
+      // 2. Gọi API lấy phường/xã bằng TÊN TỈNH (provinceName)
+      final wards = await _authDataSource.fetchWards(provinceName); // 💡 Truyền TÊN tỉnh
       setState(() {
         _wards = wards;
         _loadingWards = false;
@@ -104,13 +109,10 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
     }
   }
 
-  // 💡 Thêm hàm này để cập nhật tên Phường/Xã khi chọn
-  void _onWardChanged(int? code) {
+  // 💡 LOGIC ĐÃ SỬA: Nhận TÊN phường/xã (String)
+  void _onWardChanged(String? name) {
     setState(() {
-      _selectedWardCode = code;
-      _selectedWardName = code == null
-          ? null
-          : _wards.firstWhere((w) => w['code'] == code)['name'];
+      _selectedWardName = name;
     });
   }
 
@@ -151,25 +153,23 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
   }
 
   Future<void> _handleRegister() async {
-    // 💡 Thêm kiểm tra validation cho Dropdown Tỉnh/Thành phố và Phường/Xã
+    // 💡 SỬA: Kiểm tra _selectedProvinceId và _selectedWardName (đều là String)
     if (_formKey.currentState!.validate() &&
         _agreeTerms &&
-        _selectedProvinceCode != null &&
-        (_wards.isEmpty || _selectedWardCode != null)) {
+        _selectedProvinceId != null &&
+        (_wards.isEmpty || _selectedWardName != null)) {
       setState(() => _isRegistering = true);
       try {
-        // 💡 Logic kết hợp địa chỉ: Địa chỉ chi tiết, Phường/Xã, Tỉnh/Thành phố
         final detailedPart = _detailedAddressController.text.trim();
         final wardPart =
             _selectedWardName != null && _selectedWardName!.isNotEmpty
-            ? _selectedWardName!
-            : '';
+                ? _selectedWardName!
+                : '';
         final provincePart =
             _selectedProvinceName != null && _selectedProvinceName!.isNotEmpty
-            ? _selectedProvinceName!
-            : '';
+                ? _selectedProvinceName!
+                : '';
 
-        // Nối các phần lại, chỉ thêm dấu phẩy nếu có phần tử đứng trước
         final addressParts = [
           detailedPart,
           wardPart,
@@ -183,7 +183,7 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           email: _emailController.text,
           phone: _phoneController.text,
           fullName: _fullNameController.text,
-          address: address, // 💡 Sử dụng địa chỉ đã kết hợp
+          address: address, // Sử dụng địa chỉ đã kết hợp
           taxCode: _taxCodeController.text,
           nameCompany: _companyNameController.text,
           avatarUrl: '',
@@ -227,12 +227,12 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           description: Text(
-            "Đã xảy ra lỗi: ${e.toString()}", // Bao quát lỗi backend trả về
+            "Đã xảy ra lỗi: ${e.toString()}",
             maxLines: 2,
           ),
-          animationType: AnimationType.slideInFromLeft, // ✅
+          animationType: AnimationType.slideInFromLeft,
           toastDuration: const Duration(seconds: 3),
-          toastAlignment: Alignment.topLeft, // ✅
+          toastAlignment: Alignment.topLeft,
           borderRadius: 12,
           width: 320,
           height: 90,
@@ -247,37 +247,37 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         description: const Text("Bạn phải đồng ý với điều khoản sử dụng."),
-        animationType: AnimationType.slideInFromLeft, // ✅
+        animationType: AnimationType.slideInFromLeft,
         toastDuration: const Duration(seconds: 2),
-        toastAlignment: Alignment.topLeft, // ✅
+        toastAlignment: Alignment.topLeft,
         borderRadius: 12,
         width: 320,
         height: 90,
       ).show(context);
-    } else if (_selectedProvinceCode == null) {
+    } else if (_selectedProvinceId == null) { // 💡 Kiểm tra ID tỉnh (String)
       MotionToast.warning(
         title: const Text(
           "Lỗi địa chỉ",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         description: const Text("Vui lòng chọn Tỉnh/Thành phố."),
-        animationType: AnimationType.slideInFromLeft, // ✅
+        animationType: AnimationType.slideInFromLeft,
         toastDuration: const Duration(seconds: 2),
-        toastAlignment: Alignment.topLeft, // ✅
+        toastAlignment: Alignment.topLeft,
         borderRadius: 12,
         width: 320,
         height: 90,
       ).show(context);
-    } else if (_wards.isNotEmpty && _selectedWardCode == null) {
+    } else if (_wards.isNotEmpty && _selectedWardName == null) { // 💡 Kiểm tra TÊN phường/xã (String)
       MotionToast.warning(
         title: const Text(
           "Lỗi địa chỉ",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         description: const Text("Vui lòng chọn Phường/Xã."),
-        animationType: AnimationType.slideInFromLeft, // ✅
+        animationType: AnimationType.slideInFromLeft,
         toastDuration: const Duration(seconds: 2),
-        toastAlignment: Alignment.topLeft, // ✅
+        toastAlignment: Alignment.topLeft,
         borderRadius: 12,
         width: 320,
         height: 90,
@@ -418,58 +418,50 @@ class _RecruiterSignupFormState extends State<RecruiterSignupForm> {
           const SizedBox(height: 20),
           // 💡 Thêm trường địa chỉ chi tiết
          
-          if (_loadingProvinces)
+         if (_loadingProvinces)
             const CircularProgressIndicator()
           else
-            CustomDropdownField<int>(
+            // 💡 ĐÃ SỬA: Dùng String cho value và ID
+            CustomDropdownField<String>( 
               key: const ValueKey('province_dropdown'),
               label: 'Tỉnh/Thành phố',
               icon: Icons.location_on_outlined,
-              value: _selectedProvinceCode,
+              value: _selectedProvinceId,
               hint: 'Chọn tỉnh/thành phố',
               items: _provinces.map((province) {
-                final int code = province['code'];
-                final String name = province['name'];
-                return DropdownMenuItem<int>(value: code, child: Text(name));
+                final String id = province['id']; // Dùng 'id'
+                final String name = province['province']; // Dùng 'province' cho tên hiển thị
+                return DropdownMenuItem<String>(value: id, child: Text(name));
               }).toList(),
-              onChanged: (value) => _onProvinceChanged(value),
+              onChanged: (value) => _onProvinceChanged(value), // 💡 Tham số là String?
               validator: (value) =>
                   value == null ? 'Vui lòng chọn tỉnh/thành phố' : null,
             ),
           const SizedBox(height: 20),
-          if (_loadingWards)
+         if (_loadingWards)
             const CircularProgressIndicator()
           else
-            CustomDropdownField<int>(
+            // 💡 ĐÃ SỬA: Dùng String cho value và TÊN phường/xã
+            CustomDropdownField<String>( 
               key: const ValueKey('ward_dropdown'),
               label: 'Phường/Xã',
               icon: Icons.location_city_outlined,
-              value: _selectedWardCode,
+              value: _selectedWardName, // Dùng tên đã chọn
               hint: _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
               items: _wards.map((ward) {
-                final int code = ward['code'] as int;
-                final String name = ward['name'] as String;
-                return DropdownMenuItem<int>(value: code, child: Text(name));
+                // Phường/xã chỉ có trường 'name' theo API mới
+                final String name = ward['name'] as String; 
+                // 💡 Giá trị (value) của Dropdown là TÊN phường/xã (String)
+                return DropdownMenuItem<String>(value: name, child: Text(name));
               }).toList(),
-              // 💡 Chỉnh sửa onChanged để gọi _onWardChanged
+              // 💡 Chỉnh sửa onChanged để gọi _onWardChanged (nhận String)
               onChanged: _wards.isEmpty
                   ? null
-                  : (value) => _onWardChanged(value),
+                  : (value) => _onWardChanged(value), 
               validator: (value) => value == null && _wards.isNotEmpty
                   ? 'Vui lòng chọn phường/xã'
                   : null,
             ),
-
-          const SizedBox(height: 20),
-           CustomTextField(
-            key: const ValueKey('detailed_address_field'),
-            label: 'Địa chỉ chi tiết (VD: số nhà, tên đường)',
-            icon: Icons.place_outlined,
-            obscureText: false,
-            controller: _detailedAddressController,
-            validator: (value) =>
-                value!.isEmpty ? 'Vui lòng nhập địa chỉ chi tiết' : null,
-          ),
           const SizedBox(height: 20),
           Row(
             children: [

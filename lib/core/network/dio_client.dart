@@ -25,7 +25,10 @@ class DioClient {
    _dio.interceptors.add(InterceptorsWrapper(
   onRequest: (options, handler) async {
     // Nếu endpoint là reset password thì bỏ qua token trong prefs
-    if (options.path.contains('/reset-password')) {
+    if (options.path.contains('/api/auth/password/reset')) {
+      return handler.next(options);
+    }
+    if (options.path.contains('/api/internal/users')) {
       return handler.next(options);
     }
 

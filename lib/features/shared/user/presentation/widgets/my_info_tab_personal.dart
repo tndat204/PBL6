@@ -35,16 +35,16 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
   bool _loadingProvinces = true;
   bool _loadingWards = false;
 
-  int? _selectedProvinceCode;
-  int? _selectedWardCode;
-  String? _selectedProvinceName;
-  String? _selectedWardName;
+ // 💡 ĐÃ SỬA: Dùng String? cho ID tỉnh và tên phường/xã
+  String? _selectedProvinceId; // ID tỉnh (String)
+  String? _selectedWardName; // Tên phường/xã đã chọn (String)
+  String? _selectedProvinceName; 
   String? _initialDetailedAddress;
 
   final AuthRemoteDataSource _authDataSource =
       GetIt.instance<AuthRemoteDataSource>();
 
-  // 💡 Hàm tách địa chỉ ban đầu
+  // 💡 Hàm tách địa chỉ ban đầu (Không thay đổi logic phân tích, chỉ thay đổi biến gán)
   void _parseInitialAddress(String address) {
     if (address.isEmpty) return;
 
@@ -52,10 +52,9 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
     if (parts.length >= 3) {
       // Giả định: [Địa chỉ chi tiết], [Phường/Xã], [Tỉnh/Thành phố]
       _initialDetailedAddress = parts[0];
-      _selectedWardName = parts[1];
-      _selectedProvinceName = parts[2];
+      _selectedWardName = parts[1]; // Tên Phường/Xã (String)
+      _selectedProvinceName = parts[2]; // Tên Tỉnh/Thành phố (String)
     } else {
-      // Nếu không đúng định dạng, coi cả là địa chỉ chi tiết
       _initialDetailedAddress = address;
     }
   }
@@ -75,21 +74,25 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
   }
 
   // 💡 Hàm tải danh sách tỉnh/thành phố
-  Future<void> _fetchProvinces() async {
+ Future<void> _fetchProvinces() async {
     try {
       final data = await _authDataSource.fetchProvinces();
       setState(() {
         _provinces = data;
         _loadingProvinces = false;
-        // 💡 Tìm và thiết lập mã tỉnh/thành phố ban đầu nếu có tên
+        
         if (_selectedProvinceName != null) {
           final initialProvince = _provinces.firstWhere(
-              (p) => p['name'] == _selectedProvinceName,
+              // Dùng 'province' cho tên tỉnh, thay vì 'name'
+              (p) => p['province'] == _selectedProvinceName,
               orElse: () => {});
+              
           if (initialProvince.isNotEmpty) {
-            _selectedProvinceCode = initialProvince['code'];
-            // Tải phường/xã nếu tìm thấy tỉnh/thành phố
-            _fetchWards(_selectedProvinceCode!);
+            // Lấy 'id' (String) thay vì 'code' (int)
+            _selectedProvinceId = initialProvince['id']; 
+            
+            // Tải phường/xã bằng TÊN TỈNH (String)
+            _fetchWards(_selectedProvinceName!);
           }
         }
       });
@@ -99,22 +102,26 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
     }
   }
 
-  // 💡 Hàm tải danh sách phường/xã
-  Future<void> _fetchWards(int provinceCode) async {
+  // 💡 Hàm tải danh sách phường/xã (SỬA THAM SỐ VÀ LOGIC DỮ LIỆU)
+  Future<void> _fetchWards(String provinceName) async {
     setState(() => _loadingWards = true);
     try {
-      final wards = await _authDataSource.fetchWards(provinceCode);
+      // 💡 API mới nhận TÊN TỈNH (String)
+      final wards = await _authDataSource.fetchWards(provinceName); 
       if (mounted) {
         setState(() {
           _wards = wards;
           _loadingWards = false;
-          // 💡 Tìm và thiết lập mã phường/xã ban đầu nếu có tên
+          
           if (_selectedWardName != null) {
+            // Danh sách wards chỉ có 'name' (String) theo API mới
             final initialWard = _wards.firstWhere(
                 (w) => w['name'] == _selectedWardName,
                 orElse: () => {});
+                
             if (initialWard.isNotEmpty) {
-              _selectedWardCode = initialWard['code'];
+              // 💡 KHÔNG GÁN MÃ, chỉ cần đảm bảo _selectedWardName đã được thiết lập
+              // _selectedWardName = initialWard['name']; // Đã có từ _parseInitialAddress
             }
           }
         });
@@ -125,38 +132,38 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
     }
   }
 
-  // 💡 Xử lý khi chọn tỉnh/thành phố
-  Future<void> _onProvinceChanged(int? code) async {
-    if (code == null) {
+  // 💡 Xử lý khi chọn tỉnh/thành phố (SỬA THAM SỐ VÀ LOGIC DỮ LIỆU)
+  Future<void> _onProvinceChanged(String? id) async {
+    if (id == null) {
       setState(() {
-        _selectedProvinceCode = null;
+        _selectedProvinceId = null;
         _selectedProvinceName = null;
-        _selectedWardCode = null;
         _selectedWardName = null;
         _wards = [];
       });
       return;
     }
 
+    // 1. Lấy tên tỉnh từ ID
+    final String provinceName = _provinces.firstWhere((p) => p['id'] == id)['province'];
+
     setState(() {
-      _selectedProvinceCode = code;
-      _selectedWardCode = null;
-      _selectedWardName = null;
+      _selectedProvinceId = id;
+      _selectedProvinceName = provinceName;
+      _selectedWardName = null; // Reset phường/xã
       _wards = [];
       _loadingWards = true;
-      _selectedProvinceName =
-          _provinces.firstWhere((p) => p['code'] == code)['name'];
     });
-    await _fetchWards(code);
+    
+    // 2. Gọi API lấy wards bằng TÊN tỉnh
+    await _fetchWards(provinceName); 
   }
 
-  // 💡 Xử lý khi chọn phường/xã
-  void _onWardChanged(int? code) {
+  // 💡 Xử lý khi chọn phường/xã (SỬA THAM SỐ VÀ LOGIC DỮ LIỆU)
+  void _onWardChanged(String? name) {
     setState(() {
-      _selectedWardCode = code;
-      _selectedWardName = code == null
-          ? null
-          : _wards.firstWhere((w) => w['code'] == code)['name'];
+      // Gán TÊN phường/xã (String)
+      _selectedWardName = name; 
     });
   }
 
@@ -201,42 +208,40 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
 
           const SizedBox(height: 16),
 
-          // 💡 Dropdown Tỉnh/Thành phố
           if (_loadingProvinces)
             const Center(child: CircularProgressIndicator())
           else
-            CustomDropdownField<int>(
+            CustomDropdownField<String>( // 💡 Dùng String
               label: 'Tỉnh/Thành phố',
               icon: Icons.location_on_outlined,
-              value: _selectedProvinceCode,
+              value: _selectedProvinceId, // 💡 Dùng ID (String)
               hint: 'Chọn tỉnh/thành phố',
               items: _provinces.map((province) {
-                final int code = province['code'];
-                final String name = province['name'];
-                return DropdownMenuItem<int>(value: code, child: Text(name));
+                final String id = province['id']; // Dùng 'id'
+                final String name = province['province']; // Dùng 'province' cho tên
+                return DropdownMenuItem<String>(value: id, child: Text(name));
               }).toList(),
-              onChanged: _onProvinceChanged,
+              onChanged: _onProvinceChanged, // 💡 Nhận String?
               validator: (value) =>
                   value == null ? 'Vui lòng chọn tỉnh/thành phố' : null,
             ),
-
           const SizedBox(height: 16),
 
           // 💡 Dropdown Phường/Xã
           if (_loadingWards)
             const Center(child: CircularProgressIndicator())
           else
-            CustomDropdownField<int>(
+            CustomDropdownField<String>( // 💡 Dùng String
               label: 'Phường/Xã',
               icon: Icons.location_city_outlined,
-              value: _selectedWardCode,
+              value: _selectedWardName, // 💡 Dùng TÊN phường/xã (String)
               hint: _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
               items: _wards.map((ward) {
-                final int code = ward['code'] as int;
-                final String name = ward['name'] as String;
-                return DropdownMenuItem<int>(value: code, child: Text(name));
+                // API mới chỉ trả về 'name' cho wards (tên là String)
+                final String name = ward['name'] as String; 
+                return DropdownMenuItem<String>(value: name, child: Text(name)); // 💡 value là TÊN (String)
               }).toList(),
-              onChanged: _wards.isEmpty ? null : _onWardChanged,
+              onChanged: _wards.isEmpty ? null : _onWardChanged, // 💡 Nhận String?
               validator: (value) => value == null && _wards.isNotEmpty
                   ? 'Vui lòng chọn phường/xã'
                   : null,
@@ -254,13 +259,13 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
           const SizedBox(height: 32),
 
           // 🔹 Thay nút thường bằng CustomElevatedButton
-          CustomElevatedButton(
+     CustomElevatedButton(
             text: 'Cập nhật',
             onPressed: () async {
-              // 💡 Kiểm tra validation cho Dropdown Tỉnh/Thành phố và Phường/Xã
+              // 💡 Kiểm tra validation: Dùng ID (String) và TÊN phường/xã (String)
               if (!_formKey.currentState!.validate() ||
-                  _selectedProvinceCode == null ||
-                  (_wards.isNotEmpty && _selectedWardCode == null)) {
+                  _selectedProvinceId == null || 
+                  (_wards.isNotEmpty && _selectedWardName == null)) {
                 return;
               }
 
@@ -269,7 +274,6 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
               final wardPart = _selectedWardName != null && _selectedWardName!.isNotEmpty ? _selectedWardName! : '';
               final provincePart = _selectedProvinceName != null && _selectedProvinceName!.isNotEmpty ? _selectedProvinceName! : '';
 
-              // Nối các phần lại, chỉ thêm dấu phẩy nếu có phần tử đứng trước
               final addressParts = [detailedPart, wardPart, provincePart]
                   .where((s) => s.isNotEmpty)
                   .toList();
@@ -278,7 +282,7 @@ class _MyInfoTabPersonalState extends State<MyInfoTabPersonal> {
               final data = {
                 'fullName': _nameController.text,
                 'phone': _phoneController.text,
-                'address': newAddress, // 💡 Sử dụng địa chỉ mới đã kết hợp
+                'address': newAddress, // Sử dụng địa chỉ mới đã kết hợp
               };
 
               await widget.onSave(data);

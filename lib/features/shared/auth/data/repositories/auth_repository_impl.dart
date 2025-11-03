@@ -17,8 +17,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchWards(int provinceCode) {
-    return _remoteDataSource.fetchWards(provinceCode);
+  Future<List<Map<String, dynamic>>> fetchWards(String provinceName) {
+    return _remoteDataSource.fetchWards(provinceName);
   }
 
   @override

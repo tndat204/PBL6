@@ -1,3 +1,6 @@
+// file: features/shared/auth/presentation/signup_form.dart
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +13,7 @@ import 'package:pbl6/features/shared/auth/domain/usecases/register_usecase.dart'
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_dropdown_field.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_elevated_button.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_text_field.dart';
+import 'package:pbl6/features/shared/auth/presentation/widgets/terms_modal.dart';
 import 'package:pbl6/routes/route_names.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,10 +27,9 @@ class SignupForm extends StatefulWidget {
 class _SignupFormState extends State<SignupForm> {
   bool _agreeTerms = false;
 
-  int? _selectedProvinceCode;
-  int? _selectedWardCode;
+  String? _selectedProvinceId; // 'id' của tỉnh, kiểu String
+  String? _selectedWardName; // Tên phường/xã đã chọn
   String? _selectedProvinceName;
-  String? _selectedWardName;
 
   List<Map<String, dynamic>> _provinces = [];
   List<Map<String, dynamic>> _wards = [];
@@ -44,10 +47,12 @@ class _SignupFormState extends State<SignupForm> {
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _birthDateController = TextEditingController();
-  // 💡 Thêm Controller cho địa chỉ chi tiết
   final _detailedAddressController = TextEditingController();
 
   DateTime? _selectedBirthDate;
+
+  // 💡 Biến trạng thái lỗi tập trung
+  String? _serverError;
 
   late final RegisterUseCase _registerUseCase;
   final AuthRemoteDataSource _authDataSource =
@@ -62,55 +67,61 @@ class _SignupFormState extends State<SignupForm> {
     });
   }
 
-  Future<void> _fetchProvinces() async {
+ Future<void> _fetchProvinces() async {
     try {
-      final data = await _authDataSource.fetchProvinces();
+      // API service đã được cập nhật để dùng API mới
+      final data = await _authDataSource.fetchProvinces(); 
       setState(() {
         _provinces = data;
         _loadingProvinces = false;
       });
     } catch (e) {
-      setState(() => _loadingProvinces = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi tải tỉnh/thành phố: $e')));
+      setState(() {
+        _loadingProvinces = false;
+        _serverError = 'Lỗi tải tỉnh/thành phố: $e';
+      });
     }
   }
 
-  Future<void> _onProvinceChanged(int? code) async {
-    if (code == null) return;
+  Future<void> _onProvinceChanged(String? id) async {
+    if (id == null) return;
+    
+    // 1. Tìm tên tỉnh (provinceName) dựa trên ID (id)
+    final selectedProvince = _provinces.firstWhere(
+      (p) => p['id'] == id,
+    );
+    final String provinceName = selectedProvince['province']; // Lấy tên tỉnh
+
     setState(() {
-      _selectedProvinceCode = code;
-      _selectedWardCode = null;
-      _selectedWardName = null;
+      _selectedProvinceId = id;
+      _selectedProvinceName = provinceName; // Cập nhật tên tỉnh
+      _selectedWardName = null; // Reset phường/xã
       _wards = [];
       _loadingWards = true;
-      _selectedProvinceName = _provinces.firstWhere(
-        (p) => p['code'] == code,
-      )['name'];
+      _serverError = null;
     });
 
     try {
-      final wards = await _authDataSource.fetchWards(code);
+      // 2. Gọi API lấy phường/xã bằng TÊN TỈNH (provinceName)
+      // Giả sử AuthRemoteDataSource.fetchWards đã được sửa để nhận String
+      final wards = await _authDataSource.fetchWards(provinceName);
       setState(() {
-        _wards = wards;
+        // Danh sách wards giờ chỉ có name (theo cấu trúc API mới)
+        _wards = wards; 
         _loadingWards = false;
       });
     } catch (e) {
-      setState(() => _loadingWards = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi tải phường/xã: $e')));
+      setState(() {
+        _loadingWards = false;
+        _serverError = 'Lỗi tải phường/xã: $e';
+      });
     }
   }
 
-  // 💡 Thêm hàm này để cập nhật tên Phường/Xã khi chọn
-  void _onWardChanged(int? code) {
+  void _onWardChanged(String? name) {
     setState(() {
-      _selectedWardCode = code;
-      _selectedWardName = code == null
-          ? null
-          : _wards.firstWhere((w) => w['code'] == code)['name'];
+      _selectedWardName = name;
+      _serverError = null;
     });
   }
 
@@ -145,138 +156,127 @@ class _SignupFormState extends State<SignupForm> {
     }
   }
 
+  // 💡 Hàm map lỗi từ API
+  String _mapErrorToMessage(Object e) {
+    final errorString = e.toString().toLowerCase();
+
+    if (errorString.contains("đã tồn tại email") ||
+        errorString.contains("email_existed")) {
+      return "Email này đã được sử dụng.";
+    }
+    if (errorString.contains("đã tồn tại username") ||
+        errorString.contains("username_existed")) {
+      return "Tên đăng nhập này đã tồn tại.";
+    }
+    if (errorString.contains("đã tồn tại số điện thoại") ||
+        errorString.contains("phone_existed")) {
+      return "Số điện thoại này đã được sử dụng.";
+    }
+    if (errorString.contains("tên đăng nhập hoặc email hoặc sdt đã tồn tại") ||
+        errorString.contains("user_existed")) {
+      return "Email hoặc số điện thoại đã tồn tại.";
+    }
+    if (errorString.contains("your age must be at least") ||
+        errorString.contains("invalid_dob")) {
+      return "Bạn chưa đủ tuổi để đăng ký.";
+    }
+    if (errorString.contains("tên đăng nhập chưa hợp lệ") ||
+        errorString.contains("username_invalid")) {
+      return "Tên đăng nhập không hợp lệ (ví dụ: chứa khoảng trắng).";
+    }
+
+    // Lỗi chung
+    return "Đăng ký thất bại. Vui lòng thử lại.";
+  }
+
+  // 💡 Hàm hiển thị modal điều khoản
+  
+
   Future<void> _handleRegister() async {
-    // 💡 Thêm kiểm tra validation cho Dropdown Tỉnh/Thành phố và Phường/Xã
-    if (_formKey.currentState!.validate() &&
-        _agreeTerms &&
-        _selectedProvinceCode != null &&
-        (_wards.isEmpty || _selectedWardCode != null)) {
-      setState(() => _isRegistering = true);
-      try {
-        // 💡 Logic kết hợp địa chỉ: Địa chỉ chi tiết, Phường/Xã, Tỉnh/Thành phố
-        final detailedPart = _detailedAddressController.text.trim();
-        final wardPart =
-            _selectedWardName != null && _selectedWardName!.isNotEmpty
-            ? _selectedWardName!
-            : '';
-        final provincePart =
-            _selectedProvinceName != null && _selectedProvinceName!.isNotEmpty
-            ? _selectedProvinceName!
-            : '';
+    // 💡 Xóa lỗi cũ khi bắt đầu submit
+    if (mounted) setState(() => _serverError = null);
 
-        // Nối các phần lại, chỉ thêm dấu phẩy nếu có phần tử đứng trước
-        final addressParts = [
-          detailedPart,
-          wardPart,
-          provincePart,
-        ].where((s) => s.isNotEmpty).toList();
-        final address = addressParts.join(', ');
+    // Kiểm tra validation của Form
+    if (!_formKey.currentState!.validate()) {
+      return; // Dừng nếu các trường (CustomTextField) không hợp lệ
+    }
 
-        final request = RegisterRequest(
-          username: _emailController.text,
-          password: _passwordController.text,
-          email: _emailController.text,
-          phone: _phoneController.text,
-          fullName: _nameController.text,
-          address: address, // 💡 Sử dụng địa chỉ đã kết hợp
-          taxCode: '', // để trống
-          nameCompany: '', // để trống
-          avatarUrl: '', // để trống
-          birthDate: _selectedBirthDate ?? DateTime(2000, 1, 1),
-        );
+    // 💡 Kiểm tra logic (checkbox, dropdowns) và gán lỗi
+    if (!_agreeTerms) {
+      setState(() => _serverError = "Bạn phải đồng ý với điều khoản sử dụng.");
+      return;
+    }
+    if (_selectedProvinceId == null) {
+      setState(() => _serverError = "Vui lòng chọn Tỉnh/Thành phố.");
+      return;
+    }
+    if (_wards.isNotEmpty && _selectedWardName == null) {
+      setState(() => _serverError = "Vui lòng chọn Phường/Xã.");
+      return;
+    }
 
-        await _registerUseCase(request);
+    // 💡 Nếu tất cả kiểm tra đều qua
+    setState(() => _isRegistering = true);
+    try {
+      final detailedPart = _detailedAddressController.text.trim();
+      final wardPart =
+          _selectedWardName != null && _selectedWardName!.isNotEmpty
+          ? _selectedWardName!
+          : '';
+      final provincePart =
+          _selectedProvinceName != null && _selectedProvinceName!.isNotEmpty
+          ? _selectedProvinceName!
+          : '';
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('registered_email', _emailController.text);
+      final addressParts = [
+        detailedPart,
+        wardPart,
+        provincePart,
+      ].where((s) => s.isNotEmpty).toList();
+      final address = addressParts.join(', ');
 
-        MotionToast(
-          icon: Icons.check_circle,
-          primaryColor: AppPallete.lightGradient,
-          secondaryColor: const Color.fromARGB(255, 74, 98, 138),
-          title: const Text(
-            "Thành công",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          description: const Text(
-            "Đăng ký thành công, vui lòng đăng nhập để tiếp tục",
-            style: TextStyle(color: AppPallete.backgroundColor),
-          ),
-          animationType: AnimationType.slideInFromLeft,
-          toastDuration: const Duration(seconds: 2),
-          toastAlignment: Alignment.topLeft,
-          borderRadius: 12,
-          width: 320,
-          height: 90,
-        ).show(context);
+      final request = RegisterRequest(
+        // 💡 Dùng email làm username
+        username: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        fullName: _nameController.text.trim(),
+        address: address,
+        taxCode: '',
+        nameCompany: '',
+        avatarUrl: '',
+        birthDate: _selectedBirthDate ?? DateTime(2000, 1, 1),
+      );
 
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            context.pushReplacementNamed(RouteNames.LOGIN);
-          }
+      await _registerUseCase(request);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('registered_email', _emailController.text.trim());
+
+      // 💡 Vẫn dùng MotionToast cho THÀNH CÔNG
+      MotionToast.success(
+            title: const Text("Thành công"),
+            description: const Text("Đăng kí thành công! Vui lòng đăng nhập!"),
+            animationType: AnimationType.slideInFromLeft,
+            toastDuration: const Duration(seconds: 2),
+            toastAlignment: Alignment.topLeft,
+          ).show(context);
+
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          context.pushReplacementNamed(RouteNames.LOGIN);
+        }
+      });
+    } catch (e) {
+      // 💡 Gán lỗi đã map vào _serverError
+      if (mounted) {
+        setState(() {
+          _serverError = _mapErrorToMessage(e);
         });
-      } catch (e) {
-        MotionToast.error(
-          title: const Text(
-            "Đăng ký thất bại",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          description: Text(
-            "Đã xảy ra lỗi: ${e.toString()}", // Bao quát lỗi backend trả về
-            maxLines: 2,
-          ),
-          animationType: AnimationType.slideInFromLeft, // ✅
-          toastDuration: const Duration(seconds: 3),
-          toastAlignment: Alignment.topLeft, // ✅
-          borderRadius: 12,
-          width: 320,
-          height: 90,
-        ).show(context);
-      } finally {
-        if (mounted) setState(() => _isRegistering = false);
       }
-    } else if (!_agreeTerms) {
-      MotionToast.warning(
-        title: const Text(
-          "Lỗi điều khoản",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        description: const Text("Bạn phải đồng ý với điều khoản sử dụng."),
-        animationType: AnimationType.slideInFromLeft, // ✅
-        toastDuration: const Duration(seconds: 2),
-        toastAlignment: Alignment.topLeft, // ✅
-        borderRadius: 12,
-        width: 320,
-        height: 90,
-      ).show(context);
-    } else if (_selectedProvinceCode == null) {
-      MotionToast.warning(
-        title: const Text(
-          "Lỗi địa chỉ",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        description: const Text("Vui lòng chọn Tỉnh/Thành phố."),
-        animationType: AnimationType.slideInFromLeft, // ✅
-        toastDuration: const Duration(seconds: 2),
-        toastAlignment: Alignment.topLeft, // ✅
-        borderRadius: 12,
-        width: 320,
-        height: 90,
-      ).show(context);
-    } else if (_wards.isNotEmpty && _selectedWardCode == null) {
-      MotionToast.warning(
-        title: const Text(
-          "Lỗi địa chỉ",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        description: const Text("Vui lòng chọn Phường/Xã."),
-        animationType: AnimationType.slideInFromLeft, // ✅
-        toastDuration: const Duration(seconds: 2),
-        toastAlignment: Alignment.topLeft, // ✅
-        borderRadius: 12,
-        width: 320,
-        height: 90,
-      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isRegistering = false);
     }
   }
 
@@ -288,7 +288,6 @@ class _SignupFormState extends State<SignupForm> {
     _confirmPasswordController.dispose();
     _phoneController.dispose();
     _birthDateController.dispose();
-    // 💡 Dispose controller địa chỉ chi tiết
     _detailedAddressController.dispose();
     super.dispose();
   }
@@ -300,6 +299,7 @@ class _SignupFormState extends State<SignupForm> {
       child: Column(
         children: [
           CustomTextField(
+            semanticsLabel: "nameField", // 💡
             label: 'Họ và Tên',
             icon: Icons.person_outline,
             obscureText: false,
@@ -309,6 +309,7 @@ class _SignupFormState extends State<SignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            semanticsLabel: "emailField", // 💡
             label: 'Email',
             icon: Icons.email_outlined,
             obscureText: false,
@@ -328,6 +329,7 @@ class _SignupFormState extends State<SignupForm> {
             onTap: _selectBirthDate,
             child: AbsorbPointer(
               child: CustomTextField(
+                semanticsLabel: "birthDateField", // 💡
                 label: 'Ngày sinh',
                 icon: Icons.cake_outlined,
                 obscureText: false,
@@ -339,13 +341,13 @@ class _SignupFormState extends State<SignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            semanticsLabel: "passwordField", // 💡
             label: 'Mật khẩu',
             icon: Icons.lock_outline,
             obscureText: true,
             controller: _passwordController,
             validator: (value) {
               if (value!.isEmpty) return 'Vui lòng nhập mật khẩu';
-              // 💡 Chỉnh sửa regex validation, thêm yêu cầu có chữ hoa, số và ký tự đặc biệt như RecruiterSignupForm
               final regex = RegExp(
                 r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$',
               );
@@ -357,6 +359,7 @@ class _SignupFormState extends State<SignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            semanticsLabel: "confirmPasswordField", // 💡
             label: 'Nhập lại mật khẩu',
             icon: Icons.lock_outline,
             obscureText: true,
@@ -371,6 +374,7 @@ class _SignupFormState extends State<SignupForm> {
           ),
           const SizedBox(height: 20),
           CustomTextField(
+            semanticsLabel: "phoneField", // 💡
             label: 'Số điện thoại',
             icon: Icons.phone_outlined,
             obscureText: false,
@@ -386,24 +390,24 @@ class _SignupFormState extends State<SignupForm> {
           ),
           const SizedBox(height: 20),
 
-          // 💡 Thêm trường địa chỉ chi tiết
-
-
           // --- Dropdown Tỉnh / Thành phố ---
           if (_loadingProvinces)
             const CircularProgressIndicator()
           else
-            CustomDropdownField<int>(
+            // 💡 ĐÃ SỬA: DropdownMenuItem<String> và value: _selectedProvinceId
+            CustomDropdownField<String>( 
+              semanticsLabel: "provinceDropdown",
               label: 'Tỉnh/Thành phố',
               icon: Icons.location_on_outlined,
-              value: _selectedProvinceCode,
+              value: _selectedProvinceId,
               hint: 'Chọn tỉnh/thành phố',
               items: _provinces.map((province) {
-                final int code = province['code'];
-                final String name = province['name'];
-                return DropdownMenuItem<int>(value: code, child: Text(name));
+                final String id = province['id']; // Dùng 'id'
+                final String name = province['province']; // Dùng 'province' cho tên hiển thị
+                return DropdownMenuItem<String>(value: id, child: Text(name));
               }).toList(),
-              onChanged: (value) => _onProvinceChanged(value),
+              // 💡 ĐÃ SỬA: Kiểu dữ liệu tham số là String
+              onChanged: (value) => _onProvinceChanged(value), 
               validator: (value) =>
                   value == null ? 'Vui lòng chọn tỉnh/thành phố' : null,
             ),
@@ -411,30 +415,34 @@ class _SignupFormState extends State<SignupForm> {
           const SizedBox(height: 20),
 
           // --- Dropdown Phường / Xã ---
-          if (_loadingWards)
+         if (_loadingWards)
             const CircularProgressIndicator()
           else
-            CustomDropdownField<int>(
+            // 💡 ĐÃ SỬA: DropdownMenuItem<String> và value: _selectedWardName
+            CustomDropdownField<String>( 
+              semanticsLabel: "wardDropdown",
               label: 'Phường/Xã',
               icon: Icons.location_city_outlined,
-              value: _selectedWardCode,
+              value: _selectedWardName,
               hint: _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
               items: _wards.map((ward) {
-                final int code = ward['code'];
-                final String name = ward['name'];
-                return DropdownMenuItem<int>(value: code, child: Text(name));
+                // Phường/xã chỉ có trường 'name' theo API mới
+                final String name = ward['name']; 
+                // 💡 Giá trị (value) của Dropdown là TÊN phường/xã (String)
+                return DropdownMenuItem<String>(value: name, child: Text(name));
               }).toList(),
-              // 💡 Chỉnh sửa onChanged để gọi _onWardChanged
               onChanged: _wards.isEmpty
                   ? null
-                  : (value) => _onWardChanged(value),
+                  // 💡 ĐÃ SỬA: Kiểu dữ liệu tham số là String
+                  : (value) => _onWardChanged(value), 
               validator: (value) => value == null && _wards.isNotEmpty
                   ? 'Vui lòng chọn phường/xã'
                   : null,
             ),
 
           const SizedBox(height: 20),
-                    CustomTextField(
+          CustomTextField(
+            semanticsLabel: "detailedAddressField", // 💡
             label: 'Địa chỉ chi tiết (VD: số nhà, tên đường)',
             icon: Icons.place_outlined,
             obscureText: false,
@@ -443,38 +451,93 @@ class _SignupFormState extends State<SignupForm> {
                 value!.isEmpty ? 'Vui lòng nhập địa chỉ chi tiết' : null,
           ),
           const SizedBox(height: 20),
+
+          // 💡 HÀNG ĐIỀU KHOẢN ĐÃ CẬP NHẬT
           Row(
             children: [
               Transform.scale(
                 scale: 1.2,
-                child: Checkbox(
-                  value: _agreeTerms,
-                  onChanged: (value) =>
-                      setState(() => _agreeTerms = value ?? false),
-                  activeColor: AppPallete.primaryColor,
-                  checkColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+                child: Semantics(
+                  label: "agreeTermsCheckbox",
+                  child: Checkbox(
+                    value: _agreeTerms,
+                    onChanged: (value) =>
+                        setState(() => _agreeTerms = value ?? false),
+                    activeColor: AppPallete.primaryColor,
+                    checkColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                'Tôi đồng ý với điều khoản',
-                style: TextStyle(
-                  color: AppPallete.textColor,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontFamily: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.fontFamily,
+                      color: AppPallete.textColor,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                    ),
+                    children: [
+                      const TextSpan(text: 'Tôi đồng ý với '),
+                      TextSpan(
+                        text: 'điều khoản sử dụng',
+                        style: const TextStyle(
+                          color: AppPallete.primaryColor,
+                          fontWeight: FontWeight.bold, // 💡 In đậm
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            TermsModal.show(context);
+                          },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
+
+          // 💡 WIDGET HIỂN THỊ LỖI TẬP TRUNG
+          if (_serverError != null) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+              child: Semantics(
+                label: _serverError!,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _serverError!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red[700],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 32), // Khoảng trống mặc định
+          ],
+
+          // --- Nút Đăng ký ---
           _isRegistering
               ? const Center(child: CircularProgressIndicator())
-              : CustomElevatedButton(
-                  text: 'Đăng ký',
-                  onPressed: _handleRegister,
+              : Semantics(
+                  label: "registerButton", // 💡
+                  button: true,
+                  child: ExcludeSemantics(
+                    child: CustomElevatedButton(
+                      text: 'Đăng ký',
+                      onPressed: _handleRegister,
+                    ),
+                  ),
                 ),
         ],
       ),

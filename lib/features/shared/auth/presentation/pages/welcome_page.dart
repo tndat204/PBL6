@@ -86,13 +86,19 @@ class _WelcomePageState extends State<WelcomePage>
                   // Phần nút ở dưới cùng
                   Column(
                     children: [
-                      CustomElevatedButton(
-                        text: 'Đăng ký',
-                        onPressed: () {
-                          context.push(
-                            RouteNames.ROLE_SELECTION,
-                          ); // Dùng GoRouter thay Navigator
-                        },
+                       Semantics(
+                        label: "RegisterButton", 
+                        button: true,
+                        child: ExcludeSemantics(
+                          child: CustomElevatedButton(
+                            text: 'Đăng ký',
+                            onPressed: () {
+                              context.push(
+                                RouteNames.ROLE_SELECTION,
+                              ); 
+                            },
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Row(
