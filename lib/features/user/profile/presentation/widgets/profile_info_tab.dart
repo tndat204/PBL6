@@ -41,9 +41,7 @@ class ThousandsInputFormatter extends TextInputFormatter {
   }
 }
 
-
 class ProfileInfoTab extends StatefulWidget {
-
   final ProfileEntity? profile;
   final CreateProfileUseCase createProfileUseCase;
   final UpdateProfileUseCase updateProfileUseCase;
@@ -51,8 +49,8 @@ class ProfileInfoTab extends StatefulWidget {
 
   const ProfileInfoTab({
     super.key,
-    this.profile, 
-    required this.createProfileUseCase, 
+    this.profile,
+    required this.createProfileUseCase,
     required this.updateProfileUseCase,
     required this.getAllSkillsUseCase,
   });
@@ -68,14 +66,13 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
   late TextEditingController _linkedinController;
   late TextEditingController _portfolioController;
   late TextEditingController _salaryController;
-    List<UserSkillEntity> _selectedUserSkills = [];
+  List<UserSkillEntity> _selectedUserSkills = [];
   List<Skill> _availableSkills = [];
 
   bool _isSaving = false;
   bool _isLoadingSkills = true;
-  bool _isCreating = false; 
+  bool _isCreating = false;
 
-  
   final List<String> _skillLevels = [
     'BEGINNER',
     'INTERMEDIATE',
@@ -86,12 +83,10 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
   @override
   void initState() {
     super.initState();
-    
+
     _isCreating = widget.profile == null;
 
-    final formatter = NumberFormat(
-      '#,###',
-    );
+    final formatter = NumberFormat('#,###');
 
     _headlineController = TextEditingController(
       text: widget.profile?.headline ?? '',
@@ -115,7 +110,6 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
           : formatter.format(widget.profile?.desiredSalary),
     );
 
-    
     _selectedUserSkills = _isCreating ? [] : List.from(widget.profile!.skills);
 
     _loadAvailableSkills();
@@ -296,6 +290,7 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
             _buildSectionHeader('Thông tin cơ bản'),
             const SizedBox(height: 16),
             CustomTextField(
+              
               label: 'Vị trí mong muốn',
               icon: Icons.work_outline,
               obscureText: false,
@@ -502,7 +497,6 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
               ),
             ),
 
-            
             trailing: IconButton(
               icon: const Icon(
                 Icons.delete_outline_rounded,
@@ -510,7 +504,6 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
               ),
               tooltip: 'Xóa kỹ năng',
               onPressed: () {
-               
                 _showDeleteSkillConfirmationDialog(userSkill);
               },
             ),
@@ -587,7 +580,15 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
             .toList();
 
         return AlertDialog(
-          title: const Text('Chọn kỹ năng'),
+          title: const Text(
+            "Chọn kĩ năng",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black,
+            ),
+            textAlign: TextAlign.center,
+          ),
           content: availableToSelect.isEmpty
               ? const Text('Đã chọn hết tất cả kỹ năng.')
               : SizedBox(
@@ -631,7 +632,15 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
           // Dùng để cập nhật UI cho Năm và Cấp độ
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('Chi tiết kỹ năng: ${skill.name}'),
+              title: Text(
+                'Chi tiết kỹ năng: ${skill.name}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
               // Giảm padding mặc định của content
               contentPadding: const EdgeInsets.symmetric(vertical: 16),
               content: Column(
@@ -678,7 +687,10 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
 
                   // ✅ YÊU CẦU 4: Giao diện chọn Cấp độ (dạng ListTile)
                   ListTile(
-                    title: const Text('Cấp độ'),
+                    title:  const Text(
+                    'Cấp độ',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                     subtitle: Text(selectedLevel),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
@@ -730,7 +742,15 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
       context: dialogContext, // Dùng context của dialog trước đó
       builder: (context) {
         return AlertDialog(
-          title: const Text('Chọn cấp độ'),
+          title: const Text(
+            'Chọn cấp độ',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black,
+            ),
+            textAlign: TextAlign.center,
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
