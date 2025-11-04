@@ -18,7 +18,7 @@ public enum ErrorCode {
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
     INVALID_KEY(1009, "Uncategorized error", HttpStatus.BAD_REQUEST),
     EMAIL_NOT_FOUND(1010, "Email not found", HttpStatus.BAD_REQUEST),
-    USER_EXISTED(1011,"Tên đăng nhập hoặc email hoặc sdt đã tồn tại",HttpStatus.BAD_REQUEST),
+    USER_EXISTED(1011,"Username hoặc email hoặc sdt đã tồn tại",HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(1012,"Vai trò không tồn tại",HttpStatus.BAD_REQUEST),
     PERMISSION_NOT_FOUND(1021,"Quyền không tồn tại",HttpStatus.BAD_REQUEST),
     ROLE_EXISTED(1020,"Vai trò đã tồn tại",HttpStatus.BAD_REQUEST),

@@ -46,13 +46,12 @@ public class UserServiceImpl implements UserService {
     FileClient  fileClient;
     CompanyClient companyClient;
     public UserResponse register(CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USERNAME_EXISTED);
-        }
-
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
         if (request.getPhone() != null && userRepository.existsByPhone(request.getPhone())) {
@@ -64,31 +63,35 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         user.setEnabled(true);
-        try {
-            NotificationEvent notificationEvent = NotificationEvent.builder()
-                    .channel("EMAIL")
-                    .recipient(user.getEmail())
-                    .templateCode("welcome_template")
-                    .subject("Chào mừng đến với IT Job Hunt!")
-                    .param(Map.of( "name", user.getFullName(),
-                            "email", user.getEmail()))
-                    .build();
 
-            kafkaTemplate.send("notification-delivery", notificationEvent);
+        if (request.getNameCompany() != null) {
+            roleRepository.findByName("OWNER").ifPresent(user.getRoles()::add);
+        } else {
+            roleRepository.findByName("USER").ifPresent(user.getRoles()::add);
+        }
+
+        try {
+            User savedUser = userRepository.save(user);
             if(request.getNameCompany() != null){
-                roleRepository.findByName("RECRUITER").ifPresent(user.getRoles()::add);
                 CreateCompanyRequest createCompanyRequest= CreateCompanyRequest.builder()
-                        .ownerID(user.getId())
+                        .ownerID(savedUser.getId())
                         .name(request.getNameCompany())
                         .taxCode(request.getTaxCode())
                         .build();
 
                 companyClient.createCompany(createCompanyRequest);
             }
-            else{
-                roleRepository.findByName("USER").ifPresent(user.getRoles()::add);
-            }
-            User savedUser=userRepository.save(user);
+            NotificationEvent notificationEvent = NotificationEvent.builder()
+                    .channel("EMAIL")
+                    .recipient(savedUser.getEmail())
+                    .templateCode("welcome_template")
+                    .subject("Chào mừng đến với IT Job Hunt!")
+                    .param(Map.of( "name", savedUser.getFullName(),
+                            "email", savedUser.getEmail()))
+                    .build();
+
+            kafkaTemplate.send("notification-delivery", notificationEvent);
+
             return modelMapper.map(savedUser, UserResponse.class);
         } catch (DataIntegrityViolationException e) {
             throw new AppException(ErrorCode.USER_EXISTED);
