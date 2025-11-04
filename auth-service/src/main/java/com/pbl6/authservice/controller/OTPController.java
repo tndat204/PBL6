@@ -4,6 +4,7 @@ import com.pbl6.authservice.dto.request.SendMailRequest;
 import com.pbl6.authservice.dto.request.VerifyOTPRequest;
 import com.pbl6.authservice.dto.shared.APIResponse;
 import com.pbl6.authservice.service.OTPService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +23,7 @@ public class OTPController {
     }
 
     @PostMapping("/password/send")
-    public APIResponse<String> sendOTP(@RequestBody SendMailRequest request){
+    public APIResponse<String> sendOTP(@Valid @RequestBody SendMailRequest request){
         otpService.sendOTP(request);
         return APIResponse.<String>builder()
                 .code(200)
@@ -30,7 +31,7 @@ public class OTPController {
                 .build();
     }
     @PostMapping("/verify")
-    public APIResponse<String> verifyOTP(@RequestBody VerifyOTPRequest request) {
+    public APIResponse<String> verifyOTP(@Valid @RequestBody VerifyOTPRequest request) {
         return APIResponse.<String>builder()
                 .code(200)
                 .result(otpService.verifyOtp(request))

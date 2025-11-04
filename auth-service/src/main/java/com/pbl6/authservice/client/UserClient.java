@@ -4,6 +4,7 @@ import com.pbl6.authservice.dto.shared.APIResponse;
 import com.pbl6.authservice.dto.shared.CreateUserRequest;
 import com.pbl6.authservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.authservice.dto.shared.UserResponse;
+import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,5 +20,5 @@ public interface UserClient {
     APIResponse<String> resetPassword(@RequestBody ResetPasswordRequest request);
 
     @PostMapping
-    APIResponse<UserResponse>  registerUser(@RequestBody CreateUserRequest request);
+    APIResponse<UserResponse>  registerUser(@Valid @RequestBody CreateUserRequest request);
 }

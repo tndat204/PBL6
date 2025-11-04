@@ -7,6 +7,7 @@ import com.pbl6.authservice.dto.shared.APIResponse;
 import com.pbl6.authservice.dto.shared.IntrospectRequest;
 import com.pbl6.authservice.dto.shared.IntrospectResponse;
 import com.pbl6.authservice.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    public APIResponse<AuthenticationResponse> login(@RequestBody LoginRequest request) {
+    public APIResponse<AuthenticationResponse> login(@Valid @RequestBody LoginRequest request) {
         var result = authService.login(request);
         return APIResponse.<AuthenticationResponse>builder()
                 .result(result)
@@ -63,7 +64,7 @@ public class AuthController {
     }
 
     @PostMapping("/password/reset")
-    public APIResponse<String> resetPassword(@RequestBody NewPasswordRequest request){
+    public APIResponse<String> resetPassword(@Valid @RequestBody NewPasswordRequest request){
         authService.resetPassword(request);
         return APIResponse.<String>builder()
                 .code(200)

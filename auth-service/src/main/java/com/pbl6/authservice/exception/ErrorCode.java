@@ -15,6 +15,7 @@ public enum ErrorCode {
     UNAUTHENTICATED(1004, "Chưa xác thực", HttpStatus.UNAUTHORIZED),
     USER_NOT_FOUND(1005, "Người dùng không tồn tại", HttpStatus.NOT_FOUND),
     UNAUTHORIZED(1006, "You do not have permission", HttpStatus.FORBIDDEN),
+    VALIDATION_FAILED(1007, "Dữ liệu gửi lên không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
     INVALID_KEY(1009, "Uncategorized error", HttpStatus.BAD_REQUEST),
     EMAIL_NOT_FOUND(1010, "Email not found", HttpStatus.BAD_REQUEST),
@@ -27,7 +28,8 @@ public enum ErrorCode {
     UPLOAD_FILE_FAILED(1019,"Tải file lên không được",HttpStatus.BAD_REQUEST),
     INVALID_OTP(1020,"OTP không hợp lệ",HttpStatus.BAD_REQUEST),
     INVALID_TOKEN(1021,"Token không hợp lệ",HttpStatus.UNAUTHORIZED),
-    WRONG_PASSWORD(1023,"Sai mật khẩu",HttpStatus.BAD_REQUEST);
+    WRONG_PASSWORD(1023,"Sai mật khẩu",HttpStatus.BAD_REQUEST),
+    PASSWORD_CANNOT_MISSING(1024,"Mật khẩu mới không được bỏ trống",HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;

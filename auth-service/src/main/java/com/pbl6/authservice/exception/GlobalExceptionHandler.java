@@ -1,17 +1,32 @@
 package com.pbl6.authservice.exception;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.pbl6.authservice.dto.shared.APIResponse;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
     private static final String MIN_ATTRIBUTE = "min";
-
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<APIResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        APIResponse apiResponse = new APIResponse();
+        apiResponse.setCode(ErrorCode.VALIDATION_FAILED.getCode()); // tạo code riêng cho validation
+        // Gộp tất cả lỗi field thành 1 message hoặc list
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.joining("; "));
+        apiResponse.setMessage(message);
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<APIResponse> handlingException(Exception e) {
         // Tạo đối tượng APIResponse

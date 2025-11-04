@@ -248,6 +248,9 @@ public class AuthServiceImpl implements AuthService {
         // Lấy email từ subject
         String email = jwt.getSubject();
 
+        if(request.getNewPassword() ==null) {
+            throw new AppException(ErrorCode.PASSWORD_CANNOT_MISSING);
+        }
         // Tạo request cho service
         ResetPasswordRequest rpRequest = new ResetPasswordRequest();
         rpRequest.setEmail(email);

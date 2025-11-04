@@ -5,6 +5,7 @@ import com.pbl6.userservice.dto.shared.CreateUserRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
 import com.pbl6.userservice.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class UserInternalController {
     }
 
     @PostMapping
-    public APIResponse<UserResponse> register(@RequestBody CreateUserRequest request){
+    public APIResponse<UserResponse> register(@Valid @RequestBody CreateUserRequest request){
         return APIResponse.<UserResponse>builder()
                 .code(200)
                 .result(userService.register(request))
@@ -45,7 +46,7 @@ public class UserInternalController {
     }
 
     @PostMapping("/password/reset")
-    public APIResponse<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public APIResponse<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         userService.resetPassword(request);
         return APIResponse.<String>builder()
                 .code(200)
