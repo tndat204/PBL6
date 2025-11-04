@@ -11,6 +11,7 @@ title: const Text(
 style: TextStyle(
 fontWeight: FontWeight.bold,
 fontSize: 20,
+color: Colors.black, 
 ),
 textAlign: TextAlign.center,
 ),

@@ -1,0 +1,107 @@
+{
+  "test_signup_success": {
+    "name": "Test User Auto",
+    "password": "ValidPass@123",
+    "province": "Đà Nẵng",
+    "ward": "Phường Liên Chiểu",
+    "address": "123 Đường Test, Quận Automation"
+  },
+  "test_signup_missing_name": {},
+  "test_signup_missing_email": {
+    "name": "Test User Auto"
+  },
+  "test_signup_invalid_email": {
+    "name": "Test User Auto",
+    "email": "email_sai_dinh_dang"
+  },
+  "test_signup_missing_birthdate": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com"
+  },
+  "test_signup_missing_password": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com"
+  },
+  "test_signup_invalid_password": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com",
+    "password": "123"
+  },
+  "test_signup_missing_confirm_password": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com",
+    "password": "ValidPass@123"
+  },
+  "test_signup_password_mismatch": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com",
+    "password": "ValidPass@123",
+    "confirm_password": "MatKhauKhac@123"
+  },
+  "test_signup_missing_phone": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com",
+    "password": "ValidPass@123",
+    "confirm_password": "ValidPass@123"
+  },
+  "test_signup_invalid_phone": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com",
+    "password": "ValidPass@123",
+    "confirm_password": "ValidPass@123",
+    "phone": "12345"
+  },
+  "test_signup_missing_detailed_address": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com",
+    "password": "ValidPass@123",
+    "confirm_password": "ValidPass@123",
+    "phone": "0987654321",
+    "province": "Đà Nẵng",
+    "ward": "Phường Liên Chiểu"
+  },
+  "test_signup_address_too_long": {
+    "name": "Test User Auto",
+    "email": "test@gmail.com",
+    "password": "ValidPass@123",
+    "confirm_password": "ValidPass@123",
+    "phone": "0987654321",
+    "province": "Đà Nẵng",
+    "ward": "Phường Liên Chiểu",
+    "address": "Đây là địa chỉ chi tiết RẤT RẤT RẤT DÀI, dài hơn 50 ký tự chỉ để test validation"
+  },
+  "test_signup_logic_terms_not_agreed": {
+    "name": "Test User Auto",
+    "password": "ValidPass@123",
+    "province": "Đà Nẵng",
+    "ward": "Phường Liên Chiểu",
+    "address": "123 Đường Test, Quận Automation"
+  },
+  "test_signup_logic_province_not_selected": {
+    "name": "Test User Auto",
+    "password": "ValidPass@123",
+    "address": "123 Đường Test, Quận Automation"
+  },
+  "test_signup_logic_ward_not_selected": {
+    "name": "Test User Auto",
+    "password": "ValidPass@123",
+    "province": "Hà Nội",
+    "address": "123 Đường Test, Quận Automation"
+  },
+  "test_signup_server_email_existed": {
+    "name": "Test User Auto",
+    "email": "nguyenquangdung177@gmail.com",
+    "password": "ValidPass@123",
+    "province": "Đà Nẵng",
+    "ward": "Phường Liên Chiểu",
+    "address": "123 Đường Test, Quận Automation"
+  },
+  "test_signup_server_phone_existed": {
+    "name": "Test User Auto",
+    "password": "ValidPass@123",
+    "phone": "0987654321",
+    "province": "Đà Nẵng",
+    "ward": "Phường Liên Chiểu",
+    "address": "123 Đường Test, Quận Automation"
+  }
+}

@@ -81,3 +81,20 @@ class LoginScreen(BaseScreen):
             pass
         print("[INFO] Không tìm thấy toast 'Đăng nhập thành công'.")
         return False
+    def is_login_button_displayed(self, timeout=10):
+        """
+        Kiểm tra xem nút 'Đăng nhập' (LOGIN_BUTTON) có hiển thị không.
+        Dùng để xác minh đã chuyển về màn hình Login thành công từ Signup.
+        """
+        print(f"[INFO] Đang chờ tìm LOGIN_BUTTON (ID: {self.LOGIN_BUTTON[1]}) trong {timeout} giây...")
+        try:
+        # Dùng lại helper is_element_displayed từ BaseScreen (giống is_login_successful)
+            if self.is_element_displayed(self.LOGIN_BUTTON[0], self.LOGIN_BUTTON[1], timeout):
+                print("[INFO] Đã tìm thấy LOGIN_BUTTON.")
+                return True
+        except Exception:
+        # Bắt Exception (có thể là TimeoutException từ helper)
+            pass
+        
+        print(f"[INFO] Không tìm thấy LOGIN_BUTTON sau {timeout} giây.")
+        return False

@@ -67,10 +67,10 @@ class _SignupFormState extends State<SignupForm> {
     });
   }
 
- Future<void> _fetchProvinces() async {
+  Future<void> _fetchProvinces() async {
     try {
       // API service đã được cập nhật để dùng API mới
-      final data = await _authDataSource.fetchProvinces(); 
+      final data = await _authDataSource.fetchProvinces();
       setState(() {
         _provinces = data;
         _loadingProvinces = false;
@@ -85,11 +85,9 @@ class _SignupFormState extends State<SignupForm> {
 
   Future<void> _onProvinceChanged(String? id) async {
     if (id == null) return;
-    
+
     // 1. Tìm tên tỉnh (provinceName) dựa trên ID (id)
-    final selectedProvince = _provinces.firstWhere(
-      (p) => p['id'] == id,
-    );
+    final selectedProvince = _provinces.firstWhere((p) => p['id'] == id);
     final String provinceName = selectedProvince['province']; // Lấy tên tỉnh
 
     setState(() {
@@ -107,7 +105,7 @@ class _SignupFormState extends State<SignupForm> {
       final wards = await _authDataSource.fetchWards(provinceName);
       setState(() {
         // Danh sách wards giờ chỉ có name (theo cấu trúc API mới)
-        _wards = wards; 
+        _wards = wards;
         _loadingWards = false;
       });
     } catch (e) {
@@ -190,7 +188,6 @@ class _SignupFormState extends State<SignupForm> {
   }
 
   // 💡 Hàm hiển thị modal điều khoản
-  
 
   Future<void> _handleRegister() async {
     // 💡 Xóa lỗi cũ khi bắt đầu submit
@@ -207,11 +204,11 @@ class _SignupFormState extends State<SignupForm> {
       return;
     }
     if (_selectedProvinceId == null) {
-      setState(() => _serverError = "Vui lòng chọn Tỉnh/Thành phố.");
+      setState(() => _serverError = "Vui lòng chọn tỉnh/thành phố");
       return;
     }
     if (_wards.isNotEmpty && _selectedWardName == null) {
-      setState(() => _serverError = "Vui lòng chọn Phường/Xã.");
+      setState(() => _serverError = "Vui lòng chọn phường/xã");
       return;
     }
 
@@ -256,12 +253,12 @@ class _SignupFormState extends State<SignupForm> {
 
       // 💡 Vẫn dùng MotionToast cho THÀNH CÔNG
       MotionToast.success(
-            title: const Text("Thành công"),
-            description: const Text("Đăng kí thành công! Vui lòng đăng nhập!"),
-            animationType: AnimationType.slideInFromLeft,
-            toastDuration: const Duration(seconds: 2),
-            toastAlignment: Alignment.topLeft,
-          ).show(context);
+        title: const Text("Thành công"),
+        description: const Text("Đăng kí thành công! Vui lòng đăng nhập!"),
+        animationType: AnimationType.slideInFromLeft,
+        toastDuration: const Duration(seconds: 2),
+        toastAlignment: Alignment.topLeft,
+      ).show(context);
 
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
@@ -328,17 +325,23 @@ class _SignupFormState extends State<SignupForm> {
           GestureDetector(
             onTap: _selectBirthDate,
             child: AbsorbPointer(
-              child: CustomTextField(
-                semanticsLabel: "birthDateField", // 💡
-                label: 'Ngày sinh',
-                icon: Icons.cake_outlined,
-                obscureText: false,
-                controller: _birthDateController,
-                validator: (value) =>
-                    value!.isEmpty ? 'Vui lòng chọn ngày sinh' : null,
+              child: Semantics(
+                label: 'birthDateField',
+                child: ExcludeSemantics(
+                  child: CustomTextField(
+                    semanticsLabel: "birthDateField",
+                    label: 'Ngày sinh',
+                    icon: Icons.cake_outlined,
+                    obscureText: false,
+                    controller: _birthDateController,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Vui lòng chọn ngày sinh' : null,
+                  ),
+                ),
               ),
             ),
           ),
+
           const SizedBox(height: 20),
           CustomTextField(
             semanticsLabel: "passwordField", // 💡
@@ -394,8 +397,7 @@ class _SignupFormState extends State<SignupForm> {
           if (_loadingProvinces)
             const CircularProgressIndicator()
           else
-            // 💡 ĐÃ SỬA: DropdownMenuItem<String> và value: _selectedProvinceId
-            CustomDropdownField<String>( 
+            CustomDropdownField<String>(
               semanticsLabel: "provinceDropdown",
               label: 'Tỉnh/Thành phố',
               icon: Icons.location_on_outlined,
@@ -403,11 +405,12 @@ class _SignupFormState extends State<SignupForm> {
               hint: 'Chọn tỉnh/thành phố',
               items: _provinces.map((province) {
                 final String id = province['id']; // Dùng 'id'
-                final String name = province['province']; // Dùng 'province' cho tên hiển thị
+                final String name =
+                    province['province']; // Dùng 'province' cho tên hiển thị
                 return DropdownMenuItem<String>(value: id, child: Text(name));
               }).toList(),
               // 💡 ĐÃ SỬA: Kiểu dữ liệu tham số là String
-              onChanged: (value) => _onProvinceChanged(value), 
+              onChanged: (value) => _onProvinceChanged(value),
               validator: (value) =>
                   value == null ? 'Vui lòng chọn tỉnh/thành phố' : null,
             ),
@@ -415,11 +418,10 @@ class _SignupFormState extends State<SignupForm> {
           const SizedBox(height: 20),
 
           // --- Dropdown Phường / Xã ---
-         if (_loadingWards)
+          if (_loadingWards)
             const CircularProgressIndicator()
           else
-            // 💡 ĐÃ SỬA: DropdownMenuItem<String> và value: _selectedWardName
-            CustomDropdownField<String>( 
+            CustomDropdownField<String>(
               semanticsLabel: "wardDropdown",
               label: 'Phường/Xã',
               icon: Icons.location_city_outlined,
@@ -427,14 +429,14 @@ class _SignupFormState extends State<SignupForm> {
               hint: _wards.isEmpty ? 'Không có phường/xã' : 'Chọn phường/xã',
               items: _wards.map((ward) {
                 // Phường/xã chỉ có trường 'name' theo API mới
-                final String name = ward['name']; 
+                final String name = ward['name'];
                 // 💡 Giá trị (value) của Dropdown là TÊN phường/xã (String)
                 return DropdownMenuItem<String>(value: name, child: Text(name));
               }).toList(),
               onChanged: _wards.isEmpty
                   ? null
                   // 💡 ĐÃ SỬA: Kiểu dữ liệu tham số là String
-                  : (value) => _onWardChanged(value), 
+                  : (value) => _onWardChanged(value),
               validator: (value) => value == null && _wards.isNotEmpty
                   ? 'Vui lòng chọn phường/xã'
                   : null,
@@ -447,8 +449,16 @@ class _SignupFormState extends State<SignupForm> {
             icon: Icons.place_outlined,
             obscureText: false,
             controller: _detailedAddressController,
-            validator: (value) =>
-                value!.isEmpty ? 'Vui lòng nhập địa chỉ chi tiết' : null,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Vui lòng nhập địa chỉ chi tiết';
+              }
+
+              if (value.trim().length > 50) {
+                return 'Địa chỉ không được vượt quá 50 ký tự';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 20),
 

@@ -1,0 +1,24 @@
+{
+  "test_login_success": {
+    "email": "nguyenquangdung177@gmail.com",
+    "password": "Abc@12345"
+  },
+  "test_login_wrong_password": {
+    "email": "nguyenquangdung177@gmail.com",
+    "password": "saimatkhau"
+  },
+  "test_login_invalid_email": {
+    "email": "saiemail",
+    "password": "12345678"
+  },
+  "test_login_invalid_password": {
+    "email": "nguyenquangdung177@gmail.com",
+    "password": "123"
+  },
+  "test_login_unregistered_user": {
+    "email": "chua_dangky@example.com",
+    "password": "12345678"
+  },
+  "test_login_empty_fields": {
+  }
+}
