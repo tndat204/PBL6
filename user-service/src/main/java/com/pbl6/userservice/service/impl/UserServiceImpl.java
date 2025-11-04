@@ -46,6 +46,19 @@ public class UserServiceImpl implements UserService {
     FileClient  fileClient;
     CompanyClient companyClient;
     public UserResponse register(CreateUserRequest request) {
+
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USERNAME_EXISTED);
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+
+        if (request.getPhone() != null && userRepository.existsByPhone(request.getPhone())) {
+            throw new AppException(ErrorCode.PHONE_EXISTED);
+        }
+
         User user = modelMapper.map(request, User.class);
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
