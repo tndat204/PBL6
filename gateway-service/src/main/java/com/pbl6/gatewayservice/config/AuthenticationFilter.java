@@ -40,7 +40,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/api/auth/password/reset",
             "/api/auth/otp/password/send",
             "/api/internal/users",
-            "/api/auth/otp/verify"
+            "/api/auth/otp/verify",
+            "/api/categories",
+            "/api/skills",
+            "/api/jobs",
+            "/api/companies"
     );
 
     @Override
@@ -53,6 +57,14 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
 
         if (path.startsWith("/api/internal/users") && !"POST".equalsIgnoreCase(method)) {
+            isPublic = false;
+        }
+
+        if ((path.startsWith("/api/categories")
+                || path.startsWith("/api/skills")
+                || path.startsWith("/api/jobs")
+                || path.startsWith("/api/companies"))
+                && !"GET".equalsIgnoreCase(method)) {
             isPublic = false;
         }
 

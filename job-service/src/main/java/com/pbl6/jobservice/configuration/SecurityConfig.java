@@ -32,6 +32,7 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(PUBLIC_ENDPOINTS)
                 .permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/companies").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/companies", "/api/companies/**","/api/jobs","/api/jobs/**").permitAll()
                 .anyRequest()
                 .authenticated());
 
