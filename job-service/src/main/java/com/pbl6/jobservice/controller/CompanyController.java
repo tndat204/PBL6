@@ -88,4 +88,5 @@ public class CompanyController {
                 .result(companyService.getMyCompany())
                 .build();
     }
+
 }

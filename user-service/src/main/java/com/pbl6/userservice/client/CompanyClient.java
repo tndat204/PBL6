@@ -5,8 +5,7 @@ import com.pbl6.userservice.dto.request.CreateCompanyRequest;
 import com.pbl6.userservice.dto.response.APIResponse;
 import com.pbl6.userservice.dto.response.CompanyResponse;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
         name = "job-service",

@@ -65,7 +65,7 @@ public class UserServiceImpl implements UserService {
         user.setEnabled(true);
 
         if (request.getNameCompany() != null) {
-            roleRepository.findByName("OWNER").ifPresent(user.getRoles()::add);
+            roleRepository.findByName("RECRUITER").ifPresent(user.getRoles()::add);
         } else {
             roleRepository.findByName("USER").ifPresent(user.getRoles()::add);
         }

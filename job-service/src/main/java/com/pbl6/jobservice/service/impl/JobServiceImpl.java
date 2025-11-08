@@ -48,7 +48,7 @@ public class JobServiceImpl implements JobService {
                 company.getId(),
                 postedBy,
                 List.of(CompanyUser.Status.ACTIVE),
-                List.of(CompanyUser.Role.OWNER, CompanyUser.Role.RECRUITER)
+                List.of(CompanyUser.Role.RECRUITER)
         );
         if (!allowed) {
             throw new AppException(ErrorCode.NOT_ALLOW_TO_POST);
@@ -64,6 +64,9 @@ public class JobServiceImpl implements JobService {
                 .salaryMin(request.getSalaryMin())
                 .salaryMax(request.getSalaryMax())
                 .jobType(request.getJobType())
+                .experienceLevel(request.getExperienceLevel())
+                .requiredYearsOfExpMax(request.getRequiredYearsOfExpMax())
+                .requiredYearsOfExpMin(request.getRequiredYearsOfExpMin())
                 .expiryDate(request.getExpiryDate())
                 .build();
 
@@ -164,7 +167,7 @@ public class JobServiceImpl implements JobService {
                 job.getCompany().getId(),
                 userId,
                 List.of(CompanyUser.Status.ACTIVE),
-                List.of(CompanyUser.Role.OWNER)
+                List.of(CompanyUser.Role.RECRUITER)
         );
 
         if (!allowed) {
@@ -230,7 +233,7 @@ public class JobServiceImpl implements JobService {
                 job.getCompany().getId(),
                 userId,
                 List.of(CompanyUser.Status.ACTIVE),
-                List.of(CompanyUser.Role.OWNER)
+                List.of(CompanyUser.Role.RECRUITER)
         );
 
         if (!allowed) {

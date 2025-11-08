@@ -41,20 +41,27 @@ public class CompanyServiceImpl implements CompanyService {
     FileClient fileClient;
     @Override
     public CompanyResponse createCompany(CreateCompanyRequest request) {
+        // Map request sang entity
         Company company = modelMapper.map(request, Company.class);
 
-        Company saved = companyRepository.save(company);
+        // Lấy công ty nếu đã tồn tại, hoặc tạo mới
+        Company savedCompany = companyRepository.findByTaxCode(company.getTaxCode());
+        if (savedCompany == null) {
+            savedCompany = companyRepository.save(company);
+        }
+
         CompanyUser companyUser = CompanyUser.builder()
-                .company(saved)
+                .company(savedCompany)
                 .userId(request.getOwnerID())
-                .role(CompanyUser.Role.OWNER)
-                .status(CompanyUser.Status.ACTIVE)
+                .role(CompanyUser.Role.RECRUITER)
+                .status(CompanyUser.Status.INACTIVE)
                 .build();
 
         companyUserRepository.save(companyUser);
-        return modelMapper.map(saved, CompanyResponse.class);
 
+        return modelMapper.map(savedCompany, CompanyResponse.class);
     }
+
 
     @Transactional
     public CompanyResponse updateCompany(String id, UpdateCompanyRequest request) {
@@ -68,7 +75,7 @@ public class CompanyServiceImpl implements CompanyService {
                 company.getId(),
                 userId,
                 List.of(CompanyUser.Status.ACTIVE),
-                List.of(CompanyUser.Role.OWNER, CompanyUser.Role.RECRUITER)
+                List.of(CompanyUser.Role.RECRUITER, CompanyUser.Role.RECRUITER)
         );
 
         if (!isOwner) {
@@ -106,12 +113,11 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = companyRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
-        // Chỉ owner mới xóa được
         boolean isOwner = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(
                 company.getId(),
                 userId,
                 List.of(CompanyUser.Status.ACTIVE),
-                List.of(CompanyUser.Role.OWNER, CompanyUser.Role.RECRUITER)
+                List.of(CompanyUser.Role.RECRUITER)
         );
 
         if (!isOwner) {
@@ -149,12 +155,11 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = companyRepository.findById(UUID.fromString(companyId))
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
-        // Chỉ owner mới xóa được
         boolean isOwner = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(
                 company.getId(),
                 userId,
                 List.of(CompanyUser.Status.ACTIVE),
-                List.of(CompanyUser.Role.OWNER)
+                List.of(CompanyUser.Role.RECRUITER)
         );
 
         if (!isOwner) {
@@ -175,6 +180,7 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = companyUser.getCompany();
         return modelMapper.map(company, CompanyResponse.class);
     }
+
 
     private UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

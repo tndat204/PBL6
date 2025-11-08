@@ -37,7 +37,7 @@ public class CompanyUser extends Base {
     Status status;
 
     public enum Role {
-        OWNER, RECRUITER, VIEWER
+        RECRUITER, VIEWER
     }
 
     public enum Status {
