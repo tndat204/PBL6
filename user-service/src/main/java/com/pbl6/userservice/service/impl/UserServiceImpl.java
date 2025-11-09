@@ -1,6 +1,7 @@
 package com.pbl6.userservice.service.impl;
 
 import com.pbl6.event.dto.NotificationEvent;
+import com.pbl6.event.dto.UserRegisteredEvent;
 import com.pbl6.userservice.client.CompanyClient;
 import com.pbl6.userservice.client.FileClient;
 import com.pbl6.userservice.dto.request.ChangePasswordRequest;
@@ -28,10 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +43,7 @@ public class UserServiceImpl implements UserService {
     KafkaTemplate<String, Object> kafkaTemplate;
     FileClient  fileClient;
     CompanyClient companyClient;
+    static final String USER_REGISTERED_TOPIC = "user_registered_topic";
     public UserResponse register(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
@@ -72,6 +71,12 @@ public class UserServiceImpl implements UserService {
 
         try {
             User savedUser = userRepository.save(user);
+            Set<String> roleNames=savedUser.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
+            UserRegisteredEvent event = new UserRegisteredEvent(
+                    savedUser.getId().toString(),
+                    roleNames
+            );
+            kafkaTemplate.send(USER_REGISTERED_TOPIC, savedUser.getId().toString(), event);
             if(request.getNameCompany() != null){
                 CreateCompanyRequest createCompanyRequest= CreateCompanyRequest.builder()
                         .ownerID(savedUser.getId())

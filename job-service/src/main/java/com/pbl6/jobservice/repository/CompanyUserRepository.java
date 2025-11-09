@@ -23,4 +23,6 @@ public interface CompanyUserRepository extends JpaRepository<CompanyUser, UUID> 
     void deleteByCompanyId(UUID companyId);
 
     Optional<CompanyUser> findByUserIdAndStatus(UUID userId, CompanyUser.Status status);
+
+    Optional<CompanyUser> findByCompanyIdAndUserId(UUID companyId, UUID userId);
 }

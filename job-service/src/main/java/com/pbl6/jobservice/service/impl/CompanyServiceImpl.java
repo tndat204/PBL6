@@ -1,5 +1,8 @@
 package com.pbl6.jobservice.service.impl;
 
+import com.pbl6.event.dto.CompanyActivatedEvent;
+import com.pbl6.event.dto.CompanyDeactivatedEvent;
+import com.pbl6.event.dto.CompanyRegisteredEvent;
 import com.pbl6.jobservice.client.FileClient;
 import com.pbl6.jobservice.dto.request.CreateCompanyRequest;
 import com.pbl6.jobservice.dto.request.UpdateCompanyRequest;
@@ -19,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.Conditions;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,6 +43,10 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyUserRepository  companyUserRepository;
     JobRepository   jobRepository;
     FileClient fileClient;
+    KafkaTemplate<String, Object> kafkaTemplate;
+    static String COMPANY_REGISTERED_TOPIC = "company_registered_topic";
+    static String COMPANY_ACTIVATED_TOPIC = "company_activated_topic";
+    static String COMPANY_DEACTIVATED_TOPIC = "company_deactivated_topic";
     @Override
     public CompanyResponse createCompany(CreateCompanyRequest request) {
         // Map request sang entity
@@ -48,6 +56,13 @@ public class CompanyServiceImpl implements CompanyService {
         Company savedCompany = companyRepository.findByTaxCode(company.getTaxCode());
         if (savedCompany == null) {
             savedCompany = companyRepository.save(company);
+            CompanyRegisteredEvent event = new CompanyRegisteredEvent(
+                    savedCompany.getId().toString(),
+                    savedCompany.getName()
+            );
+
+            // 3. Bắn event "Đăng ký mới"
+            kafkaTemplate.send(COMPANY_REGISTERED_TOPIC, savedCompany.getId().toString(), event);
         }
 
         CompanyUser companyUser = CompanyUser.builder()
@@ -58,6 +73,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .build();
 
         companyUserRepository.save(companyUser);
+
 
         return modelMapper.map(savedCompany, CompanyResponse.class);
     }
@@ -138,6 +154,12 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
         company.setActive(true);
         companyRepository.save(company);
+        CompanyActivatedEvent event = new CompanyActivatedEvent(
+                company.getId().toString()
+        );
+
+        // 3. Bắn event "Đã kích hoạt"
+        kafkaTemplate.send(COMPANY_ACTIVATED_TOPIC, company.getId().toString(), event);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -146,6 +168,12 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
         company.setActive(false);
         companyRepository.save(company);
+        CompanyDeactivatedEvent event = new CompanyDeactivatedEvent(
+                company.getId().toString()
+        );
+
+        // 3. Bắn event "Đã BỎ kích hoạt"
+        kafkaTemplate.send(COMPANY_DEACTIVATED_TOPIC, company.getId().toString(), event);
     }
 
     @Override
@@ -179,6 +207,26 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_ASSOCIATED_WITH_COMPANY));
         Company company = companyUser.getCompany();
         return modelMapper.map(company, CompanyResponse.class);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void toggleUserStatus(String companyId, String userId) {
+        UUID companyUUID = UUID.fromString(companyId);
+        UUID userUUID = UUID.fromString(userId);
+
+        Company company = companyRepository.findById(companyUUID)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyUUID, userUUID)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND_IN_COMPANY));
+
+        if (companyUser.getStatus() == CompanyUser.Status.ACTIVE) {
+            companyUser.setStatus(CompanyUser.Status.INACTIVE);
+        } else {
+            companyUser.setStatus(CompanyUser.Status.ACTIVE);
+        }
+
+        companyUserRepository.save(companyUser);
     }
 
 

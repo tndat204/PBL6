@@ -1,5 +1,6 @@
 package com.pbl6.jobservice.service.impl;
 
+import com.pbl6.event.dto.JobPostedEvent;
 import com.pbl6.jobservice.dto.request.CreateJobRequest;
 import com.pbl6.jobservice.dto.request.UpdateJobRequest;
 import com.pbl6.jobservice.dto.response.JobResponse;
@@ -15,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.Conditions;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -34,7 +36,9 @@ public class JobServiceImpl implements JobService {
     CompanyRepository companyRepository;
     CompanyUserRepository companyUserRepository;
     ModelMapper modelMapper;
-
+    KafkaTemplate<String, Object> kafkaTemplate;
+    static String JOB_POSTED_TOPIC = "job_posted_topic";
+    static String JOB_CLOSED_TOPIC = "job_closed_topic";
     @Transactional
     public JobResponse createJob(CreateJobRequest request) {
         Company company = companyRepository.findById(request.getCompanyId())
@@ -91,7 +95,14 @@ public class JobServiceImpl implements JobService {
                 job.getSkills().add(jobSkill);
             }
         }
+        JobPostedEvent event = new JobPostedEvent(
+                job.getId().toString(),
+                job.getCompany().getId().toString(),
+                job.getExperienceLevel().toString()
+        );
 
+        // 3. Bắn event "Đăng tin mới"
+        kafkaTemplate.send(JOB_POSTED_TOPIC, job.getId().toString(), event);
         JobResponse response = modelMapper.map(job, JobResponse.class);
 
         if (job.getCategories() != null) {

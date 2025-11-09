@@ -1,5 +1,7 @@
 package com.pbl6.jobservice.service.impl;
 
+import com.pbl6.event.dto.ApplicationStatusChangedEvent;
+import com.pbl6.event.dto.ApplicationSubmittedEvent;
 import com.pbl6.jobservice.client.ProfileClient;
 import com.pbl6.jobservice.dto.request.ApplicationRequest;
 import com.pbl6.jobservice.dto.response.ApplicationResponse;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -39,6 +42,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     ModelMapper modelMapper;
     JobRepository jobRepository;
     ProfileClient profileClient;
+    KafkaTemplate<String, Object> kafkaTemplate;
+    static String APP_SUBMITTED_TOPIC = "application_submitted_topic";
+    static String APP_STATUS_TOPIC = "application_status_topic";
     @Override
     public ApplicationResponse createApplication(ApplicationRequest request) {
         Job job = jobRepository.findById(request.getJobId())
@@ -50,6 +56,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStatus(Application.Status.SUBMITTED);
         application.setCvFileUrl(profileClient.getCv().getResult());
         Application savedApplication = applicationRepository.save(application);
+        ApplicationSubmittedEvent event = new ApplicationSubmittedEvent(
+                savedApplication.getApplicationId().toString(),
+                savedApplication.getJob().getId().toString()
+        );
+
+        // 3. Bắn event "Nộp CV mới"
+        kafkaTemplate.send(APP_SUBMITTED_TOPIC, savedApplication.getApplicationId().toString(), event);
         return modelMapper.map(savedApplication, ApplicationResponse.class);
     }
 
@@ -89,6 +102,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStatus(status);
 
         Application updatedApplication = applicationRepository.save(application);
+        ApplicationStatusChangedEvent event = new ApplicationStatusChangedEvent(
+                updatedApplication.getApplicationId().toString(),
+                updatedApplication.getStatus().toString() // Gửi tên của Enum (ví dụ: "HIRED")
+        );
+
+        // 3. Bắn event "Thay đổi trạng thái"
+        kafkaTemplate.send(APP_STATUS_TOPIC, updatedApplication.getApplicationId().toString(), event);
         return modelMapper.map(updatedApplication, ApplicationResponse.class);
     }
 

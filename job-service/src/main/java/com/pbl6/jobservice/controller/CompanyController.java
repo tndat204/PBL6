@@ -88,5 +88,13 @@ public class CompanyController {
                 .result(companyService.getMyCompany())
                 .build();
     }
+    @PatchMapping("/{companyId}/users/{userId}/status")
+    public APIResponse<String> toggleUserStatus(@PathVariable String companyId,@PathVariable String userId){
+        companyService.toggleUserStatus(companyId,userId);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("User status changed successfully")
+                .build();
+    }
 
 }

@@ -21,6 +21,9 @@ public class UpdateJobRequest {
     BigDecimal salaryMin;
     BigDecimal salaryMax;
     Job.JobType jobType;
+    Job.ExperienceLevel experienceLevel;
+    Integer requiredYearsOfExpMin;
+    Integer requiredYearsOfExpMax;
     Set<UUID> categoryIds;
     Set<UUID> skillIds;
     String location;
