@@ -21,6 +21,7 @@ abstract class AuthRemoteDataSource {
   );
   Future<LoginResponse> googleLogin(String idToken);
   Future<UserApiResponse> register(RegisterRequest request);
+  Future<APIResponse<String>> logout(String token);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -90,7 +91,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     return LoginResponse.fromJson(response.data);
   }
 
-  @override
+
   @override
   Future<UserApiResponse> register(RegisterRequest request) async {
     try {
@@ -106,6 +107,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return UserApiResponse.fromJson(response.data);
     } catch (e) {
       print('❌ Đăng ký thất bại: $e');
+      rethrow;
+    }
+  }
+ @override
+  Future<APIResponse<String>> logout(String token) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.logout, 
+        data: {'token': token},
+      );
+      
+      return APIResponse.fromJson(response.data, (json) => json.toString());
+    } catch (e) {
+      print('❌ Logout thất bại: $e');
       rethrow;
     }
   }

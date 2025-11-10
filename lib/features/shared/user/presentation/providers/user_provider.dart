@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../user/jobs/domain/entities/user.dart';
 
-
 class UserProvider extends ChangeNotifier {
   User? _user;
 
@@ -29,5 +28,10 @@ class UserProvider extends ChangeNotifier {
       );
       notifyListeners();
     }
+  }
+
+  void clearUser() {
+    _user = null;
+    notifyListeners();
   }
 }

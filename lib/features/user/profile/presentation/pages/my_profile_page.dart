@@ -17,7 +17,6 @@ import '../../domain/usecases/upload_cv_usecase.dart';
 import '../widgets/profile_cv_tab.dart';
 import '../widgets/profile_info_tab.dart';
 
-
 class MyProfilePage extends StatefulWidget {
   const MyProfilePage({super.key});
 
@@ -29,7 +28,7 @@ class _MyProfilePageState extends State<MyProfilePage>
     with SingleTickerProviderStateMixin {
   late final GetMyProfileUseCase _getMyProfileUseCase;
   // ✅ BƯỚC 2 (PHẦN 1): KHAI BÁO USE CASE
-  late final CreateProfileUseCase _createProfileUseCase; 
+  late final CreateProfileUseCase _createProfileUseCase;
   late final UpdateProfileUseCase _updateProfileUseCase;
   late final UploadCVUseCase _uploadCVUseCase;
   late final GetAllSkillsUseCase _getAllSkillsUseCase;
@@ -45,7 +44,7 @@ class _MyProfilePageState extends State<MyProfilePage>
     super.initState();
     _getMyProfileUseCase = GetIt.I<GetMyProfileUseCase>();
     // ✅ BƯỚC 2 (PHẦN 2): KHỞI TẠO USE CASE
-    _createProfileUseCase = GetIt.I<CreateProfileUseCase>(); 
+    _createProfileUseCase = GetIt.I<CreateProfileUseCase>();
     _updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
     _uploadCVUseCase = GetIt.I<UploadCVUseCase>();
     _getAllSkillsUseCase = GetIt.I<GetAllSkillsUseCase>();
@@ -67,13 +66,15 @@ class _MyProfilePageState extends State<MyProfilePage>
     result.fold(
       (failure) {
         if (mounted) {
-            setState(() => _errorMessage = failure.message);
-            MotionToast.error(description: Text('Lỗi tải Profile: ${failure.message}')).show(context);
+          setState(() => _errorMessage = failure.message);
+          MotionToast.error(
+            description: Text('Lỗi tải Profile: ${failure.message}'),
+          ).show(context);
         }
       },
       (profileEntity) {
         if (mounted) {
-            setState(() => _profile = profileEntity);
+          setState(() => _profile = profileEntity);
         }
       },
     );
@@ -83,7 +84,7 @@ class _MyProfilePageState extends State<MyProfilePage>
     }
   }
 
-    @override
+  @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
@@ -95,42 +96,45 @@ class _MyProfilePageState extends State<MyProfilePage>
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Colors.white, // Thêm màu nền trắng
-        body: Container( // Thêm Gradient nền khi loading
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: AppPallete.backgroundGradient,
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+        body: Container(
+          // Thêm Gradient nền khi loading
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: AppPallete.backgroundGradient,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            child: const Center(child: CircularProgressIndicator()),
+          ),
+          child: const Center(child: CircularProgressIndicator()),
         ),
       );
     }
 
     // --- Phần Lỗi ---
     if (_errorMessage != null && _profile == null) {
-        return Scaffold(
+      return Scaffold(
         backgroundColor: Colors.white,
-          body: Container( // Thêm Gradient nền khi lỗi
-            decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                colors: AppPallete.backgroundGradient,
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                ),
-            ),
-            child: SafeArea( // Thêm SafeArea
-                child: Column(
-                  children: [
-                      const CustomAppBar(), // Vẫn hiển thị AppBar
-                      const Spacer(), // Đẩy lỗi xuống giữa
-                      Center(child: Text('Không thể tải Profile: $_errorMessage')),
-                      const Spacer(), // Đẩy lỗi xuống giữa
-                  ],
-                ),
+        body: Container(
+          // Thêm Gradient nền khi lỗi
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: AppPallete.backgroundGradient,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
+          child: SafeArea(
+            // Thêm SafeArea
+            child: Column(
+              children: [
+                CustomAppBar(), // Vẫn hiển thị AppBar
+                const Spacer(), // Đẩy lỗi xuống giữa
+                Center(child: Text('Không thể tải Profile: $_errorMessage')),
+                const Spacer(), // Đẩy lỗi xuống giữa
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -138,34 +142,39 @@ class _MyProfilePageState extends State<MyProfilePage>
     final profile = _profile;
     if (profile == null) {
       return Scaffold(
-          backgroundColor: Colors.white,
-          body: Container( // Thêm Gradient nền
-            decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                colors: AppPallete.backgroundGradient,
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                ),
-            ),
-            child: SafeArea( // Thêm SafeArea
-                child: Column(
-                  children: [
-                    const CustomAppBar(), // Vẫn hiển thị AppBar
-                    const Spacer(),
-                    const Center(child: Text("Profile chưa được tạo hoặc lỗi dữ liệu.")),
-                    const Spacer(),
-                    // Có thể thêm nút "Tạo Profile" ở đây
-                  ],
-                ),
+        backgroundColor: Colors.white,
+        body: Container(
+          // Thêm Gradient nền
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: AppPallete.backgroundGradient,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
+          child: SafeArea(
+            // Thêm SafeArea
+            child: Column(
+              children: [
+                CustomAppBar(), // Vẫn hiển thị AppBar
+                const Spacer(),
+                const Center(
+                  child: Text("Profile chưa được tạo hoặc lỗi dữ liệu."),
+                ),
+                const Spacer(),
+                // Có thể thêm nút "Tạo Profile" ở đây
+              ],
+            ),
+          ),
+        ),
       );
     }
 
     // --- Hiển thị chính khi có Profile ---
     return Scaffold(
       backgroundColor: Colors.white, // Đặt màu nền chính là trắng
-      body: Container( // Container ngoài cùng với Gradient
+      body: Container(
+        // Container ngoài cùng với Gradient
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: AppPallete.backgroundGradient,
@@ -174,45 +183,39 @@ class _MyProfilePageState extends State<MyProfilePage>
           ),
         ),
         child: SafeArea(
-          
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                          const CustomAppBar(),
+              CustomAppBar(),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'Hoàn thiện hồ sơ của bạn\n để tăng cơ hội việc làm!', 
-                  style: Theme.of(context).textTheme.headlineSmall
-                      ?.copyWith(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 42,
-                        color: AppPallete.textColor,
-                        height: 1.3,
-                        fontFamily: 'Italianno',
-                      ),
+                  'Hoàn thiện hồ sơ của bạn\n để tăng cơ hội việc làm!',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 42,
+                    color: AppPallete.textColor,
+                    height: 1.3,
+                    fontFamily: 'Italianno',
+                  ),
                 ),
               ),
               const SizedBox(height: 20), // Giữ khoảng cách
-
               // 💡 Container chứa TabBar và TabBarView với nền trắng
               Expanded(
                 child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white, // Nền trắng cho phần tab
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                      border: Border.all(
-                        color: Colors.grey.shade200,
-                        width: 1,
-                      ),
+                  decoration: BoxDecoration(
+                    color: Colors.white, // Nền trắng cho phần tab
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
+                    border: Border.all(color: Colors.grey.shade200, width: 1),
+                  ),
                   child: Column(
                     children: [
-                        const SizedBox(height: 20), // Khoảng cách trên TabBar
+                      const SizedBox(height: 20), // Khoảng cách trên TabBar
                       // --- Tab bar ---
                       Container(
                         height: 46,
@@ -238,7 +241,7 @@ class _MyProfilePageState extends State<MyProfilePage>
                           ],
                         ),
                       ),
-                        const SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
                       // --- Nội dung tab ---
                       Expanded(
@@ -260,7 +263,9 @@ class _MyProfilePageState extends State<MyProfilePage>
                               uploadCVUseCase: _uploadCVUseCase,
                             ),
                             // 3. Review Tab
-                            const Center(child: Text('Đánh giá sẽ được thêm sau.')),
+                            const Center(
+                              child: Text('Đánh giá sẽ được thêm sau.'),
+                            ),
                           ],
                         ),
                       ),

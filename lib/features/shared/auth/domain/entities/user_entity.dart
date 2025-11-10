@@ -1,6 +1,6 @@
 import 'package:pbl6/features/shared/auth/data/models/user_api_response.dart';
 
-enum UserRole { candidate, recruiter, manager }
+enum UserRole { user, recruiter, admin}
 
 class UserEntity {
   final String id;

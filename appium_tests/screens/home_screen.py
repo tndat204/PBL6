@@ -1,11 +1,12 @@
 from appium.webdriver.common.appiumby import AppiumBy
 from .base_screen import BaseScreen
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import os
 
 class HomeScreen(BaseScreen):
     DASHBOARD_TITLE = (AppiumBy.ACCESSIBILITY_ID, "Chào mừng bạn đến trang tổng quan ứng viên!")
-
+    PROFILE_TAB = (AppiumBy.ACCESSIBILITY_ID, "Hồ sơ\nTab 4 of 4")
     def is_dashboard_displayed(self, timeout=10):
         """
         Thử tìm element dashboard trong 'timeout' giây.
@@ -46,3 +47,16 @@ class HomeScreen(BaseScreen):
         except Exception as e:
             print(f"[ERROR] Exception when checking dashboard: {e}")
             return False
+    def go_to_profile_tab(self):
+       
+        print("[ACTION] Chuyển qua tab 'Hồ sơ'...")
+        try:
+            profile_tab = self.wait.until(
+                EC.element_to_be_clickable(self.PROFILE_TAB)
+            )
+            profile_tab.click()
+            print("[INFO] Đã nhấn tab 'Hồ sơ'.")
+            time.sleep(1) # Chờ tab load
+        except Exception as e:
+            print(f"[ERROR] Không thể nhấn tab 'Hồ sơ': {e}")
+            raise

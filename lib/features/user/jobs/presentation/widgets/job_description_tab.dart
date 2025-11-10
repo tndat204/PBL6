@@ -62,6 +62,77 @@ class _JobDescriptionTabState extends State<JobDescriptionTab> {
     }
   }
 
+  // THÊM: Helper định dạng trình độ
+  String _formatExperienceLevel(ExperienceLevel level) {
+    switch (level) {
+      case ExperienceLevel.INTERN:
+        return 'Thực tập sinh';
+      case ExperienceLevel.FRESHER:
+        return 'Mới tốt nghiệp';
+      case ExperienceLevel.JUNIOR:
+        return 'Nhân viên (Junior)';
+      case ExperienceLevel.SENIOR:
+        return 'Chuyên viên (Senior)';
+      case ExperienceLevel.PRINCIPAL:
+        return 'Chuyên gia cao cấp (Principal)';
+      case ExperienceLevel.MANAGER:
+        return 'Quản lý / Trưởng nhóm';
+      case ExperienceLevel.ANY:
+        return 'Không yêu cầu kinh nghiệm';
+    }
+  }
+
+  // THÊM: Helper định dạng số năm kinh nghiệm
+  String _formatYearsExperience(int min, int max) {
+    if (min == 0 && max == 0) return 'Không yêu cầu';
+    if (min == max) return '$min năm';
+    if (max > 15) return 'Trên $min năm'; // Giả sử max là số lớn (vd: 99)
+    return '$min - $max năm';
+  }
+
+  // THÊM: Widget build tiêu đề (để tái sử dụng)
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: Colors.black87,
+        letterSpacing: 0.3,
+      ),
+    );
+  }
+
+  // THÊM: Widget build dòng thông tin (cho yêu cầu)
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Colors.grey.shade600),
+        const SizedBox(width: 12),
+        Text(
+          '$label:',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -73,15 +144,27 @@ class _JobDescriptionTabState extends State<JobDescriptionTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Mô tả công việc",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-              letterSpacing: 0.3,
+          // THÊM: Mục yêu cầu công việc
+          _buildSectionTitle("Yêu cầu công việc"),
+          const SizedBox(height: 16),
+          _buildInfoRow(
+            Icons.bar_chart_rounded,
+            "Trình độ",
+            _formatExperienceLevel(widget.job.experienceLevel),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            Icons.work_history_rounded,
+            "Kinh nghiệm",
+            _formatYearsExperience(
+              widget.job.requiredYearsOfExpMin,
+              widget.job.requiredYearsOfExpMax,
             ),
           ),
+          const SizedBox(height: 32),
+
+          // --- Mục mô tả ---
+          _buildSectionTitle("Mô tả công việc"),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
@@ -100,16 +183,9 @@ class _JobDescriptionTabState extends State<JobDescriptionTab> {
             ),
           ),
 
+          // --- Mục danh mục ---
           const SizedBox(height: 32),
-          Text(
-            "Danh mục",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-              letterSpacing: 0.3,
-            ),
-          ),
+          _buildSectionTitle("Danh mục"),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -117,29 +193,20 @@ class _JobDescriptionTabState extends State<JobDescriptionTab> {
             children: _categories.isEmpty
                 ? [const Text("Không có danh mục")]
                 : _categories
-                    .map((c) => _buildChip(Icons.category_outlined, c.name))
-                    .toList(),
+                      .map((c) => _buildChip(Icons.category_outlined, c.name))
+                      .toList(),
           ),
 
+          // --- Mục kỹ năng ---
           const SizedBox(height: 32),
-          Text(
-            "Kỹ năng yêu cầu",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-              letterSpacing: 0.3,
-            ),
-          ),
+          _buildSectionTitle("Kỹ năng yêu cầu"),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: _skills.isEmpty
                 ? [const Text("Không có kỹ năng")]
-                : _skills
-                    .map((s) => _buildChip(Icons.code, s.name))
-                    .toList(),
+                : _skills.map((s) => _buildChip(Icons.code, s.name)).toList(),
           ),
         ],
       ),

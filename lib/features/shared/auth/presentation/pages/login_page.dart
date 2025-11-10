@@ -2,13 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jwt_decode/jwt_decode.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/data/services/google_sign_in_service.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
+import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
+import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
 import 'package:pbl6/routes/route_names.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../user/jobs/domain/entities/user.dart';
 import '../widgets/login_form.dart';
 import '../widgets/social_button.dart';
 
@@ -23,8 +26,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
   final LoginUseCase _loginUseCase = GetIt.instance<LoginUseCase>();
-  final GoogleSignInService _googleSignInService = GetIt.instance<GoogleSignInService>();
-
+  final GoogleSignInService _googleSignInService =
+      GetIt.instance<GoogleSignInService>();
+  final GetMyInfoUseCase _getMyInfoUseCase = GetIt.instance<GetMyInfoUseCase>();
+  bool _isGoogleLoading = false;
   @override
   void initState() {
     super.initState();
@@ -45,58 +50,71 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
- Future<void> _handleGoogleSignIn() async {
-  try {
-    final idToken = await _googleSignInService.getIdToken();
+  Future<void> _handleGoogleSignIn() async {
+    if (mounted) setState(() => _isGoogleLoading = true);
 
-    if (idToken != null) {
-      final response = await _loginUseCase.googleLogin(idToken);
+    try {
+      final idToken = await _googleSignInService.getIdToken();
 
-      if (response.code == 200 && response.result != null) {
-        final prefs = await SharedPreferences.getInstance();
-        final token = response.result!.token;
-        await prefs.setString('auth_token', token);
+      if (idToken != null) {
+        // 1. Gọi UseCase (Repository đã tự lưu token/role)
+        final response = await _loginUseCase.googleLogin(idToken);
 
-        // 🧩 Giống như login thường: decode token để biết vai trò
-        final decodedToken = Jwt.parseJwt(token);
-        final scope = decodedToken['scope'] ?? 'ROLE_USER';
+        if (response.code == 200 && response.result != null) {
+          // 2. Fetch thông tin user (Giống hệt _handleLogin)
+          try {
+            final userEntity = await _getMyInfoUseCase();
+            if (mounted) {
+              context.read<UserProvider>().setUser(
+                User.fromAuthEntity(userEntity),
+              );
+            }
+          } catch (e) {
+            print("Lỗi fetch user info sau khi Google login: $e");
+          }
 
-        String targetRoute = RouteNames.USER_DASHBOARD; // mặc định
+          // 3. Hiển thị thông báo (Giống hệt _handleLogin)
+          if (mounted) {
+            MotionToast.success(
+              title: const Text("Thành công"),
+              description: const Text("Đăng nhập bằng Google thành công"),
+              animationType: AnimationType.slideInFromLeft,
+              toastDuration: const Duration(seconds: 2),
+              toastAlignment: Alignment.topLeft,
+            ).show(context);
+          }
 
-        switch (scope) {
-          case 'ROLE_ADMIN':
-            targetRoute = RouteNames.ADMIN_DASHBOARD;
-            break;
-          case 'ROLE_RECRUITER':
-            targetRoute = RouteNames.RECRUITER_DASHBOARD;
-            break;
-          case 'ROLE_USER':
-          default:
-            targetRoute = RouteNames.USER_DASHBOARD;
+          // 4. Điều hướng (Giống hệt _handleLogin)
+          // Tạm thời không delay để toast và điều hướng song song
+          if (mounted) {
+            context.go('/dashboard');
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đăng nhập Google thất bại: ${response.code}'),
+              ),
+            );
+          }
         }
-
-        // 🧠 Lưu thêm role nếu cần guard hoặc my-info
-        await prefs.setString('user_role', scope);
-
-        // ✅ Điều hướng tới dashboard tương ứng
-        context.go(targetRoute);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đăng nhập Google thất bại: ${response.code}')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể lấy ID Token từ Google')),
+          );
+        }
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể lấy ID Token từ Google')),
-      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Lỗi: $e')),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -135,9 +153,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       Text(
                         'Đăng nhập để tiếp tục hành trình của bạn',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppPallete.mutedTextColor,
-                              fontSize: 16,
-                            ),
+                          color: AppPallete.mutedTextColor,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -220,10 +238,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                       GestureDetector(
                         onTap: () {
-                           context.push(RouteNames.ROLE_SELECTION);
+                          context.push(RouteNames.ROLE_SELECTION);
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             border: Border(
                               bottom: BorderSide(

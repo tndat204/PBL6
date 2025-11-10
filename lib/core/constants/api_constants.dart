@@ -5,6 +5,7 @@ class ApiConstants {
   // static const String baseUrl ='http://192.168.1.195:8080/';
   // Auth
   static const String login = '/api/auth/token';
+  static const String logout = '/api/auth/logout';
   static const String googleLogin = '/api/auth/google-app';
   static const String sendOTP = '/api/auth/otp/password/send';
   static const String verifyOTP = '/api/auth/otp/verify';

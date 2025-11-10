@@ -289,124 +289,109 @@ class _ProfileInfoTabState extends State<ProfileInfoTab> {
           children: [
             _buildSectionHeader('Thông tin cơ bản'),
             const SizedBox(height: 16),
-            Semantics(
-              label: "headlineField",
-              child: ExcludeSemantics(
-                child: CustomTextField(
-                  label: 'Vị trí mong muốn',
-                  icon: Icons.work_outline,
-                  obscureText: false,
-                  controller: _headlineController,
-                  minLines: 1,
-                  maxLines: 2,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Vị trí mong muốn không được để trống.';
-                    }
-                    if (value.trim().length > 200) {
-                      return 'Vị trí mong muốn không được vượt quá 200 ký tự.';
-                    }
-                    final invalidChars = RegExp(
-                      r'[!@#\$%\^&\*\(\)\=\+\{\}\[\];:"<>,\?/]',
-                    );
-                    if (invalidChars.hasMatch(value)) {
-                      return 'Vị trí mong muốn chứa ký tự không hợp lệ.';
-                    }
-                    return null;
-                  },
-                ),
-              ),
+            CustomTextField(
+              label: 'Vị trí mong muốn',
+              semanticsLabel: "headlineField",
+              icon: Icons.work_outline,
+              obscureText: false,
+              controller: _headlineController,
+              minLines: 1,
+              maxLines: 2,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Vị trí mong muốn không được để trống.';
+                }
+                if (value.trim().length > 200) {
+                  return 'Vị trí mong muốn không được vượt quá 200 ký tự.';
+                }
+                final invalidChars = RegExp(
+                  r'[!@#\$%\^&\*\(\)\=\+\{\}\[\];:"<>,\?/]',
+                );
+                if (invalidChars.hasMatch(value)) {
+                  return 'Vị trí mong muốn chứa ký tự không hợp lệ.';
+                }
+                return null;
+              },
             ),
+
             const SizedBox(height: 14),
-            Semantics(
-              label: "summaryField",
-              child: ExcludeSemantics(
-                child: CustomTextField(
-                  label: 'Tóm tắt bản thân',
-                  icon: Icons.notes_outlined,
-                  obscureText: false,
-                  controller: _summaryController,
-                  keyboardType: TextInputType.multiline,
-                  minLines: 3,
-                  maxLines: 6,
-                  validator: (value) {
-                    if (value != null && value.trim().length > 500) {
-                      return 'Tóm tắt không được vượt quá 500 ký tự.';
-                    }
-                    return null;
-                  },
-                ),
-              ),
+            CustomTextField(
+              semanticsLabel: "summaryField",
+              label: 'Tóm tắt bản thân',
+              icon: Icons.notes_outlined,
+              obscureText: false,
+              controller: _summaryController,
+              keyboardType: TextInputType.multiline,
+              minLines: 3,
+              maxLines: 6,
+              validator: (value) {
+                if (value != null && value.trim().length > 500) {
+                  return 'Tóm tắt không được vượt quá 500 ký tự.';
+                }
+                return null;
+              },
             ),
+
             const SizedBox(height: 14),
-            Semantics(
-              label: "salaryField",
-              child: ExcludeSemantics(
-                child: CustomTextField(
-                  label: 'Mức lương mong muốn (VNĐ)',
-                  icon: Icons.attach_money,
-                  obscureText: false,
-                  controller: _salaryController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    ThousandsInputFormatter(),
-                  ],
-                ),
-              ),
+            CustomTextField(
+              semanticsLabel: "salaryField",
+              label: 'Mức lương mong muốn (VNĐ)',
+              icon: Icons.attach_money,
+              obscureText: false,
+              controller: _salaryController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                ThousandsInputFormatter(),
+              ],
             ),
+
             const SizedBox(height: 28),
             _buildSectionHeader('Liên kết'),
             const SizedBox(height: 16),
-            Semantics(
-              label: "linkedinField",
-              child: ExcludeSemantics(
-                child: CustomTextField(
-                  label: 'Liên kết LinkedIn',
-                  icon: Icons.link,
-                  obscureText: false,
-                  controller: _linkedinController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty)
-                      return null; // cho phép bỏ trống
-                    final regex = RegExp(
-                      r'^(https?:\/\/)?([\w]+\.)?linkedin\.com\/.*$',
-                      caseSensitive: false,
-                    );
-                    if (!regex.hasMatch(value.trim())) {
-                      if (!value.contains('linkedin.com')) {
-                        return 'Liên kết phải là đường dẫn LinkedIn.';
-                      }
-                      return 'Liên kết LinkedIn không hợp lệ.';
-                    }
-                    return null;
-                  },
-                ),
-              ),
+            CustomTextField(
+              semanticsLabel: "linkedinField",
+              label: 'Liên kết LinkedIn',
+              icon: Icons.link,
+              obscureText: false,
+              controller: _linkedinController,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty)
+                  return null; // cho phép bỏ trống
+                final regex = RegExp(
+                  r'^(https?:\/\/)?([\w]+\.)?linkedin\.com\/.*$',
+                  caseSensitive: false,
+                );
+                if (!regex.hasMatch(value.trim())) {
+                  if (!value.contains('linkedin.com')) {
+                    return 'Liên kết phải là đường dẫn LinkedIn.';
+                  }
+                  return 'Liên kết LinkedIn không hợp lệ.';
+                }
+                return null;
+              },
             ),
+
             const SizedBox(height: 14),
-            Semantics(
-              label: "portfolioField",
-              child: ExcludeSemantics(
-                child: CustomTextField(
-                  label: 'Liên kết Portfolio',
-                  icon: Icons.web,
-                  obscureText: false,
-                  controller: _portfolioController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty)
-                      return null; // cho phép bỏ trống
-                    final regex = RegExp(
-                      r'^(https?:\/\/)?([\w\-]+\.)+[a-zA-Z]{2,}(\/.*)?$',
-                    );
-                    if (!regex.hasMatch(value.trim())) {
-                      return 'Liên kết Portfolio không hợp lệ.';
-                    }
-                    return null;
-                  },
-                ),
-              ),
+            CustomTextField(
+              semanticsLabel: "portfolioField",
+              label: 'Liên kết Portfolio',
+              icon: Icons.web,
+              obscureText: false,
+              controller: _portfolioController,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty)
+                  return null; // cho phép bỏ trống
+                final regex = RegExp(
+                  r'^(https?:\/\/)?([\w\-]+\.)+[a-zA-Z]{2,}(\/.*)?$',
+                );
+                if (!regex.hasMatch(value.trim())) {
+                  return 'Liên kết Portfolio không hợp lệ.';
+                }
+                return null;
+              },
             ),
+
             const SizedBox(height: 28),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

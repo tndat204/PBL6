@@ -6,7 +6,7 @@
     "ward": "Phường Liên Chiểu",
     "address": "123 Đường Test, Quận Automation"
   },
-  "test_signup_missing_name": {},
+  
   "test_signup_missing_email": {
     "name": "Test User Auto"
   },
@@ -103,5 +103,7 @@
     "province": "Đà Nẵng",
     "ward": "Phường Liên Chiểu",
     "address": "123 Đường Test, Quận Automation"
-  }
+    
+  },
+  "test_signup_missing_name": {}
 }

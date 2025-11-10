@@ -72,9 +72,7 @@ class TestSignup:
         signup.tap_agree_terms()
         
         signup.tap_register(wait_after_click=3)
-        
-    
-
+           
         print("[INFO] Xác minh đã chuyển về màn hình Đăng nhập...")
         login = LoginScreen(appium_driver)
         ok = login.is_login_button_displayed(timeout=8)
@@ -85,10 +83,9 @@ class TestSignup:
     # --- Test Case Lỗi Validation (Theo thứ tự Form) ---
 
     def test_signup_missing_name(self, appium_driver, signup_data):
-        """❌ 2. Test: Bỏ trống Họ và Tên"""
+        """ 2. Test: Bỏ trống Họ và Tên"""
         signup = self._navigate_to_signup(appium_driver)
-        # data = signup_data["test_signup_missing_name"] # Không có data
-        
+              
         signup.tap_register(wait_after_click=1)
         
         ok = signup.is_error_displayed(signup.ERROR_NAME_EMPTY)
@@ -96,7 +93,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng nhập họ và tên'"
 
     def test_signup_missing_email(self, appium_driver, signup_data):
-        """❌ 3. Test: Bỏ trống Email"""
+        """ 3. Test: Bỏ trống Email"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_missing_email"]
         
@@ -108,7 +105,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng nhập email'"
 
     def test_signup_invalid_email(self, appium_driver, signup_data):
-        """❌ 4. Test: Email sai định dạng"""
+        """ 4. Test: Email sai định dạng"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_invalid_email"]
         
@@ -121,7 +118,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Email không hợp lệ'"
 
     def test_signup_missing_birthdate(self, appium_driver, signup_data):
-        """❌ 5. Test: Bỏ trống Ngày sinh"""
+        """ 5. Test: Bỏ trống Ngày sinh"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_missing_birthdate"]
         
@@ -134,7 +131,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng chọn ngày sinh'"
 
     def test_signup_missing_password(self, appium_driver, signup_data):
-        """❌ 6. Test: Bỏ trống Mật khẩu"""
+        """ 6. Test: Bỏ trống Mật khẩu"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_missing_password"]
         
@@ -148,7 +145,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng nhập mật khẩu'"
 
     def test_signup_invalid_password(self, appium_driver, signup_data):
-        """❌ 7. Test: Mật khẩu không đủ mạnh (quá ngắn)"""
+        """ 7. Test: Mật khẩu không đủ mạnh (quá ngắn)"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_invalid_password"]
         
@@ -163,7 +160,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi định dạng mật khẩu"
 
     def test_signup_missing_confirm_password(self, appium_driver, signup_data):
-        """❌ 8. Test: Bỏ trống Xác nhận mật khẩu"""
+        """ 8. Test: Bỏ trống Xác nhận mật khẩu"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_missing_confirm_password"]
         
@@ -178,7 +175,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng nhập lại mật khẩu'"
 
     def test_signup_password_mismatch(self, appium_driver, signup_data):
-        """❌ 9. Test: Mật khẩu nhập lại không khớp"""
+        """ 9. Test: Mật khẩu nhập lại không khớp"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_password_mismatch"]
         
@@ -195,7 +192,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Mật khẩu không khớp'"
 
     def test_signup_missing_phone(self, appium_driver, signup_data):
-        """❌ 10. Test: Bỏ trống Số điện thoại"""
+        """ 10. Test: Bỏ trống Số điện thoại"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_missing_phone"]
 
@@ -211,7 +208,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng nhập số điện thoại'"
 
     def test_signup_invalid_phone(self, appium_driver, signup_data):
-        """❌ 11. Test: Số điện thoại sai định dạng (quá ngắn)"""
+        """ 11. Test: Số điện thoại sai định dạng (quá ngắn)"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_invalid_phone"]
         
@@ -228,7 +225,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Số điện thoại không hợp lệ'"
 
     def test_signup_missing_detailed_address(self, appium_driver, signup_data):
-        """❌ 12. Test: Bỏ trống Địa chỉ chi tiết"""
+        """ 12. Test: Bỏ trống Địa chỉ chi tiết"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_missing_detailed_address"]
 
@@ -250,7 +247,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng nhập địa chỉ chi tiết'"
 
     def test_signup_address_too_long(self, appium_driver, signup_data):
-        """❌ 13. Test: Địa chỉ chi tiết quá dài (> 50 ký tự)"""
+        """ 13. Test: Địa chỉ chi tiết quá dài (> 50 ký tự)"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_address_too_long"]
 
@@ -289,7 +286,7 @@ class TestSignup:
         signup.set_detailed_address(data["address"])
 
     def test_signup_logic_terms_not_agreed(self, appium_driver, signup_data):
-        """❌ 14. Test: Lỗi Logic - Không đồng ý điều khoản"""
+        """ 14. Test: Lỗi Logic - Không đồng ý điều khoản"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_logic_terms_not_agreed"]
 
@@ -306,7 +303,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Bạn phải đồng ý với điều khoản sử dụng.'"
 
     def test_signup_logic_province_not_selected(self, appium_driver, signup_data):
-        """❌ 15. Test: Lỗi Logic - Bỏ trống Tỉnh/Thành phố"""
+        """ 15. Test: Lỗi Logic - Bỏ trống Tỉnh/Thành phố"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_logic_province_not_selected"]
 
@@ -321,7 +318,7 @@ class TestSignup:
         assert ok, "Không hiển thị lỗi 'Vui lòng chọn Tỉnh/Thành phố.'"
 
     def test_signup_logic_ward_not_selected(self, appium_driver, signup_data):
-        """❌ 16. Test: Lỗi Logic - Bỏ trống Phường/Xã"""
+        """ 16. Test: Lỗi Logic - Bỏ trống Phường/Xã"""
         signup = self._navigate_to_signup(appium_driver)
         data = signup_data["test_signup_logic_ward_not_selected"]
 

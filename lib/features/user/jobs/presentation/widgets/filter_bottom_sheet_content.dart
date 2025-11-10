@@ -1,4 +1,3 @@
-// file: features/user/jobs/presentation/widgets/filter_bottom_sheet_content.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
@@ -60,9 +59,8 @@ class _FilterBottomSheetContentState extends State<FilterBottomSheetContent> {
     'FULL_TIME': 'Full-time',
     'PART_TIME': 'Part-time',
     'CONTRACT': 'Contract',
-    'INTERNSHIP': 'Internship',
-    'FREELANCE': 'Freelance',
-  };
+    'REMOTE': 'Remote',
+      };
 
   @override
   void initState() {
@@ -118,6 +116,15 @@ class _FilterBottomSheetContentState extends State<FilterBottomSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+    // SỬA: Tạo danh sách unique (độc nhất) để tránh lỗi assertion
+    final uniqueProvinceNames = widget.provinces
+        .map((p) => p['province'] as String?)
+        .where((name) => name != null && name.isNotEmpty) // Lọc null hoặc rỗng
+        .toSet() // Lọc trùng lặp
+        .toList();
+
+    final uniqueJobTypeNames = widget.jobTypeNames.toSet().toList();
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -199,10 +206,11 @@ class _FilterBottomSheetContentState extends State<FilterBottomSheetContent> {
                 items: [
                   const DropdownMenuItem<String>(
                       value: null, child: Text('Tất cả địa điểm')),
-                  ...widget.provinces.map((province) {
+                  // SỬA: Dùng danh sách unique đã lọc
+                  ...uniqueProvinceNames.map((provinceName) {
                     return DropdownMenuItem<String>(
-                      value: province['name'],
-                      child: Text(province['name'] ?? 'Lỗi tên tỉnh'),
+                      value: provinceName,
+                      child: Text(provinceName!),
                     );
                   })
                 ],
@@ -226,7 +234,8 @@ class _FilterBottomSheetContentState extends State<FilterBottomSheetContent> {
                 items: [
                   const DropdownMenuItem<String>(
                       value: null, child: Text('Tất cả loại hình')),
-                  ...widget.jobTypeNames.map((enumName) {
+                  // SỬA: Dùng danh sách unique đã lọc
+                  ...uniqueJobTypeNames.map((enumName) {
                     return DropdownMenuItem<String>(
                       value: enumName,
                       child:

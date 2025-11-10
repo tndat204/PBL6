@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart'; // Để dùng context.go
-import 'package:jwt_decode/jwt_decode.dart'; // Decode token
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
@@ -9,10 +8,9 @@ import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.da
 import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 
-import '../../../../../routes/route_names.dart'; // Import route names
-import '../../../../user/jobs/domain/entities/user.dart'; // Import User từ user domain (mở rộng từ auth)
+import '../../../../../routes/route_names.dart';
+import '../../../../user/jobs/domain/entities/user.dart';
 import '../widgets/custom_elevated_button.dart';
 import '../widgets/custom_text_field.dart';
 
@@ -43,7 +41,6 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // ⭐ Xóa lỗi cũ và đặt loading
       if (mounted)
         setState(() {
           _isLoading = true;
@@ -57,53 +54,20 @@ class _LoginFormState extends State<LoginForm> {
         );
 
         if (response.code == 200 && response.result?.token != null) {
-          final token = response.result!.token;
           final prefs = await SharedPreferences.getInstance();
-
-          // ✅ Luôn lưu token (dù không rememberMe)
-          await prefs.setString('auth_token', token);
-
-          // Decode token để lấy role, userId, email
-          final decodedToken = Jwt.parseJwt(token);
-          final email = decodedToken['sub'] ?? _emailController.text;
-          final userId = decodedToken['userId'] ?? const Uuid().v4().toString();
-          final scope = decodedToken['scope'] ?? 'ROLE_USER';
-
-          // Map scope sang UserRole
-          UserRole role;
-          switch (scope) {
-            case 'ROLE_RECRUITER':
-              role = UserRole.recruiter;
-              break;
-            case 'ROLE_ADMIN':
-              role = UserRole.admin;
-              break;
-            default:
-              role = UserRole.user;
-          }
-
-          // Lưu role & userId vào prefs để guard dùng
-          await prefs.setString('user_role', role.toString());
-          await prefs.setString('user_id', userId);
-
-          // Nếu rememberMe thì đánh dấu cờ remember
           await prefs.setBool('remember_me', _rememberMe);
           try {
-            // Fetch user info immediately after successful login
             final userEntity = await _getMyInfoUseCase();
-            // Update the global UserProvider
             if (mounted) {
-              // Use read here as we are inside a button handler
               context.read<UserProvider>().setUser(
                 User.fromAuthEntity(userEntity),
               );
             }
           } catch (e) {
-            // Handle error fetching user info if needed, but don't block login
             print("Error fetching user info after login: $e");
-            // Maybe show a less intrusive warning later
           }
 
+          // 4. Hiển thị thông báo và điều hướng (Phần này đúng rồi)
           MotionToast.success(
             title: const Text("Thành công"),
             description: const Text("Đăng nhập thành công"),
@@ -112,24 +76,21 @@ class _LoginFormState extends State<LoginForm> {
             toastAlignment: Alignment.topLeft,
           ).show(context);
 
-          // Điều hướng đến dashboard sau 2 giây
+
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) {
               context.go('/dashboard');
             }
           });
         } else if (response.code == 1023) {
-          // ⭐ Gán lỗi server thay vì snackbar
           if (mounted) setState(() => _serverError = 'Sai mật khẩu');
         } else {
-          // ⭐ Gán lỗi server thay vì snackbar
           if (mounted)
             setState(
               () => _serverError = 'Đăng nhập thất bại, vui lòng thử lại',
             );
         }
       } catch (e) {
-        // ⭐ Gán lỗi server thay vì snackbar
         if (mounted)
           setState(
             () => _serverError = 'Lỗi không xác định. Vui lòng thử lại.',

@@ -8,6 +8,7 @@ import 'package:pbl6/features/shared/auth/data/services/google_sign_in_service.d
 import 'package:pbl6/features/shared/auth/domain/repositories/auth_repository.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
+import 'package:pbl6/features/shared/auth/domain/usecases/logout_usecase.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/register_usecase.dart';
 // ===== CATEGORY =====
 import 'package:pbl6/features/shared/category/data/datasources/category_remote_datasource.dart';
@@ -87,6 +88,9 @@ void init() {
     RegisterUseCase(sl<AuthRepository>()),
   );
   sl.registerSingleton<GoogleSignInService>(GoogleSignInService());
+  sl.registerSingleton<LogoutUseCase>(
+    LogoutUseCase(sl<AuthRepository>()),
+  );
 
   // ================= USER =================
   sl.registerLazySingleton<UserRemoteDataSource>(
