@@ -1,7 +1,27 @@
 import FormLayout from "../layouts/FormLayout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function JobPost() {
+
+  const[category, setCategory] = useState([]);
+  useEffect(() =>{
+    async function fetchCategories() {
+      try {
+        const res = await fetch("http://localhost:8080/api/categories",{
+          method: "GET",
+          headers:{
+            "Content-Type" : "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJodXkyMDA0NEBleGFtcGxlLmNvbSIsInNjb3BlIjoiUk9MRV9VU0VSIiwiaXNzIjoiaXRqb2JodW50LmNvbSIsImV4cCI6MTc2MjM2MTk3MiwiaWF0IjoxNzYyMzU0NzcyLCJ1c2VySWQiOiIyZmE1YmMyYi0yNjY1LTRjNjUtYTYxNC1kYzU3ZjM1NDE1NjQiLCJqdGkiOiJiYThkZjk4Yy0wMjYzLTQ2NTMtYjE0Mi1jZDAzYWRlODI5NGQifQ.wRKyndepnOU1CSLUI4VNvmgVp-oLhAXhz8GEDjwiGMuTsMvnq5fhfV8Cz0-Zx5WQQvKdbvm86HddSarqUjnQWA`
+          }
+        });
+        const data = await res.json();
+        setCategory(data.result || data); // tuỳ theo cấu trúc trả về của API
+       }catch (err) {
+        console.error("Lỗi khi lấy danh sách category:", err);
+      }
+    }
+    fetchCategories();
+  }, []);
   const allSkills = ["HTML", "CSS", "JavaScript", "React", "Figma", "Node.js", "Python", "Ruby", "Java", "PHP", "C#", "C++", "ReactJS", "Tailwind CSS"]; // danh sách tất cả các skill có thể chọn
   const [selectedSkill, setSelectedSkill] = useState(""); // giá trị đang chọn trong select
   const [skills, setSkills] = useState([]); // danh sách các skill đã chọn
@@ -48,9 +68,11 @@ function JobPost() {
           <div>
             <label className="block text-md font-medium mb-1 text-gray-700">Categories:</label>
             <select className="w-full border border-gray-300 rounded px-3 py-2 text-gray-600 focus:outline-none focus:ring-1 focus:ring-sea-200">
-              <option>Web Designer</option>
-              <option>Developer</option>
-              <option>Marketing</option>
+              {
+                category.map((categoryItem) =>{
+                  return <option key={categoryItem.id} value={categoryItem.name}>{categoryItem.name}</option>
+                })
+              }
             </select>
           </div>
 

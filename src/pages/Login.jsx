@@ -21,7 +21,7 @@ export default function Login() {
 
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
+      e.preventDefault();
 
     const payload = {
       email: formData.email,
@@ -29,7 +29,7 @@ export default function Login() {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/login", {
+      const response = await fetch("http://localhost:8080/api/auth/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +132,7 @@ export default function Login() {
               <input type="checkbox" className="rounded" />
               <span>Ghi nhớ đăng nhập</span>
             </label>
-            <a href="/forgot-password" className="text-green-600 hover:underline">
+            <a href="/forgot-password" className="text-sea-400 hover:underline">
               Quên mật khẩu?
             </a>
           </div>
@@ -170,7 +170,7 @@ export default function Login() {
         {/* Login link */}
         <p className="mt-2 text-sm text-center text-gray-600">
           Bạn chưa có tài khoản?{" "}
-          <a href="/register " className="text-emerald-600 font-medium hover:underline">
+          <a href="/register " className="text-sea-400 font-medium hover:underline">
             Đăng ký
           </a>
         </p>

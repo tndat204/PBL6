@@ -1,11 +1,25 @@
 import { useState, useEffect  } from 'react';
-
+import { handleLogout } from '../utils/authUtils';
+import { useRef } from 'react';
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+  const toggleUserMenu = (e) => {
+    e.stopPropagation();
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+  const onLogout = () =>{
+    // Xoa token va user khoi LocalStorage
+    if(confirm("Bạn có chắc chắn muốn đăng xuất?")){
+      handleLogout();
+    }
+  }
+  const userMenuRef = useRef(null);
+  const userToggleRef = useRef(null);
   useEffect(() => {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -16,6 +30,23 @@ function Navbar() {
         }
       }
     }, []);
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        isUserMenuOpen &&
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target) &&
+        userToggleRef.current &&
+        !userToggleRef.current.contains(event.target)
+      ) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, [isUserMenuOpen]);
   return (
     <nav className="bg-sea-400 text-white p-4 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
@@ -43,13 +74,69 @@ function Navbar() {
           </div> */}
           {user ? (
             //  Nếu có user, hiển thị avatar + tên
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                {user.name?.charAt(0)?.toUpperCase() || "U"}
-              </div>
-              <span className="hidden md:block text-gray-200 font-medium">
-                {user.username || "Người dùng"}
-              </span>
+            // <div className="flex items-center space-x-2">
+            //   <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+            //     {user.fullName?.charAt(0)?.toUpperCase() || "U"}
+            //   </div>
+            //   <span className="hidden md:block text-gray-200 font-medium">
+            //     {user.username || "Người dùng"}
+            //   </span>
+            // </div>
+            <div className="relative">
+              <button
+                ref={userToggleRef}
+                onClick={toggleUserMenu}
+                className="flex items-center space-x-2 hover:bg-sea-300 rounded-lg px-3 py-2 transition-colors"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                  {user.fullName?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+                <span className="hidden md:block text-gray-200 font-medium">
+                  {user.fullName || user.username || "Người dùng"}
+                </span>
+                <svg 
+                  className={`w-4 h-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div ref={userMenuRef} className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <a
+                    href="/profile"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    Hồ sơ cá nhân
+                  </a>
+                  <a
+                    href="/post-job"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    Đăng tin tuyển dụng
+                  </a>
+                  <a
+                    href="/company-posts"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    Quản lý tin đăng
+                  </a>
+                  <hr className="my-1" />
+                  <button
+                    onClick={onLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center space-x-0">

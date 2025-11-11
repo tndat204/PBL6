@@ -11,6 +11,9 @@ import Authenticate from "../pages/Authenticate";
 import SystemError from "../pages/SystemError";
 import CompanyProfile from "../pages/CompanyProfile";
 import CompanyPosts from "../pages/CompanyPosts";
+import RegisterRoleModal from "../components/RegisterRoleModal";
+import RegisterCandidate from "../pages/RegisterCandidate";
+import RegisterEmployer from "../pages/RegisterEmployer";
 
 export default function AppRoutes() {
   return (
@@ -18,6 +21,9 @@ export default function AppRoutes() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/register-role" element={<RegisterRoleModal />} />
+        <Route path="/register-candidate" element={<RegisterCandidate />} />
+        <Route path="/register-employer" element={<RegisterEmployer />} />
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<About />} />
         <Route path="/job-details" element={<JobDetails />} />
