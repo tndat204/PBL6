@@ -1,5 +1,3 @@
-// file: features/shared/auth/presentation/widgets/custom_text_field.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
@@ -16,6 +14,12 @@ class CustomTextField extends StatefulWidget {
 
   final int? minLines;
   final int? maxLines;
+
+  // THÊM: Các tham số còn thiếu
+  final bool? enabled;
+  final bool? readOnly;
+  final VoidCallback? onTap;
+
   const CustomTextField({
     super.key,
     required this.label,
@@ -28,6 +32,10 @@ class CustomTextField extends StatefulWidget {
     this.semanticsLabel,
     this.minLines,
     this.maxLines,
+    // THÊM: vào constructor
+    this.enabled,
+    this.readOnly,
+    this.onTap,
   });
 
   @override
@@ -66,6 +74,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
               minLines: widget.minLines ?? 1,
               // maxLines: widget.maxLines ?? (widget.obscureText ? 1 : null),
               maxLines: widget.maxLines ?? 1,
+
+              // THÊM: Truyền các tham số vào TextFormField
+              enabled: widget.enabled,
+              readOnly: widget.readOnly ?? false,
+              onTap: widget.onTap,
+
               style: TextStyle(
                 color: AppPallete.textColor,
                 fontSize: 16,
@@ -95,7 +109,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 suffixIcon: widget.obscureText
                     ? IconButton(
                         icon: Icon(
-                          _isObscured ? Icons.visibility_off : Icons.visibility,
+                          _isObscured
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: _isFocused
                               ? AppPallete.primaryColor
                               : AppPallete.mutedTextColor,
@@ -134,6 +150,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   borderSide: BorderSide(
                     color: AppPallete.primaryColor,
                     width: 2,
+                  ),
+                ),
+                // SỬA: Tắt border khi trường bị disabled
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppPallete.borderColor.withOpacity(0.5),
+                    width: 1.5,
                   ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(

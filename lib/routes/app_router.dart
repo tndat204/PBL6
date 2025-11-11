@@ -1,8 +1,10 @@
-// lib/routes/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pbl6/features/admin/admin_shell.dart';
 import 'package:pbl6/features/recruiter/dashboard/presentation/pages/recruiter_dashboard.dart';
+import 'package:pbl6/features/recruiter/job/presentation/pages/recruiter_job_page.dart';
+// THÊM IMPORT MỚI
+import 'package:pbl6/features/recruiter/job/presentation/pages/upsert_job_page.dart';
 import 'package:pbl6/features/recruiter/recruiter_shell.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/forgot_password_email_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/recruiter_signup_page.dart';
@@ -178,102 +180,118 @@ final GoRouter router = GoRouter(
         }
       },
     ),
+    // SỬA: Dùng pageBuilder
     GoRoute(
-  path: '/user/jobs/:id',
-  name: 'job_detail',
-  builder: (context, state) {
-    final jobId = state.pathParameters['id']!;
-    return JobDetailPage(jobId: jobId);
-  },
-),
-GoRoute(
-  path: '/user/my-info',
-  name: 'my_info',
-  builder: (_, __) => const MyInfoPage(),
-),
+      path: '/user/jobs/:id',
+      name: 'job_detail',
+      pageBuilder: (context, state) {
+        final jobId = state.pathParameters['id']!;
+        return slideFromRightTransition(
+          JobDetailPage(jobId: jobId),
+          state,
+        );
+      },
+    ),
+    // SỬA: Dùng pageBuilder
+    GoRoute(
+      path: '/user/my-info',
+      name: 'my_info',
+      pageBuilder: (context, state) => slideFromRightTransition(
+        const MyInfoPage(),
+        state,
+      ),
+    ),
 
-  ShellRoute(
-  builder: (context, state, child) => UserShell(child: child),
-  routes: [
-    GoRoute(
-      path: '/user/dashboard',
-      builder: (_, __) => const UserDashboard(),
+    ShellRoute(
+      builder: (context, state, child) => UserShell(child: child),
+      routes: [
+        GoRoute(
+          path: '/user/dashboard',
+          builder: (_, __) => const UserDashboard(),
+        ),
+        GoRoute(path: '/user/jobs', builder: (_, __) => const JobPage()),
+        GoRoute(
+          path: '/user/messages',
+          builder: (_, __) => const PlaceholderScreen(title: 'Messages'),
+        ),
+        GoRoute(
+          path: '/user/profile',
+          builder: (_, __) => const MyProfilePage(),
+        ),
+      ],
     ),
-    GoRoute(
-      path: '/user/jobs',
-      builder: (_, __) => const JobPage(), 
+
+    ShellRoute(
+      builder: (context, state, child) => RecruiterShell(child: child),
+      routes: [
+        GoRoute(
+          path: '/recruiter/dashboard',
+          builder: (_, __) => const RecruiterDashboard(),
+        ),
+        GoRoute(
+          path: '/recruiter/jobs',
+          builder: (_, __) => const RecruiterJobPage(),
+        ),
+        GoRoute(
+          path: '/recruiter/projects',
+          builder: (_, __) => const PlaceholderScreen(title: 'Projects'),
+        ),
+        GoRoute(
+          path: '/recruiter/profile',
+          builder: (_, __) => const PlaceholderScreen(title: 'Profile'),
+        ),
+      ],
     ),
+
+    // ⭐️ THÊM ROUTE MỚI CHO UPSERT JOB (NẰM NGOÀI SHELL) ⭐️
     GoRoute(
-      path: '/user/messages',
-      builder: (_, __) => const PlaceholderScreen(title: 'Messages'),
+      path: '/recruiter/jobs/upsert',
+      name: 'recruiter_job_upsert',
+      pageBuilder: (context, state) {
+        // state.extra sẽ là jobId (String?)
+        // null = Add Mode
+        // non-null = Edit Mode
+        final String? jobId = state.extra as String?;
+        return slideFromRightTransition(
+          UpsertJobPage(jobId: jobId),
+          state,
+        );
+      },
     ),
-    GoRoute(
-      path: '/user/profile',
-      builder: (_, __) => const MyProfilePage(),
+
+    ShellRoute(
+      builder: (context, state, child) => AdminShell(child: child),
+      routes: [
+        GoRoute(
+          path: '/admin/dashboard',
+          builder: (_, __) => const AdminDashboard(),
+        ),
+        GoRoute(
+          path: '/admin/home',
+          builder: (_, __) => const PlaceholderScreen(title: 'Admin Home'),
+        ),
+        GoRoute(
+          path: '/admin/users',
+          builder: (_, __) => const PlaceholderScreen(title: 'Users'),
+        ),
+        GoRoute(
+          path: '/admin/settings',
+          builder: (_, __) => const PlaceholderScreen(title: 'Settings'),
+        ),
+      ],
     ),
   ],
-),
-
-
-ShellRoute(
-  builder: (context, state, child) => RecruiterShell(child: child),
-  routes: [
-    GoRoute(
-      path: '/recruiter/dashboard',
-      builder: (_, __) => const RecruiterDashboard(),
-    ),
-    GoRoute(
-      path: '/recruiter/home',
-      builder: (_, __) => const PlaceholderScreen(title: 'Recruiter Home'),
-    ),
-    GoRoute(
-      path: '/recruiter/projects',
-      builder: (_, __) => const PlaceholderScreen(title: 'Projects'),
-    ),
-    GoRoute(
-      path: '/recruiter/profile',
-      builder: (_, __) => const PlaceholderScreen(title: 'Profile'),
-    ),
-  ],
-),
-
-ShellRoute(
-  builder: (context, state, child) => AdminShell(child: child),
-  routes: [
-    GoRoute(
-      path: '/admin/dashboard',
-      builder: (_, __) => const AdminDashboard(),
-    ),
-    GoRoute(
-      path: '/admin/home',
-      builder: (_, __) => const PlaceholderScreen(title: 'Admin Home'),
-    ),
-    GoRoute(
-      path: '/admin/users',
-      builder: (_, __) => const PlaceholderScreen(title: 'Users'),
-    ),
-    GoRoute(
-      path: '/admin/settings',
-      builder: (_, __) => const PlaceholderScreen(title: 'Settings'),
-    ),
-  ],
-),
-
-
-  ],
-  
   redirect: routeGuard,
   errorBuilder: (context, state) =>
       Scaffold(body: Center(child: Text('Error: ${state.error}'))),
 );
+
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   const PlaceholderScreen({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(title, style: const TextStyle(fontSize: 22)),
-    );
+    return Center(child: Text(title, style: const TextStyle(fontSize: 22)));
   }
 }

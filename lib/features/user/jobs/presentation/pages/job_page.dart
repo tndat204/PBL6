@@ -78,12 +78,13 @@ class _JobPageState extends State<JobPage> {
   // SỬA: Hàm này giờ chỉ tải tỉnh
   Future<void> _loadProvinces() async {
     if (_provinces.isNotEmpty || _isLoadingProvinces) return;
-    
+
     // SỬA: Để hàm gọi quản lý trạng thái loading
     if (mounted) setState(() => _isLoadingProvinces = true);
-    
+
     try {
-      _provinces = await _authDataSource.fetchProvinces(); // ✅ Use AuthDataSource
+      _provinces = await _authDataSource
+          .fetchProvinces(); // ✅ Use AuthDataSource
       print("Provinces loaded: ${_provinces.length}");
     } catch (e) {
       print("Error loading provinces: $e");
@@ -119,8 +120,11 @@ class _JobPageState extends State<JobPage> {
         _uiCategories.insert(
           0,
           CategoryUiModel(
-            category:
-                const Category(id: _allCategoriesId, name: 'Tất cả', skills: []),
+            category: const Category(
+              id: _allCategoriesId,
+              name: 'Tất cả',
+              skills: [],
+            ),
             isSelected: true,
           ),
         );
@@ -137,21 +141,25 @@ class _JobPageState extends State<JobPage> {
             String? provinceName;
             // ✅ Refined province extraction logic
             if (company.address != null && company.address!.isNotEmpty) {
-              final parts =
-                  company.address!.split(',').map((e) => e.trim()).toList();
+              final parts = company.address!
+                  .split(',')
+                  .map((e) => e.trim())
+                  .toList();
               if (parts.isNotEmpty) {
                 // Try matching the last part with loaded provinces
                 final potentialProvince = parts.last;
                 // SỬA: Logic này giờ sẽ hoạt động vì _provinces đã được tải
-                final provinceExists =
-                    _provinces.any((p) => p['province'] == potentialProvince); // SỬA 'name' -> 'province'
+                final provinceExists = _provinces.any(
+                  (p) => p['province'] == potentialProvince,
+                ); // SỬA 'name' -> 'province'
                 if (provinceExists) {
                   provinceName = potentialProvince;
                 } else if (parts.length > 1) {
                   // Fallback: try the second to last part if the last wasn't a province
                   final secondLast = parts[parts.length - 2];
-                  final secondProvinceExists =
-                      _provinces.any((p) => p['province'] == secondLast); // SỬA 'name' -> 'province'
+                  final secondProvinceExists = _provinces.any(
+                    (p) => p['province'] == secondLast,
+                  ); // SỬA 'name' -> 'province'
                   if (secondProvinceExists) {
                     provinceName = secondLast;
                   }
@@ -194,13 +202,12 @@ class _JobPageState extends State<JobPage> {
 
       // 2. SAU ĐÓ TẢI DỮ LIỆU CÒN LẠI
       await _loadInitialData(refresh: refresh);
-
     } catch (e) {
       print("Error loading all data: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tải dữ liệu: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi tải dữ liệu: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -227,7 +234,8 @@ class _JobPageState extends State<JobPage> {
     setState(() {
       _filteredJobs = _allJobs.where((job) {
         // Category
-        final matchCategory = (_selectedCategoryId == null ||
+        final matchCategory =
+            (_selectedCategoryId == null ||
             _selectedCategoryId == _allCategoriesId ||
             job.categoryIds.contains(_selectedCategoryId));
 
@@ -236,32 +244,38 @@ class _JobPageState extends State<JobPage> {
         final matchQuery = (cleanQuery == null || cleanQuery.isEmpty)
             ? true
             : (job.title.trim().toLowerCase().contains(cleanQuery) ||
-                (job.companyName?.trim().toLowerCase().contains(cleanQuery) ??
-                    false));
+                  (job.companyName?.trim().toLowerCase().contains(cleanQuery) ??
+                      false));
 
         // Salary (Compare int with double?)
-        final matchSalary = (_filterMinSalary == null ||
-                job.salaryMin >= _filterMinSalary!) && // Direct int comparison is fine if filter is double
+        final matchSalary =
+            (_filterMinSalary == null ||
+                job.salaryMin >=
+                    _filterMinSalary!) && // Direct int comparison is fine if filter is double
             (_filterMaxSalary == null || job.salaryMax <= _filterMaxSalary!);
 
         // SỬA: Logic lọc địa điểm chính xác hơn
         // Giờ chúng ta lọc dựa trên `locationProvince` đã được trích xuất
-        final matchLocation = (_filterLocationProvince == null ||
+        final matchLocation =
+            (_filterLocationProvince == null ||
                 job.locationProvince == _filterLocationProvince) ||
             // Fallback nếu locationProvince bị null,
             // thì kiểm tra location thô
             (job.locationProvince == null &&
-                job.location
-                    .toLowerCase()
-                    .contains(_filterLocationProvince!.toLowerCase()));
+                job.location.toLowerCase().contains(
+                  _filterLocationProvince!.toLowerCase(),
+                ));
 
         // Job Type (Compare enum.name with String?)
         final matchJobType =
             (_filterJobType == null || job.jobType.name == _filterJobType);
 
         // Expiry Date (Compare DateTime with DateTime?)
-        final matchExpiry = (_filterExpiryDateBefore == null ||
-            !job.expiryDate.isAfter(_filterExpiryDateBefore!)); // expiry <= filterDate
+        final matchExpiry =
+            (_filterExpiryDateBefore == null ||
+            !job.expiryDate.isAfter(
+              _filterExpiryDateBefore!,
+            )); // expiry <= filterDate
 
         // Combine
         return matchCategory &&
@@ -297,7 +311,7 @@ class _JobPageState extends State<JobPage> {
         provinces: _provinces, // SỬA: Giờ _provinces đã đầy đủ
         jobTypeNames: _jobTypeNames, // Pass enum name strings
         // SỬA: _isLoadingProvinces sẽ là false sau khi _loadAllData chạy
-        isLoadingProvinces: _isLoadingProvinces, 
+        isLoadingProvinces: _isLoadingProvinces,
       ),
     ).then((returnedFilters) {
       if (returnedFilters != null) {
@@ -351,8 +365,9 @@ class _JobPageState extends State<JobPage> {
                               CustomAppBar(),
                               const SizedBox(height: 16),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 child: Text(
                                   'Chúng tôi giúp bạn nhận được\ncông việc bạn xứng đáng!',
                                   style: Theme.of(context)
@@ -385,11 +400,15 @@ class _JobPageState extends State<JobPage> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                                const BorderRadius.vertical(top: Radius.circular(24)),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(24),
+                            ),
                             border: Border(
-                                top: BorderSide(
-                                    color: Colors.grey.shade200, width: 1)),
+                              top: BorderSide(
+                                color: Colors.grey.shade200,
+                                width: 1,
+                              ),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,13 +416,15 @@ class _JobPageState extends State<JobPage> {
                               const SizedBox(height: 20),
                               // Categories
                               const Padding(
-                                padding:
-                                    EdgeInsets.symmetric(horizontal: 16),
-                                child: Text('Danh mục',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87)),
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  'Danh mục',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 12),
                               SizedBox(
@@ -411,7 +432,8 @@ class _JobPageState extends State<JobPage> {
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
+                                    horizontal: 12,
+                                  ),
                                   itemCount: _uiCategories.length,
                                   itemBuilder: (context, index) {
                                     final uiModel = _uiCategories[index];
@@ -426,49 +448,56 @@ class _JobPageState extends State<JobPage> {
 
                               // Job List Title
                               const Padding(
-                                padding:
-                                    EdgeInsets.symmetric(horizontal: 16),
-                                child: Text('Công việc phù hợp',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87)),
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  'Công việc phù hợp',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 16),
 
                               // Job List or Empty/Loading State
                               _isLoading && _filteredJobs.isEmpty
                                   ? const Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 48),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 48,
+                                      ),
                                       child: Center(
-                                          child: CircularProgressIndicator()))
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    )
                                   : _filteredJobs.isEmpty
-                                      ? Padding(
-                                          padding:
-                                              const EdgeInsets.symmetric(
-                                                  vertical: 48,
-                                                  horizontal: 24),
-                                          child: Center(
-                                            child: Text(
-                                              'Không tìm thấy công việc nào phù hợp với bộ lọc của bạn.',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontSize: 15),
-                                            ),
+                                  ? Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 48,
+                                        horizontal: 24,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Không tìm thấy công việc nào phù hợp với bộ lọc của bạn.',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 15,
                                           ),
-                                        )
-                                      : ListView.builder(
-                                          shrinkWrap: true,
-                                          physics:
-                                              const NeverScrollableScrollPhysics(),
-                                          itemCount: _filteredJobs.length,
-                                          itemBuilder: (context, index) {
-                                            return JobCard(
-                                                job: _filteredJobs[index]);
-                                          },
                                         ),
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount: _filteredJobs.length,
+                                      itemBuilder: (context, index) {
+                                        return JobCard(
+                                          job: _filteredJobs[index],
+                                        );
+                                      },
+                                    ),
                             ],
                           ),
                         ),
