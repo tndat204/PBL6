@@ -160,4 +160,24 @@ class Job {
       postedBy: postedBy,
     );
   }
+  Map<String, dynamic> toJsonForUpsert() {
+    return {
+      // id và postedBy không được gửi, chúng được server tự gán
+      "companyId": companyId,
+      "title": title,
+      "description": description,
+      "status": status.name, // Gửi tên enum (ví dụ: "ACTIVE")
+      "salaryMin": salaryMin,
+      "salaryMax": salaryMax,
+      "jobType": jobType.name, // Gửi tên enum (ví dụ: "FULL_TIME")
+      "experienceLevel":
+          experienceLevel.name, // Gửi tên enum (ví dụ: "INTERN")
+      "requiredYearsOfExpMin": requiredYearsOfExpMin,
+      "requiredYearsOfExpMax": requiredYearsOfExpMax,
+      "categoryIds": categoryIds,
+      "skillIds": skillIds,
+      "location": location,
+      "expiryDate": expiryDate.toIso8601String(),
+    };
+  }
 }

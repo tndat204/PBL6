@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart'; // 💡 Cần import GoRouter
 import 'package:intl/intl.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 
-import '../../domain/entities/job.dart';
+import '../../../../shared/job/domain/entities/job.dart';
 
 class JobCard extends StatelessWidget {
   final Job job;

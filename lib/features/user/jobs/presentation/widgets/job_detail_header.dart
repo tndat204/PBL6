@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 
-import '../../domain/entities/job.dart';
+import '../../../../shared/job/domain/entities/job.dart';
 
 class JobDetailHeader extends StatelessWidget {
   final Job job;

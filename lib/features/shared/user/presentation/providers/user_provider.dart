@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../user/jobs/domain/entities/user.dart';
+import '../../domain/entities/user.dart';
 
 class UserProvider extends ChangeNotifier {
   User? _user;

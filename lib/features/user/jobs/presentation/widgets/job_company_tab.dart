@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/company.dart';
-import '../../domain/usecases/get_company_details_usecase.dart';
+import '../../../../shared/company/domain/entities/company.dart';
+import '../../../../shared/company/domain/usecases/get_company_details_usecase.dart';
 
 class JobCompanyTab extends StatefulWidget {
   final String companyId;

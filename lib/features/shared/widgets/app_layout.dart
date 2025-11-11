@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../user/jobs/domain/entities/user.dart';
+import '../user/domain/entities/user.dart';
 import 'custom_app_bar.dart';
 import 'custom_bottom_nav.dart';
 

@@ -4,7 +4,7 @@ import 'package:pbl6/features/shared/skill/domain/entities/skill.dart';
 import 'package:pbl6/features/shared/skill/domain/usecases/get_skill_detail_usecase.dart';
 
 import '../../../../shared/category/domain/usecases/get_category_detail_usecase.dart';
-import '../../domain/entities/job.dart';
+import '../../../../shared/job/domain/entities/job.dart';
 
 class JobDescriptionTab extends StatefulWidget {
   final Job job;

@@ -1,4 +1,4 @@
-import 'package:pbl6/features/user/jobs/domain/repositories/application_repository.dart';
+import 'package:pbl6/features/shared/application/domain/repositories/application_repository.dart';
 
 import '../../domain/entities/application.dart';
 import '../datasources/application_remote_datasource.dart';

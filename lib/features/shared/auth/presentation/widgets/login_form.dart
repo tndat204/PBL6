@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../routes/route_names.dart';
-import '../../../../user/jobs/domain/entities/user.dart';
+import '../../../user/domain/entities/user.dart';
 import '../widgets/custom_elevated_button.dart';
 import '../widgets/custom_text_field.dart';
 

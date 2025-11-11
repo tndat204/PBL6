@@ -4,13 +4,13 @@ import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/data/datasources/auth_remote_datasource.dart'; // Import Auth source
 import 'package:pbl6/features/shared/category/domain/entities/category.dart';
 import 'package:pbl6/features/shared/category/domain/usecases/get_all_categories_usecase.dart';
+import 'package:pbl6/features/shared/company/domain/usecases/get_company_details_usecase.dart';
+import 'package:pbl6/features/shared/job/domain/entities/job.dart';
+import 'package:pbl6/features/shared/user/domain/entities/user.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
 import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
 import 'package:pbl6/features/shared/widgets/custom_app_bar.dart';
-import 'package:pbl6/features/user/jobs/domain/entities/job.dart';
-import 'package:pbl6/features/user/jobs/domain/entities/user.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_all_jobs_usecase.dart';
-import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
 import 'package:pbl6/features/user/jobs/presentation/models/category_ui_model.dart';
 import 'package:pbl6/features/user/jobs/presentation/widgets/category_chip.dart';
 import 'package:pbl6/features/user/jobs/presentation/widgets/filter_bottom_sheet_content.dart';

@@ -1,6 +1,13 @@
 import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/network/dio_client.dart';
 import 'package:pbl6/core/services/api_service.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/create_job_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/delete_job_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/get_my_posted_job_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/update_job_usecase.dart';
+import 'package:pbl6/features/shared/application/data/datasources/application_remote_datasource.dart';
+import 'package:pbl6/features/shared/application/data/repositories/application_repository_impl.dart';
+import 'package:pbl6/features/shared/application/domain/repositories/application_repository.dart';
 // ===== AUTH =====
 import 'package:pbl6/features/shared/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:pbl6/features/shared/auth/data/repositories/auth_repository_impl.dart';
@@ -19,6 +26,15 @@ import 'package:pbl6/features/shared/category/domain/usecases/delete_category_us
 import 'package:pbl6/features/shared/category/domain/usecases/get_all_categories_usecase.dart';
 import 'package:pbl6/features/shared/category/domain/usecases/get_category_detail_usecase.dart';
 import 'package:pbl6/features/shared/category/domain/usecases/update_category_usecase.dart';
+import 'package:pbl6/features/shared/company/data/datasources/company_remote_datasource.dart';
+import 'package:pbl6/features/shared/company/data/repositories/company_repository_impl.dart';
+import 'package:pbl6/features/shared/company/domain/repositories/company_repository.dart';
+import 'package:pbl6/features/shared/company/domain/usecases/get_all_companies_usecase.dart';
+import 'package:pbl6/features/shared/company/domain/usecases/get_company_details_usecase.dart';
+import 'package:pbl6/features/shared/job/data/datasources/job_remote_datasource.dart';
+import 'package:pbl6/features/shared/job/data/repositories/job_repository_impl.dart';
+import 'package:pbl6/features/shared/job/domain/repositories/job_repository.dart';
+import 'package:pbl6/features/shared/job/domain/usecases/get_job_details_usecase.dart';
 // ===== COMPANY =====
 
 // ===== JOB =====
@@ -38,20 +54,8 @@ import 'package:pbl6/features/shared/user/data/repositories/user_repository_impl
 import 'package:pbl6/features/shared/user/domain/repositories/user_repository.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/change_my_password_usecase.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
-import 'package:pbl6/features/user/jobs/data/datasources/application_remote_datasource.dart';
-import 'package:pbl6/features/user/jobs/data/datasources/company_remote_datasource.dart';
-import 'package:pbl6/features/user/jobs/data/datasources/job_remote_datasource.dart';
-import 'package:pbl6/features/user/jobs/data/repositories/application_repository_impl.dart';
-import 'package:pbl6/features/user/jobs/data/repositories/company_repository_impl.dart';
-import 'package:pbl6/features/user/jobs/data/repositories/job_repository_impl.dart';
-import 'package:pbl6/features/user/jobs/domain/repositories/application_repository.dart';
-import 'package:pbl6/features/user/jobs/domain/repositories/company_repository.dart';
-import 'package:pbl6/features/user/jobs/domain/repositories/job_repository.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/apply_job_usecase.dart';
-import 'package:pbl6/features/user/jobs/domain/usecases/get_all_companies_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_all_jobs_usecase.dart';
-import 'package:pbl6/features/user/jobs/domain/usecases/get_company_details_usecase.dart';
-import 'package:pbl6/features/user/jobs/domain/usecases/get_job_details_usecase.dart';
 import 'package:pbl6/features/user/profile/data/datasources/profile_remote_datasource.dart';
 import 'package:pbl6/features/user/profile/data/repositories/profile_repository_impl.dart';
 import 'package:pbl6/features/user/profile/domain/repositories/profile_repository.dart';
@@ -81,16 +85,10 @@ void init() {
   sl.registerSingleton<ForgotPasswordUseCase>(
     ForgotPasswordUseCase(sl<AuthRepository>()),
   );
-  sl.registerSingleton<LoginUseCase>(
-    LoginUseCase(sl<AuthRepository>()),
-  );
-  sl.registerSingleton<RegisterUseCase>(
-    RegisterUseCase(sl<AuthRepository>()),
-  );
+  sl.registerSingleton<LoginUseCase>(LoginUseCase(sl<AuthRepository>()));
+  sl.registerSingleton<RegisterUseCase>(RegisterUseCase(sl<AuthRepository>()));
   sl.registerSingleton<GoogleSignInService>(GoogleSignInService());
-  sl.registerSingleton<LogoutUseCase>(
-    LogoutUseCase(sl<AuthRepository>()),
-  );
+  sl.registerSingleton<LogoutUseCase>(LogoutUseCase(sl<AuthRepository>()));
 
   // ================= USER =================
   sl.registerLazySingleton<UserRemoteDataSource>(
@@ -108,7 +106,7 @@ void init() {
   sl.registerLazySingleton<UploadAvatarUseCase>(
     () => UploadAvatarUseCase(sl<UserRepository>()),
   );
-sl.registerLazySingleton<ChangeMyPasswordUsecase>(
+  sl.registerLazySingleton<ChangeMyPasswordUsecase>(
     () => ChangeMyPasswordUsecase(sl<UserRepository>()),
   );
 
@@ -125,7 +123,18 @@ sl.registerLazySingleton<ChangeMyPasswordUsecase>(
   sl.registerLazySingleton<GetJobDetailsUseCase>(
     () => GetJobDetailsUseCase(sl<JobRepository>()),
   );
-
+  sl.registerLazySingleton<CreateJobUseCase>(
+    () => CreateJobUseCase(sl<JobRepository>()),
+  );
+  sl.registerLazySingleton<UpdateJobUseCase>(
+    () => UpdateJobUseCase(sl<JobRepository>()),
+  );
+  sl.registerLazySingleton<DeleteJobUseCase>(
+    () => DeleteJobUseCase(sl<JobRepository>()),
+  );
+  sl.registerLazySingleton<GetMyPostedJobsUseCase>(
+    () => GetMyPostedJobsUseCase(sl<JobRepository>()),
+  );
   // ================= COMPANY =================
   sl.registerLazySingleton<CompanyRemoteDataSource>(
     () => CompanyRemoteDataSourceImpl(sl<DioClient>().instance),
@@ -185,37 +194,37 @@ sl.registerLazySingleton<ChangeMyPasswordUsecase>(
   sl.registerLazySingleton<DeleteSkillUseCase>(
     () => DeleteSkillUseCase(sl<SkillRepository>()),
   );
-// 💡 ================= PROFILE =================
-sl.registerLazySingleton<ProfileRemoteDataSource>(
- () => ProfileRemoteDataSourceImpl(sl<DioClient>().instance),
- );
- sl.registerLazySingleton<ProfileRepository>(
- () => ProfileRepositoryImpl(remoteDataSource: sl<ProfileRemoteDataSource>()),
-);
-sl.registerLazySingleton<GetMyProfileUseCase>(
-() => GetMyProfileUseCase(sl<ProfileRepository>()),
- );
-sl.registerLazySingleton<CreateProfileUseCase>(
- () => CreateProfileUseCase(sl<ProfileRepository>()),
- );
-sl.registerLazySingleton<UpdateProfileUseCase>(
- () => UpdateProfileUseCase(sl<ProfileRepository>()),
- );
-sl.registerLazySingleton<UploadCVUseCase>(
-() => UploadCVUseCase(sl<ProfileRepository>()),
- );
- sl.registerLazySingleton<GetCVUrlUseCase>(
- () => GetCVUrlUseCase(sl<ProfileRepository>()),
- );
-// ======================APPLICATION=================
-sl.registerLazySingleton<ApplicationRemoteDataSource>(
- () => ApplicationRemoteDataSourceImpl(sl<DioClient>().instance),
- );
- sl.registerLazySingleton<ApplicationRepository>(
- () => ApplicationRepositoryImpl(sl<ApplicationRemoteDataSource>()),
-);
-sl.registerLazySingleton<ApplyJobUsecase>(
-() => ApplyJobUsecase(sl<ApplicationRepository>()),
- );
-
+  // 💡 ================= PROFILE =================
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(sl<DioClient>().instance),
+  );
+  sl.registerLazySingleton<ProfileRepository>(
+    () =>
+        ProfileRepositoryImpl(remoteDataSource: sl<ProfileRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<GetMyProfileUseCase>(
+    () => GetMyProfileUseCase(sl<ProfileRepository>()),
+  );
+  sl.registerLazySingleton<CreateProfileUseCase>(
+    () => CreateProfileUseCase(sl<ProfileRepository>()),
+  );
+  sl.registerLazySingleton<UpdateProfileUseCase>(
+    () => UpdateProfileUseCase(sl<ProfileRepository>()),
+  );
+  sl.registerLazySingleton<UploadCVUseCase>(
+    () => UploadCVUseCase(sl<ProfileRepository>()),
+  );
+  sl.registerLazySingleton<GetCVUrlUseCase>(
+    () => GetCVUrlUseCase(sl<ProfileRepository>()),
+  );
+  // ======================APPLICATION=================
+  sl.registerLazySingleton<ApplicationRemoteDataSource>(
+    () => ApplicationRemoteDataSourceImpl(sl<DioClient>().instance),
+  );
+  sl.registerLazySingleton<ApplicationRepository>(
+    () => ApplicationRepositoryImpl(sl<ApplicationRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<ApplyJobUsecase>(
+    () => ApplyJobUsecase(sl<ApplicationRepository>()),
+  );
 }

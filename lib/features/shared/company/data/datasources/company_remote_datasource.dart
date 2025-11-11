@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
-import 'package:pbl6/features/user/jobs/domain/entities/company.dart';
+import 'package:pbl6/features/shared/company/domain/entities/company.dart';
 
 /// 🏢 DataSource thao tác với Company API
 abstract class CompanyRemoteDataSource {

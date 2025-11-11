@@ -11,7 +11,7 @@ import 'package:pbl6/features/shared/user/presentation/providers/user_provider.d
 import 'package:pbl6/routes/route_names.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../user/jobs/domain/entities/user.dart';
+import '../../../user/domain/entities/user.dart';
 import '../widgets/login_form.dart';
 import '../widgets/social_button.dart';
 

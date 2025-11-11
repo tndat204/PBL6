@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
+import 'package:pbl6/features/shared/user/domain/entities/user.dart';
 import 'package:pbl6/features/shared/user/presentation/providers/user_provider.dart';
 import 'package:pbl6/features/shared/user/presentation/widgets/my_info_avatar.dart';
 import 'package:pbl6/features/shared/user/presentation/widgets/my_info_tab_personal.dart';
-import 'package:pbl6/features/user/jobs/domain/entities/user.dart';
 import 'package:provider/provider.dart';
 
 import '../../../auth/domain/entities/user_entity.dart';

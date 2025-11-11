@@ -1,6 +1,6 @@
-import 'package:pbl6/features/user/jobs/domain/entities/application.dart';
+import 'package:pbl6/features/shared/application/domain/entities/application.dart';
 
-import '../repositories/application_repository.dart';
+import '../../../../shared/application/domain/repositories/application_repository.dart';
 
 class ApplyJobUsecase {
   final ApplicationRepository repository;

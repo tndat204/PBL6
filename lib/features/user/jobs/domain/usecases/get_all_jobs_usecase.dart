@@ -1,5 +1,5 @@
-import '../entities/job.dart';
-import '../repositories/job_repository.dart';
+import '../../../../shared/job/domain/entities/job.dart';
+import '../../../../shared/job/domain/repositories/job_repository.dart';
 
 class GetAllJobsUseCase {
   final JobRepository repository;
