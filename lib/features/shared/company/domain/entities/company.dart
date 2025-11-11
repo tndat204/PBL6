@@ -1,4 +1,6 @@
-class Company {
+import 'package:equatable/equatable.dart';
+
+class Company extends Equatable {
   final String id; // UUID trong DB
   final String name;
   final String taxCode; // Mã số thuế
@@ -21,17 +23,74 @@ class Company {
     this.logoUrl,
   });
 
-  factory Company.fromJson(Map<String, dynamic> json) {
+  /// [copyWith] để tạo bản sao của đối tượng với các giá trị được cập nhật
+  Company copyWith({
+    String? id,
+    String? name,
+    String? taxCode,
+    String? address,
+    String? phone,
+    String? email,
+    String? description,
+    bool? active,
+    String? logoUrl,
+  }) {
     return Company(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      taxCode: json['taxCode'] ?? '',
-      address: json['address'] ?? '',
-      phone: json['phone'],
-      email: json['email'],
-      description: json['description'],
-      active: json['active'] ?? false,
-      logoUrl: json['logoUrl'],
+      id: id ?? this.id,
+      name: name ?? this.name,
+      taxCode: taxCode ?? this.taxCode,
+      address: address ?? this.address,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      description: description ?? this.description,
+      active: active ?? this.active,
+      logoUrl: logoUrl ?? this.logoUrl,
     );
   }
+
+ 
+  factory Company.fromJson(Map<String, dynamic> json) {
+   
+    final data = (json.containsKey('result') && json['result'] is Map)
+        ? json['result'] as Map<String, dynamic>
+        : json;
+
+    return Company(
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
+      taxCode: data['taxCode'] ?? '',
+      address: data['address'] ?? '',
+      phone: data['phone'],
+      email: data['email'],
+      description: data['description'],
+      active: data['active'] ?? false,
+      logoUrl: data['logoUrl'],
+    );
+  }
+
+  
+  Map<String, dynamic> toJsonForUpdate() {
+    return {
+      "name": name,
+      "taxCode": taxCode,
+      "address": address,
+      "phone": phone,
+      "email": email,
+      "description": description,
+      // Lưu ý: 'id', 'active', 'logoUrl' không được gửi trong body update này
+    };
+  }
+
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+        taxCode,
+        address,
+        phone,
+        email,
+        description,
+        active,
+        logoUrl
+      ];
 }

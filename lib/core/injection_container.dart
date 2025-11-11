@@ -3,7 +3,10 @@ import 'package:pbl6/core/network/dio_client.dart';
 import 'package:pbl6/core/services/api_service.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/create_job_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/delete_job_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/get_my_company_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/get_my_posted_job_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/update_company_detail_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/update_company_logo_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/update_job_usecase.dart';
 import 'package:pbl6/features/shared/application/data/datasources/application_remote_datasource.dart';
 import 'package:pbl6/features/shared/application/data/repositories/application_repository_impl.dart';
@@ -147,6 +150,15 @@ void init() {
   );
   sl.registerLazySingleton<GetCompanyDetailsUseCase>(
     () => GetCompanyDetailsUseCase(sl<CompanyRepository>()),
+  );
+  sl.registerLazySingleton<GetMyCompanyUseCase>(
+    () => GetMyCompanyUseCase(sl<CompanyRepository>()),
+  );
+  sl.registerLazySingleton<UpdateCompanyDetailsUseCase>(
+    () => UpdateCompanyDetailsUseCase(sl<CompanyRepository>()),
+  );
+  sl.registerLazySingleton<UpdateCompanyLogoUseCase>(
+    () => UpdateCompanyLogoUseCase(sl<CompanyRepository>()),
   );
 
   // ================= CATEGORY =================
