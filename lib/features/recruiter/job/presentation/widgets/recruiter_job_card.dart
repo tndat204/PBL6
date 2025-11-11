@@ -1,6 +1,7 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart'; // Import GoRouter
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
@@ -12,6 +13,8 @@ class RecruiterJobCard extends StatelessWidget {
   final Job job;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+
+  // Không cần thêm onJobTap vào constructor, vì logic tap được xử lý tại đây
 
   const RecruiterJobCard({
     super.key,
@@ -32,7 +35,7 @@ class RecruiterJobCard extends StatelessWidget {
   void _showDeleteConfirmDialog(BuildContext context) {
     AwesomeDialog(
       context: context,
-      dialogType: DialogType.noHeader, // Ẩn icon mặc định
+      dialogType: DialogType.noHeader,
       animType: AnimType.scale,
       dialogBackgroundColor: Colors.white,
       borderSide: BorderSide(color: Colors.red.shade300, width: 1.2),
@@ -46,7 +49,7 @@ class RecruiterJobCard extends StatelessWidget {
             size: 50,
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Xóa tin tuyển dụng',
             style: TextStyle(
               fontSize: 20,
@@ -64,6 +67,7 @@ class RecruiterJobCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              // Nút Hủy
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade300,
@@ -73,10 +77,11 @@ class RecruiterJobCard extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  Navigator.of(context).pop(); // Đóng dialog
+                  Navigator.of(context).pop();
                 },
                 child: const Text('Hủy bỏ'),
               ),
+              // Nút Đồng ý (Xóa)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade600,
@@ -90,7 +95,7 @@ class RecruiterJobCard extends StatelessWidget {
                     final deleteUseCase = GetIt.I<DeleteJobUseCase>();
                     await deleteUseCase(job.id);
 
-                    // Callback để cập nhật UI
+                    // Callback để cập nhật UI danh sách
                     onDelete();
 
                     if (context.mounted) {
@@ -108,7 +113,7 @@ class RecruiterJobCard extends StatelessWidget {
                       ).show(context);
                     }
                   }
-                  Navigator.of(context).pop(); // Đóng dialog sau khi xóa
+                  Navigator.of(context).pop();
                 },
                 child: const Text('Đồng ý'),
               ),
@@ -135,6 +140,7 @@ class RecruiterJobCard extends StatelessWidget {
         ? 'Đang hiển thị'
         : (job.status == JobStatus.INACTIVE ? 'Đã ẩn' : 'Đã đóng');
 
+    // Bọc toàn bộ nội dung trong InkWell
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -142,69 +148,91 @@ class RecruiterJobCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300, width: 1),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// --- Logo + Title + Status ---
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (imageUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      imageUrl,
-                      width: 52,
-                      height: 52,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.image_not_supported, size: 40),
-                    ),
-                  )
-                else
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.grey.shade200,
-                    ),
-                    child: const Icon(
-                      Icons.business_outlined,
-                      color: Colors.grey,
-                      size: 30,
-                    ),
-                  ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Phần có thể chạm để xem chi tiết
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+             onTap: () async {
+             
+              final result = await context.push(
+                '/recruiter/jobs/detail/${job.id}',
+                extra: onDelete, 
+              );
+           
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// --- Logo + Title + Status ---
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        job.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                          height: 1.3,
+                      // Logo
+                      if (imageUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            width: 52,
+                            height: 52,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.image_not_supported, size: 40),
+                          ),
+                        )
+                      else
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.grey.shade200,
+                          ),
+                          child: const Icon(
+                            Icons.business_outlined,
+                            color: Colors.grey,
+                            size: 30,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Row(
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.circle, size: 10, color: statusColor),
-                            const SizedBox(width: 6),
                             Text(
-                              statusText,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: statusColor,
-                                fontWeight: FontWeight.w600,
+                              job.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.circle,
+                                    size: 10,
+                                    color: statusColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    statusText,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: statusColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -212,82 +240,91 @@ class RecruiterJobCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
 
-            const SizedBox(height: 14),
-            Divider(color: Colors.grey.shade200, height: 1, thickness: 1),
-            const SizedBox(height: 12),
+                  const SizedBox(height: 14),
+                  Divider(color: Colors.grey.shade200, height: 1, thickness: 1),
+                  const SizedBox(height: 12),
 
-            /// --- Location & Type Pills ---
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                _buildTag(Icons.location_on_outlined, job.location),
-                _buildTag(
-                  Icons.work_outline,
-                  job.jobType.name.replaceAll('_', ' '),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            /// --- Salary ---
-            Row(
-              children: [
-                const Icon(
-                  Icons.payments_outlined,
-                  size: 18,
-                  color: Colors.black87,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${_formatCurrency(job.salaryMin)} - ${_formatCurrency(job.salaryMax)} VND',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  /// --- Location & Type Pills ---
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _buildTag(Icons.location_on_outlined, job.location),
+                      _buildTag(
+                        Icons.work_outline,
+                        job.jobType.name.replaceAll('_', ' '),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-            /// --- Expiry Date ---
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 15,
-                  color: Colors.grey.shade600,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Hết hạn: ',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                ),
-                Text(
-                  _formatDate(job.expiryDate),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade800,
-                    fontWeight: FontWeight.w600,
+                  /// --- Salary ---
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.payments_outlined,
+                        size: 18,
+                        color: Colors.black87,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${_formatCurrency(job.salaryMin)} - ${_formatCurrency(job.salaryMax)} VND',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Divider(color: Colors.grey.shade200, height: 1, thickness: 1),
-            const SizedBox(height: 8),
 
-            /// --- NÚT HÀNH ĐỘNG ---
-            Row(
+                  const SizedBox(height: 12),
+
+                  /// --- Expiry Date ---
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 15,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Hết hạn: ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      Text(
+                        _formatDate(job.expiryDate),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade800,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Divider nằm ngoài InkWell để không bị hiệu ứng chạm
+          Divider(color: Colors.grey.shade200, height: 1, thickness: 1),
+          const SizedBox(height: 8),
+
+          /// --- NÚT HÀNH ĐỘNG (Không chạm để xem chi tiết) ---
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // Nút Xóa
                 TextButton.icon(
                   onPressed: () => _showDeleteConfirmDialog(context),
                   icon: const Icon(
@@ -306,6 +343,7 @@ class RecruiterJobCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+                // Nút Sửa
                 ElevatedButton.icon(
                   onPressed: onEdit,
                   icon: const Icon(
@@ -333,12 +371,13 @@ class RecruiterJobCard extends StatelessWidget {
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
+  // Widget _buildTag giữ nguyên
   Widget _buildTag(IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
