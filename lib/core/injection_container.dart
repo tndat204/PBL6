@@ -77,13 +77,39 @@ void init() {
   // ================= CORE =================
   sl.registerSingleton<DioClient>(DioClient());
   sl.registerSingleton<ApiService>(ApiService(sl<DioClient>().instance));
+  // ================= COMPANY =================
+  sl.registerLazySingleton<CompanyRemoteDataSource>(
+    () => CompanyRemoteDataSourceImpl(sl<DioClient>().instance),
+  );
+  sl.registerLazySingleton<CompanyRepository>(
+    () => CompanyRepositoryImpl(sl<CompanyRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<GetAllCompaniesUseCase>(
+    () => GetAllCompaniesUseCase(sl<CompanyRepository>()),
+  );
+  sl.registerLazySingleton<GetCompanyDetailsUseCase>(
+    () => GetCompanyDetailsUseCase(sl<CompanyRepository>()),
+  );
+  sl.registerLazySingleton<GetMyCompanyUseCase>(
+    () => GetMyCompanyUseCase(sl<CompanyRepository>()),
+  );
+  sl.registerLazySingleton<UpdateCompanyDetailsUseCase>(
+    () => UpdateCompanyDetailsUseCase(sl<CompanyRepository>()),
+  );
+  sl.registerLazySingleton<UpdateCompanyLogoUseCase>(
+    () => UpdateCompanyLogoUseCase(sl<CompanyRepository>()),
+  );
 
   // ================= AUTH =================
   sl.registerSingleton<AuthRemoteDataSource>(
     AuthRemoteDataSourceImpl(sl<ApiService>(), sl<DioClient>().instance),
   );
   sl.registerSingleton<AuthRepository>(
-    AuthRepositoryImpl(sl<AuthRemoteDataSource>()),
+    // SỬA: Thêm dependency thứ 2
+    AuthRepositoryImpl(
+      sl<AuthRemoteDataSource>(),
+      sl<CompanyRemoteDataSource>(),
+    ),
   );
   sl.registerSingleton<ForgotPasswordUseCase>(
     ForgotPasswordUseCase(sl<AuthRepository>()),
@@ -137,28 +163,6 @@ void init() {
   );
   sl.registerLazySingleton<GetMyPostedJobsUseCase>(
     () => GetMyPostedJobsUseCase(sl<JobRepository>()),
-  );
-  // ================= COMPANY =================
-  sl.registerLazySingleton<CompanyRemoteDataSource>(
-    () => CompanyRemoteDataSourceImpl(sl<DioClient>().instance),
-  );
-  sl.registerLazySingleton<CompanyRepository>(
-    () => CompanyRepositoryImpl(sl<CompanyRemoteDataSource>()),
-  );
-  sl.registerLazySingleton<GetAllCompaniesUseCase>(
-    () => GetAllCompaniesUseCase(sl<CompanyRepository>()),
-  );
-  sl.registerLazySingleton<GetCompanyDetailsUseCase>(
-    () => GetCompanyDetailsUseCase(sl<CompanyRepository>()),
-  );
-  sl.registerLazySingleton<GetMyCompanyUseCase>(
-    () => GetMyCompanyUseCase(sl<CompanyRepository>()),
-  );
-  sl.registerLazySingleton<UpdateCompanyDetailsUseCase>(
-    () => UpdateCompanyDetailsUseCase(sl<CompanyRepository>()),
-  );
-  sl.registerLazySingleton<UpdateCompanyLogoUseCase>(
-    () => UpdateCompanyLogoUseCase(sl<CompanyRepository>()),
   );
 
   // ================= CATEGORY =================
