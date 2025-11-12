@@ -57,11 +57,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       final idToken = await _googleSignInService.getIdToken();
 
       if (idToken != null) {
-        // 1. Gọi UseCase (Repository đã tự lưu token/role)
+       
         final response = await _loginUseCase.googleLogin(idToken);
 
         if (response.code == 200 && response.result != null) {
-          // 2. Fetch thông tin user (Giống hệt _handleLogin)
+         
           try {
             final userEntity = await _getMyInfoUseCase();
             if (mounted) {

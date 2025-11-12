@@ -9,22 +9,17 @@ import 'package:provider/provider.dart';
 import '../user/presentation/providers/user_provider.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  // const CustomAppBar({super.key}); // Bỏ `const` để dùng hàm
   CustomAppBar({super.key}); // Bỏ `const`
 
-  // TẠO HÀM XỬ LÝ LOGOUT
   Future<void> _handleLogout(BuildContext context) async {
-    // Lấy UseCase và Provider TRƯỚC khi hiển thị dialog
-    // Dùng context.read vì đang ở trong callback
     final logoutUseCase = GetIt.I<LogoutUseCase>();
     final userProvider = context.read<UserProvider>();
 
     AwesomeDialog(
       context: context,
-      dialogType:
-          DialogType.noHeader, // Ẩn icon cảnh báo mặc định (màu vàng chói)
+      dialogType: DialogType.noHeader,
       animType: AnimType.scale,
-      dialogBackgroundColor: Colors.white, // Nền trắng nhẹ, dễ nhìn hơn
+      dialogBackgroundColor: Colors.white,
       borderSide: BorderSide(color: Colors.red.shade300, width: 1.2),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       body: Column(
@@ -93,37 +88,33 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Directly watch the provider
     final effectiveUser = context.watch<UserProvider>().user;
 
-    // Show a basic AppBar while user is loading (or handle null differently)
     if (effectiveUser == null) {
-      // You could return an empty AppBar or a placeholder
       return AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 80,
-        title: const Text('Đang tải...'), // Or keep it blank
+        title: const Text('Đang tải...'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined, size: 30),
             onPressed: () {},
           ),
-          // THÊM NÚT LOGOUT (disabled khi chưa load xong)
+
           IconButton(
             icon: Icon(
               Icons.logout_outlined,
               size: 30,
               color: Colors.grey.shade400,
             ),
-            onPressed: null, // Vô hiệu hóa
+            onPressed: null,
           ),
-          const SizedBox(width: 8), // Thêm padding
+          const SizedBox(width: 8),
         ],
       );
     }
 
-    // ✅ SIMPLIFIED URL LOGIC (as done previously)
     final avatarUrl = effectiveUser.avatarUrl.isNotEmpty
         ? effectiveUser.avatarUrl
         : null;
@@ -160,7 +151,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 Text(
                   effectiveUser.fullName.isNotEmpty
                       ? effectiveUser.fullName
-                      : 'Người dùng', // Fallback name
+                      : 'Người dùng',
                   style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.w700,
@@ -175,7 +166,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_outlined, size: 30),
+          icon: const Icon(Icons.notifications_outlined, size: 30,color: Colors.grey),
           onPressed: () {
             // TODO: Điều hướng đến trang thông báo
           },
@@ -183,7 +174,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         // THÊM NÚT LOGOUT MỚI
         IconButton(
-          icon: Icon(Icons.logout_outlined, size: 30),
+          icon: Icon(Icons.logout_outlined, size: 30,color: Colors.grey,),
           onPressed: () => _handleLogout(context), // Gọi hàm xử lý
           tooltip: 'Đăng xuất',
         ),

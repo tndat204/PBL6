@@ -335,7 +335,7 @@ class _JobPageState extends State<JobPage> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: AppPallete.backgroundGradient,
+            colors: AppPallete.mainGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

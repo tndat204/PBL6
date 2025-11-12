@@ -67,7 +67,7 @@ class _LoginFormState extends State<LoginForm> {
             print("Error fetching user info after login: $e");
           }
 
-          // 4. Hiển thị thông báo và điều hướng (Phần này đúng rồi)
+          
           MotionToast.success(
             title: const Text("Thành công"),
             description: const Text("Đăng nhập thành công"),

@@ -35,4 +35,8 @@ class AppPallete {
     Color(0xFFB9E5E8),
     Color(0xFFFFFFFF), 
   ];
+  static const List<Color> mainGradient = [
+    Color(0xFFe8f1f9),
+    Color(0xFFFFFFFF), 
+  ];
 }

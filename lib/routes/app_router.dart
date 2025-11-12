@@ -237,7 +237,7 @@ final GoRouter router = GoRouter(
       routes: [
         GoRoute(
           path: '/recruiter/dashboard',
-          builder: (_, __) => const RecruiterDashboard(),
+          builder: (_, __) => const RecruiterDashboardPage(),
         ),
         GoRoute(
           path: '/recruiter/jobs',

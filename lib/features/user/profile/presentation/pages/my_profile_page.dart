@@ -95,12 +95,12 @@ class _MyProfilePageState extends State<MyProfilePage>
     // --- Phần Loading ---
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.white, // Thêm màu nền trắng
+        backgroundColor: Colors.white, 
         body: Container(
           // Thêm Gradient nền khi loading
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: AppPallete.backgroundGradient,
+              colors: AppPallete.mainGradient,
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -118,7 +118,7 @@ class _MyProfilePageState extends State<MyProfilePage>
           // Thêm Gradient nền khi lỗi
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: AppPallete.backgroundGradient,
+              colors: AppPallete.mainGradient,
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -147,7 +147,7 @@ class _MyProfilePageState extends State<MyProfilePage>
           // Thêm Gradient nền
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: AppPallete.backgroundGradient,
+              colors: AppPallete.mainGradient,
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -177,7 +177,7 @@ class _MyProfilePageState extends State<MyProfilePage>
         // Container ngoài cùng với Gradient
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: AppPallete.backgroundGradient,
+            colors: AppPallete.mainGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

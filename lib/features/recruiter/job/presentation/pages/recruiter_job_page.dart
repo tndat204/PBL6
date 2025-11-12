@@ -337,11 +337,12 @@ class _RecruiterJobPageState extends State<RecruiterJobPage> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: AppPallete.backgroundGradient,
+            colors: AppPallete.mainGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
+        //  color: Colors.grey.shade100,
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: () => _loadAllData(refresh: true),
