@@ -3,8 +3,11 @@ import 'package:pbl6/core/network/dio_client.dart';
 import 'package:pbl6/core/services/api_service.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/create_job_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/delete_job_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/get_application_detail_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/get_applications_for_job_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/get_my_company_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/get_my_posted_job_usecase.dart';
+import 'package:pbl6/features/recruiter/job/domain/usecases/update_application_status_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/update_company_detail_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/update_company_logo_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/update_job_usecase.dart';
@@ -242,5 +245,14 @@ void init() {
   );
   sl.registerLazySingleton<ApplyJobUsecase>(
     () => ApplyJobUsecase(sl<ApplicationRepository>()),
+  );
+  sl.registerLazySingleton<GetApplicationsForJobUsecase>(
+    () => GetApplicationsForJobUsecase(sl<ApplicationRepository>()),
+  );
+  sl.registerLazySingleton<GetApplicationDetailUsecase>(
+    () => GetApplicationDetailUsecase(sl<ApplicationRepository>()),
+  );
+  sl.registerLazySingleton<UpdateApplicationStatusUsecase>(
+    () => UpdateApplicationStatusUsecase(sl<ApplicationRepository>()),
   );
 }

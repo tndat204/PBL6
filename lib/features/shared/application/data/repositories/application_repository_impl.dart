@@ -10,4 +10,22 @@ class ApplicationRepositoryImpl implements ApplicationRepository{
   Future<Application> applyJob({required String jobId, String? notes}) async {
     return await remoteDataSource.applyJob(jobId: jobId, notes: notes);
   }
+  @override
+  Future<List<Application>> getApplicationsForJob(String jobId) async {
+    return await remoteDataSource.getApplicationsForJob(jobId);
+  }
+  @override
+  Future<Application> getApplicationDetail(String applicationId) async {
+    return await remoteDataSource.getApplicationDetail(applicationId);
+  }
+  @override
+  Future<Application> updateApplicationStatus({
+    required String applicationId,
+    required ApplicationStatus newStatus,
+  }) async {
+    return await remoteDataSource.updateApplicationStatus(
+      applicationId: applicationId,
+      newStatus: newStatus,
+    );
+  }
 }

@@ -1,5 +1,17 @@
-enum ApplicationStatus { pending, accepted, rejected }
-
+enum ApplicationStatus {
+  SUBMITTED, // Mới nộp
+  REVIEWED,  // Đã xem xét
+  INTERVIEW, // Đã hẹn phỏng vấn
+  HIRED,     // Đã tuyển
+  REJECTED,  // Đã từ chối
+  UNKNOWN    // Trạng thái không xác định (phòng trường hợp lỗi)
+}
+extension ApplicationStatusExtension on ApplicationStatus {
+  String toShortString() {
+    // Trả về chuỗi viết hoa khớp với yêu cầu API (SUBMITTED, REVIEWED,...)
+    return toString().split('.').last;
+  }
+}
 class Application {
   final String id;
   final String jobId; // FK to Job
@@ -33,13 +45,19 @@ class Application {
   }
 
   static ApplicationStatus _parseStatus(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'accepted':
-        return ApplicationStatus.accepted;
-      case 'rejected':
-        return ApplicationStatus.rejected;
+    switch (status?.toUpperCase()) {
+      case 'SUBMITTED':
+        return ApplicationStatus.SUBMITTED;
+      case 'REVIEWED':
+        return ApplicationStatus.REVIEWED;
+      case 'INTERVIEW':
+        return ApplicationStatus.INTERVIEW;
+      case 'HIRED':
+        return ApplicationStatus.HIRED;
+      case 'REJECTED':
+        return ApplicationStatus.REJECTED;
       default:
-        return ApplicationStatus.pending;
+        return ApplicationStatus.UNKNOWN;
     }
   }
 }
