@@ -45,8 +45,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Transactional
     public ProfileResponse createProfile(ProfileRequest profileRequest) {
         Profile profile = modelMapper.map(profileRequest, Profile.class);
-        UUID userId = getCurrentUserId();
-        profile.setUserId(userId);
+        profile.setUserId(profileRequest.getUserId());
         profile.setIsActive(true);
 
         if (profileRequest.getSkills() != null) {

@@ -4,10 +4,12 @@ import com.pbl6.event.dto.NotificationEvent;
 import com.pbl6.event.dto.UserRegisteredEvent;
 import com.pbl6.userservice.client.CompanyClient;
 import com.pbl6.userservice.client.FileClient;
+import com.pbl6.userservice.client.ProfileClient;
 import com.pbl6.userservice.dto.request.ChangePasswordRequest;
 import com.pbl6.userservice.dto.request.CreateCompanyRequest;
 import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
+import com.pbl6.userservice.dto.shared.ProfileRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
 import com.pbl6.userservice.entity.Role;
@@ -43,6 +45,7 @@ public class UserServiceImpl implements UserService {
     KafkaTemplate<String, Object> kafkaTemplate;
     FileClient  fileClient;
     CompanyClient companyClient;
+    ProfileClient profileClient;
     static final String USER_REGISTERED_TOPIC = "user_registered_topic";
     public UserResponse register(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -97,6 +100,10 @@ public class UserServiceImpl implements UserService {
 
             kafkaTemplate.send("notification-delivery", notificationEvent);
 
+            ProfileRequest profileRequest = ProfileRequest.builder()
+                    .userId(savedUser.getId())
+                    .build();
+            profileClient.createProfile(profileRequest);
             return modelMapper.map(savedUser, UserResponse.class);
         } catch (DataIntegrityViolationException e) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -239,6 +246,16 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    @PreAuthorize("hasRole('RECRUITER')")
+    public UserResponse getUserById(String id) {
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(id));
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        return modelMapper.map(user,UserResponse.class);
     }
 
 }

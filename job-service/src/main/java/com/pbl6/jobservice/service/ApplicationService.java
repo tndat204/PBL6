@@ -12,4 +12,5 @@ public interface ApplicationService {
     List<ApplicationResponse> getApplicationsByJobId(String jobId);
     ApplicationResponse getApplicationById(String id);
     ApplicationResponse updateStatus(UUID applicationId, String status);
+    List<ApplicationResponse> getMyApplications();
 }

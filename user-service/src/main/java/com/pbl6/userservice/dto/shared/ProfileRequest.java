@@ -1,4 +1,4 @@
-package com.pbl6.profileservice.dto.request;
+package com.pbl6.userservice.dto.shared;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

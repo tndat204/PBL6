@@ -48,4 +48,11 @@ public class ApplicationController {
                 .result(applicationService.updateStatus(UUID.fromString(id),newStatus))
                 .build();
     }
+    @GetMapping("/me")
+    public APIResponse<List<ApplicationResponse>> getMyApplications() {
+        return APIResponse.<List<ApplicationResponse>>builder()
+                .code(200)
+                .result(applicationService.getMyApplications())
+                .build();
+    }
 }

@@ -112,6 +112,16 @@ public class ApplicationServiceImpl implements ApplicationService {
         return modelMapper.map(updatedApplication, ApplicationResponse.class);
     }
 
+    @Override
+    public List<ApplicationResponse> getMyApplications() {
+        UUID applicantId = getCurrentUserId();
+        List<Application> applications = applicationRepository.findByApplicantId(applicantId);
+
+        return applications.stream()
+                .map(app -> modelMapper.map(app, ApplicationResponse.class))
+                .toList();
+    }
+
     private UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication.getPrincipal() instanceof Jwt jwt)) {

@@ -1,4 +1,4 @@
-package com.pbl6.profileservice.dto.request;
+package com.pbl6.userservice.dto.shared;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -11,7 +11,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProfileRequest {
+public class ProfileResponse {
+    UUID profileId;
     UUID userId;
     String headline;
     String summary;
@@ -19,5 +20,6 @@ public class ProfileRequest {
     String linkedinUrl;
     String portfolioUrl;
     Double desiredSalary;
-    Set<ProfileSkillRequest> skills;
+    Boolean isActive;
+    Set<ProfileSkillResponse> skills;
 }

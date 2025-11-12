@@ -16,4 +16,6 @@ public interface ApplicationRepository  extends JpaRepository<Application, UUID>
     List<Application> findByJobId(UUID jobId);
     @Query("SELECT c FROM Application a JOIN a.job j JOIN j.company c WHERE a.applicationId = :applicationId")
     Optional<Company> findCompanyByApplicationId(@Param("applicationId") UUID applicationId);
+    List<Application> findByApplicantId(UUID applicantId);
+
 }
