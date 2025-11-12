@@ -196,6 +196,7 @@ public class JobServiceImpl implements JobService {
 
         if (request.getCategoryIds() != null) {
             job.getCategories().clear();
+            jobRepository.saveAndFlush(job);
             request.getCategoryIds().forEach(catId -> {
                 JobCategory jc = JobCategory.builder()
                         .job(job)
@@ -209,6 +210,7 @@ public class JobServiceImpl implements JobService {
         // Nếu update skill
         if (request.getSkillIds() != null) {
             job.getSkills().clear();
+            jobRepository.saveAndFlush(job);
             request.getSkillIds().forEach(skillId -> {
                 JobSkill js = JobSkill.builder()
                         .job(job)

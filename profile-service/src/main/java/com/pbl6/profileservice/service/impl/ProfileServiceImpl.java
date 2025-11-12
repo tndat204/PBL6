@@ -10,6 +10,7 @@ import com.pbl6.profileservice.entity.Skill;
 import com.pbl6.profileservice.exception.AppException;
 import com.pbl6.profileservice.exception.ErrorCode;
 import com.pbl6.profileservice.repository.ProfileRepository;
+import com.pbl6.profileservice.repository.ProfileSkillRepository;
 import com.pbl6.profileservice.repository.SkillRepository;
 import com.pbl6.profileservice.service.ProfileService;
 import jakarta.transaction.Transactional;
@@ -39,6 +40,7 @@ public class ProfileServiceImpl implements ProfileService {
     ModelMapper modelMapper;
     SkillRepository skillRepository;
     FileClient fileClient;
+    ProfileSkillRepository profileSkillRepository;
 
     @Transactional
     public ProfileResponse createProfile(ProfileRequest profileRequest) {
@@ -103,10 +105,10 @@ public class ProfileServiceImpl implements ProfileService {
             profile.setDesiredSalary(profileRequest.getDesiredSalary());
         }
 
-        // Logic xử lý skills đã được sửa ở câu trả lời trước
         if (profileRequest.getSkills() != null) {
             if (profile.getSkills() != null) {
                 profile.getSkills().clear();
+                profileRepository.saveAndFlush(profile);
             } else {
                 profile.setSkills(new HashSet<>());
             }

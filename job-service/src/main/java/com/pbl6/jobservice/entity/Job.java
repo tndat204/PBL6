@@ -85,7 +85,7 @@ public class Job extends Base{
     public enum JobStatus { ACTIVE, INACTIVE, CLOSED }
     public enum JobType { FULL_TIME, PART_TIME, CONTRACT, REMOTE }
     public enum ExperienceLevel {
-        INTERN, FRESHER, JUNIOR, SENIOR, PRINCIPAL, MANAGER
+        ANY,INTERN, FRESHER, JUNIOR, SENIOR, PRINCIPAL, MANAGER
     }
 }
 
