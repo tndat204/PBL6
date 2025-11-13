@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pbl6/features/admin/admin_shell.dart';
+import 'package:pbl6/features/recruiter/company/presentation/pages/my_company_page.dart';
 import 'package:pbl6/features/recruiter/dashboard/presentation/pages/recruiter_dashboard.dart';
 import 'package:pbl6/features/recruiter/job/presentation/pages/recruiter_job_detail_page.dart';
 import 'package:pbl6/features/recruiter/job/presentation/pages/recruiter_job_page.dart';
@@ -249,7 +250,7 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/recruiter/profile',
-          builder: (_, __) => const PlaceholderScreen(title: 'Profile'),
+          builder: (_, __) => const MyCompanyPage(),
         ),
       ],
     ),
