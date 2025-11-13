@@ -29,6 +29,7 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _detailedAddressController;
+  late TextEditingController _descriptionController; // 💡 THÊM CONTROLLER MÔ TẢ
 
   // Dropdown State
   List<Map<String, dynamic>> _provinces = [];
@@ -63,6 +64,7 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
     _taxCodeController = TextEditingController(text: widget.company.taxCode);
     _phoneController = TextEditingController(text: widget.company.phone ?? '');
     _emailController = TextEditingController(text: widget.company.email ?? '');
+    _descriptionController = TextEditingController(text: widget.company.description ?? ''); // 💡 KHỞI TẠO
 
     // Khởi tạo logic địa chỉ
     _parseInitialAddress(widget.company.address);
@@ -163,13 +165,14 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
         .toList();
     final newAddress = addressParts.join(', ');
 
-    // Tạo đối tượng Company đã cập nhật
+    // 💡 Tạo đối tượng Company đã cập nhật (THÊM DESCRIPTION)
     final updatedCompany = widget.company.copyWith(
       name: _nameController.text.trim(),
       taxCode: _taxCodeController.text.trim(),
       phone: _phoneController.text.trim(),
       email: _emailController.text.trim(),
       address: newAddress,
+      description: _descriptionController.text.trim(), // 💡 THÊM VÀO ĐÂY
     );
 
     // Gọi callback onSave của trang cha
@@ -183,6 +186,7 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
     _phoneController.dispose();
     _emailController.dispose();
     _detailedAddressController.dispose();
+    _descriptionController.dispose(); // 💡 DISPOSE
     super.dispose();
   }
 
@@ -198,7 +202,7 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
             icon: Icons.business,
             controller: _nameController,
             validator: (v) => v!.isEmpty ? 'Không được để trống' : null,
-            obscureText: false, // <-- SỬA LỖI
+            obscureText: false, 
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -206,7 +210,7 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
             icon: Icons.receipt_long,
             controller: _taxCodeController,
             validator: (v) => v!.isEmpty ? 'Không được để trống' : null,
-            obscureText: false, // <-- SỬA LỖI
+            obscureText: false, 
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -215,7 +219,7 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             validator: (v) => (v!.isEmpty || !v.contains('@')) ? 'Email không hợp lệ' : null,
-            obscureText: false, // <-- SỬA LỖI
+            obscureText: false, 
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -230,7 +234,7 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
               }
               return null;
             },
-            obscureText: false, // <-- SỬA LỖI
+            obscureText: false, 
           ),
           const SizedBox(height: 16),
 
@@ -276,14 +280,40 @@ class _MyCompanyTabInfoState extends State<MyCompanyTabInfo> {
             icon: Icons.place,
             controller: _detailedAddressController,
             validator: (v) => v!.isEmpty ? 'Vui lòng nhập địa chỉ' : null,
-            obscureText: false, // <-- SỬA LỖI
+            obscureText: false, 
           ),
+          const SizedBox(height: 16),
+
+          // 💡 THÊM TRƯỜNG MÔ TẢ VÀO ĐÂY
+          CustomTextField(
+            label: 'Mô tả công ty',
+            icon: Icons.description_outlined,
+            controller: _descriptionController,
+            keyboardType: TextInputType.multiline,
+            maxLines: 10, 
+            minLines: 5,
+            obscureText: false, 
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Vui lòng nhập mô tả công ty';
+              }
+              if (value.length < 50) {
+                 return 'Mô tả phải có ít nhất 50 ký tự';
+              }
+              return null;
+            },
+          ),
+          
           const SizedBox(height: 32),
           
           CustomElevatedButton(
             text: 'Lưu thay đổi',
             onPressed: _onSavePressed,
           ),
+
+          // 💡 THÊM KHOẢNG ĐỆM Ở CUỐI
+          // Giúp nút "Lưu" có thể cuộn lên trên CustomBottomBar
+          const SizedBox(height: 100),
         ],
       ),
     );
