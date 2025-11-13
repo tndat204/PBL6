@@ -7,10 +7,6 @@ import 'package:pbl6/features/recruiter/job/domain/usecases/update_application_s
 import 'package:pbl6/features/shared/application/domain/entities/application.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// Giả định bạn có định nghĩa cho UseCase này
-// import 'package:pbl6/features/recruiter/job/domain/usecases/update_application_status_usecase.dart'; 
-
-
 class RecruiterJobApplicantsTab extends StatefulWidget {
   final String jobId;
 
@@ -30,10 +26,10 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
   bool _isLoading = true;
   String? _errorMessage;
   List<Application> _allApplicants = [];
-  
+
   // Bộ lọc
   ApplicationStatus? _selectedStatusFilter;
-  
+
   // Danh sách trạng thái hiển thị trong bộ lọc (Bỏ UNKNOWN)
   final List<ApplicationStatus> _statusOptions = ApplicationStatus.values
       .where((s) => s != ApplicationStatus.UNKNOWN)
@@ -48,10 +44,11 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
   }
 
   Future<void> _loadApplicants() async {
-    if (mounted) setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (mounted)
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
 
     try {
       final applicants = await _getApplicationsForJobUsecase(widget.jobId);
@@ -61,13 +58,15 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() {
-        _errorMessage = 'Lỗi tải danh sách ứng viên: $e';
-      });
+      if (mounted)
+        setState(() {
+          _errorMessage = 'Lỗi tải danh sách ứng viên: $e';
+        });
     } finally {
-      if (mounted) setState(() {
-        _isLoading = false;
-      });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+        });
     }
   }
 
@@ -141,6 +140,8 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 1. Bộ lọc trạng thái
+        const SizedBox(height: 16),
+
         SizedBox(
           height: 50,
           child: ListView.separated(
@@ -152,7 +153,7 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
               final status = _statusOptions[index];
               final isSelected = _selectedStatusFilter == status;
               final color = _getStatusColor(status);
-              
+
               return ChoiceChip(
                 label: Text(_getStatusText(status)),
                 selected: isSelected,
@@ -165,23 +166,25 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
                   borderRadius: BorderRadius.circular(20),
                   side: BorderSide(color: color.withOpacity(0.5)),
                 ),
-                onSelected: (selected) => _onStatusFilterChanged(selected ? status : null),
+                onSelected: (selected) =>
+                    _onStatusFilterChanged(selected ? status : null),
               );
             },
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // 2. Danh sách ứng viên
         Expanded(
           child: _filteredApplicants.isEmpty
               ? Center(
                   child: Text(
-                      _selectedStatusFilter == null
-                          ? 'Chưa có ứng viên nộp hồ sơ.'
-                          : 'Không tìm thấy ứng viên ở trạng thái ${_getStatusText(_selectedStatusFilter!)}.',
-                      style: const TextStyle(color: Colors.grey)),
+                    _selectedStatusFilter == null
+                        ? 'Chưa có ứng viên nộp hồ sơ.'
+                        : 'Không tìm thấy ứng viên ở trạng thái ${_getStatusText(_selectedStatusFilter!)}.',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.only(bottom: 20),
@@ -202,7 +205,9 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
 
   // Hàm xử lý update trạng thái (gọi UseCase)
   Future<void> _updateStatus(
-      String applicationId, ApplicationStatus newStatus) async {
+    String applicationId,
+    ApplicationStatus newStatus,
+  ) async {
     try {
       await _updateApplicationStatusUsecase(
         applicationId: applicationId,
@@ -210,10 +215,12 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
       );
       if (mounted) {
         MotionToast.success(
-          description: Text('Cập nhật trạng thái thành ${_getStatusText(newStatus)}'),
+          description: Text(
+            'Cập nhật trạng thái thành ${_getStatusText(newStatus)}',
+          ),
         ).show(context);
         // Tải lại dữ liệu sau khi update thành công
-        _loadApplicants(); 
+        _loadApplicants();
       }
     } catch (e) {
       if (mounted) {
@@ -229,7 +236,8 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
 
 class ApplicantCard extends StatefulWidget {
   final Application application;
-  final Function(String applicationId, ApplicationStatus newStatus) onStatusUpdate;
+  final Function(String applicationId, ApplicationStatus newStatus)
+  onStatusUpdate;
   final VoidCallback onRefresh;
 
   const ApplicantCard({
@@ -244,13 +252,12 @@ class ApplicantCard extends StatefulWidget {
 }
 
 class _ApplicantCardState extends State<ApplicantCard> {
-
   // Logic tải CV
   void _launchCV() async {
     final url = Uri.parse(widget.application.cvFileUrl);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
-         MotionToast.error(
+        MotionToast.error(
           description: const Text('Không thể tải hoặc mở CV.'),
         ).show(context);
       }
@@ -293,7 +300,9 @@ class _ApplicantCardState extends State<ApplicantCard> {
                       Text(
                         applicant.fullName,
                         style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
@@ -305,15 +314,29 @@ class _ApplicantCardState extends State<ApplicantCard> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // --- Thông tin liên hệ ---
             _buildInfoRow(Icons.phone_outlined, applicant.phone),
             _buildInfoRow(Icons.location_on_outlined, applicant.address),
 
-            const SizedBox(height: 16),
+            if (widget.application.notes.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  '"${widget.application.notes}"', // Hiển thị notes trong ngoặc kép
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey.shade700,
+                    fontSize: 14,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
 
+            const SizedBox(height: 16),
             // --- Nút Hành động và Trạng thái ---
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -323,17 +346,21 @@ class _ApplicantCardState extends State<ApplicantCard> {
 
                 // 2. Nút Tải CV
                 ElevatedButton.icon(
-                  onPressed: widget.application.cvFileUrl.isNotEmpty ? _launchCV : null,
+                  onPressed: widget.application.cvFileUrl.isNotEmpty
+                      ? _launchCV
+                      : null,
                   icon: const Icon(Icons.file_download_outlined, size: 18),
                   label: const Text('Tải CV'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppPallete.primaryColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -368,11 +395,7 @@ class _ApplicantCardState extends State<ApplicantCard> {
             value: status,
             child: Row(
               children: [
-                Icon(
-                  Icons.circle,
-                  size: 10,
-                  color: _getStatusColor(status),
-                ),
+                Icon(Icons.circle, size: 10, color: _getStatusColor(status)),
                 const SizedBox(width: 8),
                 Text(
                   _getStatusText(status),
@@ -391,7 +414,10 @@ class _ApplicantCardState extends State<ApplicantCard> {
           color: _getStatusColor(currentStatus),
           fontWeight: FontWeight.bold,
         ),
-        icon: Icon(Icons.arrow_drop_down, color: _getStatusColor(currentStatus)),
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: _getStatusColor(currentStatus),
+        ),
       ),
     );
   }
