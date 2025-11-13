@@ -28,4 +28,8 @@ class ApplicationRepositoryImpl implements ApplicationRepository{
       newStatus: newStatus,
     );
   }
+  @override
+  Future<List<Application>> getMyApplications() async {
+    return await remoteDataSource.getMyApplications();
+  }
 }

@@ -124,7 +124,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       toolbarHeight: 80,
       title: GestureDetector(
-        onTap: () => context.push('/user/my-info'),
+        onTap: () => context.push('/my-info'),
         child: Row(
           children: [
             CircleAvatar(

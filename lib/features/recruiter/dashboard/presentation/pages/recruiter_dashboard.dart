@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
-import 'package:pbl6/features/recruiter/dashboard/presentation/widgets/kpi_card.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/get_applications_for_job_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/get_my_posted_job_usecase.dart';
 import 'package:pbl6/features/shared/application/domain/entities/application.dart';
 import 'package:pbl6/features/shared/auth/domain/repositories/auth_repository.dart';
 import 'package:pbl6/features/shared/job/domain/entities/job.dart';
 import 'package:pbl6/features/shared/widgets/custom_app_bar.dart';
+import 'package:pbl6/features/shared/widgets/kpi_card.dart';
 
 class RecruiterDashboardPage extends StatefulWidget {
   const RecruiterDashboardPage({super.key});

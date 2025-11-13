@@ -60,6 +60,7 @@ import 'package:pbl6/features/shared/user/data/repositories/user_repository_impl
 import 'package:pbl6/features/shared/user/domain/repositories/user_repository.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/change_my_password_usecase.dart';
 import 'package:pbl6/features/shared/user/domain/usecases/get_my_info_usecase.dart';
+import 'package:pbl6/features/user/dashboard/domain/usecases/get_my_applications_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/apply_job_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/get_all_jobs_usecase.dart';
 import 'package:pbl6/features/user/profile/data/datasources/profile_remote_datasource.dart';
@@ -254,5 +255,8 @@ void init() {
   );
   sl.registerLazySingleton<UpdateApplicationStatusUsecase>(
     () => UpdateApplicationStatusUsecase(sl<ApplicationRepository>()),
+  );
+  sl.registerLazySingleton<GetMyApplicationsUsecase>(
+    () => GetMyApplicationsUsecase(sl<ApplicationRepository>()),
   );
 }

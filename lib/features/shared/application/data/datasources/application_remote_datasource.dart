@@ -11,6 +11,7 @@ abstract class ApplicationRemoteDataSource {
     required String applicationId,
     required ApplicationStatus newStatus,
   });
+  Future<List<Application>> getMyApplications();
 }
 
 class ApplicationRemoteDataSourceImpl implements ApplicationRemoteDataSource {
@@ -119,6 +120,31 @@ class ApplicationRemoteDataSourceImpl implements ApplicationRemoteDataSource {
       rethrow;
     } catch (e) {
       throw Exception("Lỗi không xác định khi cập nhật status: $e");
+    }
+  }
+
+  @override
+  Future<List<Application>> getMyApplications() async {
+    try {
+      final response = await _dio.get('${ApiConstants.applications}/me');
+
+      if (response.statusCode == 200 && response.data['result'] != null) {
+        final List<dynamic> resultList = response.data['result'];
+        final applications = resultList
+            .map((json) => Application.fromJson(json))
+            .toList();
+        return applications;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: "Lấy danh sách applications của tôi thất bại",
+        );
+      }
+    } on DioException {
+      rethrow;
+    } catch (e) {
+      throw Exception("Lỗi không xác định khi get my applications: $e");
     }
   }
 }

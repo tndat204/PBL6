@@ -9,4 +9,5 @@ abstract class ApplicationRepository {
     required String applicationId,
     required ApplicationStatus newStatus,
   });
+  Future<List<Application>> getMyApplications();
 }

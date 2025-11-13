@@ -161,7 +161,7 @@ final GoRouter router = GoRouter(
       pageBuilder: (context, state) =>
           fadeTransition(UnauthorizedPage(), state),
     ),
-    // 🟢 Route trung gian tự động điều hướng đến dashboard theo role
+    
     GoRoute(
       path: '/dashboard',
       name: 'dashboard_redirect',
@@ -195,7 +195,7 @@ final GoRouter router = GoRouter(
     ),
     // SỬA: Dùng pageBuilder
     GoRoute(
-      path: '/user/my-info',
+      path: '/my-info',
       name: 'my_info',
       pageBuilder: (context, state) => slideFromRightTransition(
         const MyInfoPage(),
