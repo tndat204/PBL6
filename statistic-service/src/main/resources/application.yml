@@ -18,6 +18,14 @@ spring:
     mongodb:
       uri: mongodb://admin:123456@localhost:27017/statistic_service?authSource=admin
       database: statistic_service
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    type: redis
+    redis:
+     time-to-live: 600000 # 600,000 ms = 10 phút (Dữ liệu sẽ được làm mới mỗi 10p)
+     cache-null-values: false
 
   kafka:
     bootstrap-servers: localhost:9094
