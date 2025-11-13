@@ -99,19 +99,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthenticationResponse login(LoginRequest request) {
-        // Gọi user-service lấy thông tin user theo email
-        UserResponse user = Optional.ofNullable(
-                userServiceClient.getUserByEmail(request.getEmail()).getResult()
-        ).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new AppException(ErrorCode.WRONG_PASSWORD);
-        }
-
-        if (!user.getEnabled()) {
-            throw new AppException(ErrorCode.DEACTIVE_ACCOUNT);
-        }
-
+        UserResponse user = userServiceClient.login(request).getResult();
         String token = generateToken(user, expiration);
 
         return AuthenticationResponse.builder()

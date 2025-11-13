@@ -2,6 +2,7 @@ package com.pbl6.userservice.controller.internal;
 
 import com.pbl6.userservice.dto.response.APIResponse;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
+import com.pbl6.userservice.dto.shared.LoginRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
 import com.pbl6.userservice.service.UserService;
@@ -24,6 +25,14 @@ public class UserInternalController {
         return APIResponse.<UserResponse>builder()
                 .code(200)
                 .result(userService.register(request))
+                .build();
+    }
+
+    @PostMapping("/login")
+    public APIResponse<UserResponse> login(@Valid @RequestBody LoginRequest request){
+        return APIResponse.<UserResponse>builder()
+                .code(200)
+                .result(userService.login(request))
                 .build();
     }
 

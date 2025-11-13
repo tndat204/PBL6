@@ -4,6 +4,7 @@ package com.pbl6.userservice.service;
 import com.pbl6.userservice.dto.request.ChangePasswordRequest;
 import com.pbl6.userservice.dto.request.UpdateUserRequest;
 import com.pbl6.userservice.dto.shared.CreateUserRequest;
+import com.pbl6.userservice.dto.shared.LoginRequest;
 import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
 import com.pbl6.userservice.dto.shared.UserResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,4 +36,5 @@ public interface UserService {
 
     public void changePassword(ChangePasswordRequest request);
     public UserResponse getUserById(String id);
+    public UserResponse login(LoginRequest request);
 }

@@ -30,9 +30,10 @@ public enum ErrorCode {
     INVALID_FILE(1018,"File không hợp lệ",HttpStatus.BAD_REQUEST),
     UPLOAD_FILE_FAILED(1019,"Tải file lên không được",HttpStatus.BAD_REQUEST),
     ROLE_IN_USE(1022,"Vai trò đang được sử dụng",HttpStatus.BAD_REQUEST),
-    PERMISSION_IN_USE(1023,"Quyền đang được sử dụng",HttpStatus.BAD_REQUEST),
+    PERMISSION_IN_USE(1025,"Quyền đang được sử dụng",HttpStatus.BAD_REQUEST),
     ROLE_ALREADY_ASSIGNED(1024,"Vai trò này đã có cho tài khoản này",HttpStatus.BAD_REQUEST),
-    VALIDATION_FAILED(1007, "Dữ liệu gửi lên không hợp lệ", HttpStatus.BAD_REQUEST);
+    VALIDATION_FAILED(1007, "Dữ liệu gửi lên không hợp lệ", HttpStatus.BAD_REQUEST),
+    WRONG_PASSWORD(1023,"Sai mật khẩu",HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;

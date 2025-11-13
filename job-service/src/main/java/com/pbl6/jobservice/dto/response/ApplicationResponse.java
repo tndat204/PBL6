@@ -18,4 +18,5 @@ public class ApplicationResponse {
     String notes;
     String cvFileUrl;
     LocalDateTime appliedDate;
+    ApplicantInfo applicantInfo;
 }

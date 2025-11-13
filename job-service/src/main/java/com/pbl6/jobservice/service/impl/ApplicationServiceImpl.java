@@ -3,8 +3,11 @@ package com.pbl6.jobservice.service.impl;
 import com.pbl6.event.dto.ApplicationStatusChangedEvent;
 import com.pbl6.event.dto.ApplicationSubmittedEvent;
 import com.pbl6.jobservice.client.ProfileClient;
+import com.pbl6.jobservice.client.UserClient;
 import com.pbl6.jobservice.dto.request.ApplicationRequest;
+import com.pbl6.jobservice.dto.response.ApplicantInfo;
 import com.pbl6.jobservice.dto.response.ApplicationResponse;
+import com.pbl6.jobservice.dto.response.UserResponse;
 import com.pbl6.jobservice.entity.Application;
 import com.pbl6.jobservice.entity.Company;
 import com.pbl6.jobservice.entity.CompanyUser;
@@ -12,6 +15,7 @@ import com.pbl6.jobservice.entity.Job;
 import com.pbl6.jobservice.exception.AppException;
 import com.pbl6.jobservice.exception.ErrorCode;
 import com.pbl6.jobservice.repository.ApplicationRepository;
+import com.pbl6.jobservice.repository.CompanyRepository;
 import com.pbl6.jobservice.repository.CompanyUserRepository;
 import com.pbl6.jobservice.repository.JobRepository;
 import com.pbl6.jobservice.service.ApplicationService;
@@ -39,9 +43,11 @@ import java.util.stream.Collectors;
 public class ApplicationServiceImpl implements ApplicationService {
     ApplicationRepository applicationRepository;
     CompanyUserRepository companyUserRepository;
+    CompanyRepository companyRepository;
     ModelMapper modelMapper;
     JobRepository jobRepository;
     ProfileClient profileClient;
+    UserClient userClient;
     KafkaTemplate<String, Object> kafkaTemplate;
     static String APP_SUBMITTED_TOPIC = "application_submitted_topic";
     static String APP_STATUS_TOPIC = "application_status_topic";
@@ -63,14 +69,31 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 3. Bắn event "Nộp CV mới"
         kafkaTemplate.send(APP_SUBMITTED_TOPIC, savedApplication.getApplicationId().toString(), event);
-        return modelMapper.map(savedApplication, ApplicationResponse.class);
+        ApplicationResponse response = modelMapper.map(savedApplication, ApplicationResponse.class);
+        response.setApplicantInfo(getApplicantInfo(savedApplication.getApplicantId()));
+        return response;
     }
 
     @Override
     public List<ApplicationResponse> getApplicationsByJobId(String jobId) {
+        Company company=jobRepository.findCompanyByJobId(UUID.fromString(jobId));
+        boolean allowed = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(
+                company.getId(),
+                getCurrentUserId(),
+                List.of(CompanyUser.Status.ACTIVE),
+                List.of(CompanyUser.Role.RECRUITER)
+        );
+        if(!allowed) {
+            throw new AppException(ErrorCode.USER_NOT_ASSOCIATED_WITH_COMPANY);
+        }
         List<Application> applications = applicationRepository.findByJobId(UUID.fromString(jobId));
+
         return applications.stream()
-                .map(application -> modelMapper.map(application, ApplicationResponse.class))
+                .map(application -> {
+                    ApplicationResponse response = modelMapper.map(application, ApplicationResponse.class);
+                    response.setApplicantInfo(getApplicantInfo(application.getApplicantId()));
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -78,7 +101,19 @@ public class ApplicationServiceImpl implements ApplicationService {
     public ApplicationResponse getApplicationById(String id) {
         Application application = applicationRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
-        return modelMapper.map(application, ApplicationResponse.class);
+        Company company = application.getJob().getCompany();
+        boolean allowed = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(
+                company.getId(),
+                getCurrentUserId(),
+                List.of(CompanyUser.Status.ACTIVE),
+                List.of(CompanyUser.Role.RECRUITER)
+        );
+        if(!allowed) {
+            throw new AppException(ErrorCode.USER_NOT_ASSOCIATED_WITH_COMPANY);
+        }
+        ApplicationResponse response = modelMapper.map(application, ApplicationResponse.class);
+        response.setApplicantInfo(getApplicantInfo(application.getApplicantId()));
+        return response;
     }
 
     @Override
@@ -109,7 +144,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 3. Bắn event "Thay đổi trạng thái"
         kafkaTemplate.send(APP_STATUS_TOPIC, updatedApplication.getApplicationId().toString(), event);
-        return modelMapper.map(updatedApplication, ApplicationResponse.class);
+        ApplicationResponse response = modelMapper.map(updatedApplication, ApplicationResponse.class);
+        response.setApplicantInfo(getApplicantInfo(updatedApplication.getApplicantId()));
+        return response;
     }
 
     @Override
@@ -118,8 +155,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<Application> applications = applicationRepository.findByApplicantId(applicantId);
 
         return applications.stream()
-                .map(app -> modelMapper.map(app, ApplicationResponse.class))
-                .toList();
+                .map(application -> {
+                    ApplicationResponse response = modelMapper.map(application, ApplicationResponse.class);
+                    response.setApplicantInfo(getMyInfo());
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
     private UUID getCurrentUserId() {
@@ -128,5 +169,25 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new RuntimeException("Cannot get userId from token");
         }
         return UUID.fromString(jwt.getClaimAsString("userId"));
+    }
+    private ApplicantInfo getApplicantInfo(UUID applicantId) {
+        UserResponse userResponse=userClient.getUserById(String.valueOf(applicantId)).getResult();
+        return ApplicantInfo.builder()
+                .fullName(userResponse.getFullName())
+                .email(userResponse.getEmail())
+                .phone(userResponse.getPhone())
+                .address(userResponse.getAddress())
+                .avatarUrl(userResponse.getAvatarUrl())
+                .build();
+    }
+    private ApplicantInfo getMyInfo() {
+        UserResponse userResponse=userClient.getMyInfo().getResult();
+        return ApplicantInfo.builder()
+                .fullName(userResponse.getFullName())
+                .email(userResponse.getEmail())
+                .phone(userResponse.getPhone())
+                .address(userResponse.getAddress())
+                .avatarUrl(userResponse.getAvatarUrl())
+                .build();
     }
 }

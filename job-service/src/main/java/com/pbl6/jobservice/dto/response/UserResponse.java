@@ -1,4 +1,4 @@
-package com.pbl6.userservice.dto.shared;
+package com.pbl6.jobservice.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

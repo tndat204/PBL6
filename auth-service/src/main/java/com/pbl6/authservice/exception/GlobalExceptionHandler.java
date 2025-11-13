@@ -3,7 +3,10 @@ package com.pbl6.authservice.exception;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pbl6.authservice.dto.shared.APIResponse;
+import feign.FeignException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,6 +29,37 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         apiResponse.setMessage(message);
         return ResponseEntity.badRequest().body(apiResponse);
+    }
+    @ExceptionHandler(value = FeignException.class)
+    ResponseEntity<APIResponse> handlingFeignException(FeignException exception) {
+        try {
+            // Bước 1: Lấy nội dung lỗi (response body) từ Feign
+            String content = exception.contentUTF8();
+
+            // Nếu nội dung rỗng, trả về lỗi mặc định
+            if (content == null || content.isEmpty()) {
+                return ResponseEntity.status(exception.status()).build();
+            }
+
+            // Bước 2: Dùng Jackson ObjectMapper để chuyển chuỗi JSON thành object APIResponse
+            ObjectMapper mapper = new ObjectMapper();
+            APIResponse apiResponse = mapper.readValue(content, APIResponse.class);
+
+            // Bước 3: Trả về ResponseEntity với status code và body gốc từ service kia
+            return ResponseEntity
+                    .status(exception.status())
+                    .body(apiResponse);
+
+        } catch (JsonProcessingException e) {
+            // Trường hợp không parse được JSON (ví dụ service kia chết trả về HTML lỗi),
+            // thì fallback về lỗi chung hoặc log ra
+            return ResponseEntity
+                    .status(exception.status())
+                    .body(APIResponse.builder()
+                            .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
+                            .message(exception.getMessage()) // Hoặc message tùy chỉnh
+                            .build());
+        }
     }
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<APIResponse> handlingException(Exception e) {

@@ -8,10 +8,7 @@ import com.pbl6.userservice.client.ProfileClient;
 import com.pbl6.userservice.dto.request.ChangePasswordRequest;
 import com.pbl6.userservice.dto.request.CreateCompanyRequest;
 import com.pbl6.userservice.dto.request.UpdateUserRequest;
-import com.pbl6.userservice.dto.shared.CreateUserRequest;
-import com.pbl6.userservice.dto.shared.ProfileRequest;
-import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
-import com.pbl6.userservice.dto.shared.UserResponse;
+import com.pbl6.userservice.dto.shared.*;
 import com.pbl6.userservice.entity.Role;
 import com.pbl6.userservice.entity.User;
 import com.pbl6.userservice.exception.AppException;
@@ -255,6 +252,22 @@ public class UserServiceImpl implements UserService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         User user = userOptional.get();
+        return modelMapper.map(user,UserResponse.class);
+    }
+
+    @Override
+    public UserResponse login(LoginRequest request) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.WRONG_PASSWORD);
+        }
+        if (!user.isEnabled()) {
+            throw new AppException(ErrorCode.DEACTIVE_ACCOUNT);
+        }
         return modelMapper.map(user,UserResponse.class);
     }
 

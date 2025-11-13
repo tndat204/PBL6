@@ -1,5 +1,6 @@
 package com.pbl6.authservice.client;
 import com.pbl6.authservice.configuration.AuthenticationRequestInterceptor;
+import com.pbl6.authservice.dto.request.LoginRequest;
 import com.pbl6.authservice.dto.shared.APIResponse;
 import com.pbl6.authservice.dto.shared.CreateUserRequest;
 import com.pbl6.authservice.dto.shared.ResetPasswordRequest;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 public interface UserClient {
     @GetMapping("/email")
     APIResponse<UserResponse> getUserByEmail(@RequestParam("email") String email);
+
+    @PostMapping("/login")
+    APIResponse<UserResponse> login(@Valid @RequestBody LoginRequest request);
 
     @GetMapping("/email/exists")
     APIResponse<Boolean> checkEmail(@RequestParam("email") String email);
