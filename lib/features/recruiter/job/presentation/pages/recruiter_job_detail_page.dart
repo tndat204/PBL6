@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
+import 'package:pbl6/features/recruiter/job/presentation/widgets/recruiter_job_applicants_tab.dart';
 import 'package:pbl6/features/recruiter/job/presentation/widgets/recruiter_job_description_tab.dart';
 import 'package:pbl6/features/shared/category/domain/usecases/get_all_categories_usecase.dart'; // Dùng All thay vì Detail cho recruiter
 import 'package:pbl6/features/shared/company/domain/usecases/get_company_details_usecase.dart';
@@ -202,12 +203,8 @@ class _RecruiterJobDetailPageState extends State<RecruiterJobDetailPage>
                               getAllSkillsUseCase: _getAllSkillsUseCase,
                               getAllCategoriesUseCase: _getAllCategoriesUseCase,
                             ),
-                            // 2. Danh sách ứng viên (placeholder)
-                            const Center(
-                              child: Text(
-                                'Danh sách ứng viên nộp hồ sơ sẽ được hiển thị tại đây.',
-                                style: TextStyle(color: Colors.black54),
-                              ),
+                           RecruiterJobApplicantsTab(
+                              jobId: widget.jobId,
                             ),
                           ],
                         ),
