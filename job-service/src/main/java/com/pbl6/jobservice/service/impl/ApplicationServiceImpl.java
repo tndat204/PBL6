@@ -70,7 +70,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         // 3. Bắn event "Nộp CV mới"
         kafkaTemplate.send(APP_SUBMITTED_TOPIC, savedApplication.getApplicationId().toString(), event);
         ApplicationResponse response = modelMapper.map(savedApplication, ApplicationResponse.class);
-        response.setApplicantInfo(getApplicantInfo(savedApplication.getApplicantId()));
+        response.setApplicantInfo(getMyInfo());
         return response;
     }
 
