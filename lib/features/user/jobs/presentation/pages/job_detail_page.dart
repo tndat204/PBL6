@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/company/domain/usecases/get_company_details_usecase.dart';
@@ -9,7 +10,6 @@ import 'package:pbl6/features/user/jobs/domain/usecases/apply_job_usecase.dart';
 
 import '../../../../shared/category/domain/usecases/get_category_detail_usecase.dart';
 import '../../../../shared/skill/domain/usecases/get_skill_detail_usecase.dart';
-// 💡 IMPORT HỘP THOẠI MỚI
 import '../widgets/apply_note_dialog.dart';
 import '../widgets/job_company_tab.dart';
 import '../widgets/job_description_tab.dart';
@@ -17,8 +17,14 @@ import '../widgets/job_detail_header.dart';
 
 class JobDetailPage extends StatefulWidget {
   final String jobId;
+  // 💡 THAM SỐ MỚI: Nhận từ GoRouter extra
+  final bool hideApplyButton; 
 
-  const JobDetailPage({super.key, required this.jobId});
+  const JobDetailPage({
+    super.key, 
+    required this.jobId,
+    this.hideApplyButton = false, // Mặc định là false
+  });
 
   @override
   State<JobDetailPage> createState() => _JobDetailPageState();
@@ -31,7 +37,6 @@ class _JobDetailPageState extends State<JobDetailPage>
   late final GetSkillDetailUseCase _getSkillDetailUseCase;
   late final GetCategoryDetailUseCase _getCategoryDetailUseCase;
   late final ApplyJobUsecase _applyJobUsecase;
-
 
   Job? _job;
   bool _isLoading = true;
@@ -89,15 +94,14 @@ class _JobDetailPageState extends State<JobDetailPage>
                     padding: const EdgeInsets.only(top: 8, left: 12, right: 12),
                     child: Row(
                       children: [
-                        // 1. Nút back
                         IconButton(
                           icon: const Icon(
                             Icons.arrow_back_ios_new_rounded,
                             color: Colors.black87,
                           ),
-                          onPressed: () => Navigator.pop(context),
+                          // 💡 Sửa: Dùng GoRouter pop
+                          onPressed: () => context.pop(), 
                         ),
-
                         Expanded(
                           child: Center(
                             child: const Text(
@@ -115,12 +119,9 @@ class _JobDetailPageState extends State<JobDetailPage>
                   ),
                   const SizedBox(height: 4),
 
-                  // --- Header công việc (giống JobCard) ---
                   JobDetailHeader(job: _job!),
-
                   const SizedBox(height: 8),
 
-                  // --- Tabs đều kích thước ---
                   Container(
                     height: 46,
                     margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -177,61 +178,63 @@ class _JobDetailPageState extends State<JobDetailPage>
                     ),
                   ),
 
-                  // --- Nút Apply ---
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppPallete.primaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  // --- Nút Apply (CÓ ĐIỀU KIỆN) ---
+                  if (!widget.hideApplyButton) // 💡 CHỈ HIỂN THỊ NẾU hideApplyButton LÀ FALSE
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppPallete.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                        ),
-                        onPressed: () async {
-                          // 💡 GỌI HỘP THOẠI MỚI VÀ NHẬN VỀ MAP
-                          final result = await showApplyNoteDialog(context);
-                          if (result == null) return; // người dùng nhấn Hủy
-                          
-                          final notes = result['notes'];
-                          final filePath = result['filePath']; 
+                          onPressed: () async {
+                            final result = await showApplyNoteDialog(context);
+                            if (result == null) return; 
+                            
+                            final notes = result['notes'];
+                            final filePath = result['filePath']; 
 
-                          try {
-                           
-                            final applyResult = await _applyJobUsecase.call(
-                              jobId: widget.jobId,
-                              notes: notes,
-                              filePath: filePath!.isEmpty ? null : filePath, // TRUYỀN FILE PATH
-                            );
+                            try {
+                              final applyResult = await _applyJobUsecase.call(
+                                jobId: widget.jobId,
+                                notes: notes,
+                                filePath: filePath!.isEmpty ? null : filePath,
+                              );
 
-                            MotionToast.success(
-                              title: const Text("Thành công"),
-                              description: const Text(
-                                'Ứng tuyển thành công!',
-                              ),
-                              animationType: AnimationType.slideInFromLeft,
-                              toastAlignment: Alignment.topLeft,
-                            ).show(context);
-                          } catch (e) {
-                            MotionToast.error(
-                              description: Text("Ứng tuyển thất bại: $e"),
-                            ).show(context);
-                          }
-                        },
-
-                        child: const Text(
-                          "Ứng tuyển",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                              MotionToast.success(
+                                title: const Text("Thành công"),
+                                description: const Text(
+                                  'Ứng tuyển thành công!',
+                                ),
+                                animationType: AnimationType.slideInFromLeft,
+                                toastAlignment: Alignment.topLeft,
+                              ).show(context);
+                            } catch (e) {
+                              MotionToast.error(
+                                description: Text("Ứng tuyển thất bại: $e"),
+                              ).show(context);
+                            }
+                          },
+                          child: const Text(
+                            "Ứng tuyển",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  
+                  // 💡 HIỂN THỊ KHOẢNG ĐỆM NẾU NÚT BỊ ẨN
+                  if (widget.hideApplyButton)
+                    const SizedBox(height: 16),
                 ],
               ),
             ),

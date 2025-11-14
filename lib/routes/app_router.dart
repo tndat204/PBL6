@@ -15,6 +15,7 @@ import 'package:pbl6/features/shared/auth/presentation/pages/signup_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/unauthorized_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/verify_otp_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/welcome_page.dart';
+import 'package:pbl6/features/user/application/presentation/pages/my_application_page.dart';
 import 'package:pbl6/features/user/dashboard/presentation/pages/user_dashboard.dart';
 import 'package:pbl6/features/user/jobs/presentation/pages/job_detail_page.dart';
 import 'package:pbl6/features/user/profile/presentation/pages/my_profile_page.dart';
@@ -162,7 +163,7 @@ final GoRouter router = GoRouter(
       pageBuilder: (context, state) =>
           fadeTransition(UnauthorizedPage(), state),
     ),
-    
+
     GoRoute(
       path: '/dashboard',
       name: 'dashboard_redirect',
@@ -188,8 +189,18 @@ final GoRouter router = GoRouter(
       name: 'job_detail',
       pageBuilder: (context, state) {
         final jobId = state.pathParameters['id']!;
+
+        // 💡 LOGIC LẤY EXTRA
+        bool hideButton = false;
+        if (state.extra != null && state.extra is Map) {
+          hideButton = (state.extra as Map)['hideApplyButton'] ?? false;
+        }
+
         return slideFromRightTransition(
-          JobDetailPage(jobId: jobId),
+          JobDetailPage(
+            jobId: jobId,
+            hideApplyButton: hideButton, // 💡 Truyền vào đây
+          ),
           state,
         );
       },
@@ -198,12 +209,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/my-info',
       name: 'my_info',
-      pageBuilder: (context, state) => slideFromRightTransition(
-        const MyInfoPage(),
-        state,
-      ),
+      pageBuilder: (context, state) =>
+          slideFromRightTransition(const MyInfoPage(), state),
     ),
- GoRoute(
+    GoRoute(
       path: '/recruiter/jobs/detail/:id',
       name: 'recruiter_job_detail',
       pageBuilder: (context, state) {
@@ -223,8 +232,8 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(path: '/user/jobs', builder: (_, __) => const JobPage()),
         GoRoute(
-          path: '/user/messages',
-          builder: (_, __) => const PlaceholderScreen(title: 'Messages'),
+          path: '/user/applications',
+          builder: (_, __) => const MyApplicationPage(),
         ),
         GoRoute(
           path: '/user/profile',
@@ -254,7 +263,7 @@ final GoRouter router = GoRouter(
         ),
       ],
     ),
-    
+
     // ⭐️ THÊM ROUTE MỚI CHO UPSERT JOB (NẰM NGOÀI SHELL) ⭐️
     GoRoute(
       path: '/recruiter/jobs/upsert',
@@ -264,13 +273,9 @@ final GoRouter router = GoRouter(
         // null = Add Mode
         // non-null = Edit Mode
         final String? jobId = state.extra as String?;
-        return slideFromRightTransition(
-          UpsertJobPage(jobId: jobId),
-          state,
-        );
+        return slideFromRightTransition(UpsertJobPage(jobId: jobId), state);
       },
     ),
-    
 
     ShellRoute(
       builder: (context, state, child) => AdminShell(child: child),

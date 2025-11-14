@@ -19,7 +19,7 @@ class _UserShellState extends State<UserShell> {
   final List<String> _routes = [
     '/user/dashboard',
     '/user/jobs',
-    '/user/messages',
+    '/user/applications',
     '/user/profile',
   ];
 
@@ -54,7 +54,7 @@ class _UserShellState extends State<UserShell> {
                   BottomNavigationBarItem(
                       icon: Icon(Icons.work_outline_rounded), label: 'Việc làm'),
                   BottomNavigationBarItem(
-                      icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Đánh giá'),
+                      icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Ứng tuyển'),
                   BottomNavigationBarItem(
                       icon: Icon(Icons.person_outline_rounded), label: 'Hồ sơ'),
                 ],
