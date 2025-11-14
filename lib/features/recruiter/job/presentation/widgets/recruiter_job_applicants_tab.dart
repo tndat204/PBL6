@@ -157,15 +157,19 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
               return ChoiceChip(
                 label: Text(_getStatusText(status)),
                 selected: isSelected,
-                
+
                 // 💡 CẢI TIẾN GIAO DIỆN
                 selectedColor: color,
                 backgroundColor: Colors.white, // Nền trắng khi không chọn
                 elevation: 0, // Bỏ đổ bóng
-                labelPadding: const EdgeInsets.symmetric(horizontal: 4), // Tăng padding nhãn
-                
+                labelPadding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                ), // Tăng padding nhãn
+
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : color, // Màu chữ khi không chọn là màu trạng thái
+                  color: isSelected
+                      ? Colors.white
+                      : color, // Màu chữ khi không chọn là màu trạng thái
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   fontSize: 13,
                 ),
@@ -229,6 +233,8 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
           description: Text(
             'Cập nhật trạng thái thành ${_getStatusText(newStatus)}',
           ),
+          toastAlignment: Alignment.topLeft,
+          animationType: AnimationType.slideInFromLeft,
         ).show(context);
         // Tải lại dữ liệu sau khi update thành công
         _loadApplicants();
@@ -249,7 +255,7 @@ class _RecruiterJobApplicantsTabState extends State<RecruiterJobApplicantsTab> {
 class ApplicantCard extends StatefulWidget {
   final Application application;
   final Function(String applicationId, ApplicationStatus newStatus)
-      onStatusUpdate;
+  onStatusUpdate;
   final VoidCallback onRefresh;
 
   const ApplicantCard({
@@ -367,7 +373,8 @@ class _ApplicantCardState extends State<ApplicantCard> {
                     backgroundColor: AppPallete.primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ],
@@ -391,83 +398,70 @@ class _ApplicantCardState extends State<ApplicantCard> {
     );
   }
 
- Widget _buildStatusDropdown(ApplicationStatus currentStatus) {
-  final statusOptions = ApplicationStatus.values
-      .where((s) => s != ApplicationStatus.UNKNOWN)
-      .toList();
+  Widget _buildStatusDropdown(ApplicationStatus currentStatus) {
+    final statusOptions = ApplicationStatus.values
+        .where((s) => s != ApplicationStatus.UNKNOWN)
+        .toList();
 
-  return PopupMenuButton<ApplicationStatus>(
-    elevation: 6,
-    color: Colors.white,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
-    ),
-    onSelected: (newStatus) {
-      if (newStatus != currentStatus) {
-        widget.onStatusUpdate(widget.application.id, newStatus);
-      }
-    },
-    itemBuilder: (context) => statusOptions.map((status) {
-      final isSelected = status == currentStatus;
+    return PopupMenuButton<ApplicationStatus>(
+      elevation: 6,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      onSelected: (newStatus) {
+        if (newStatus != currentStatus) {
+          widget.onStatusUpdate(widget.application.id, newStatus);
+        }
+      },
+      itemBuilder: (context) => statusOptions.map((status) {
+        final isSelected = status == currentStatus;
 
-      return PopupMenuItem(
-        value: status,
+        return PopupMenuItem(
+          value: status,
+          child: Row(
+            children: [
+              Icon(Icons.circle, size: 12, color: _getStatusColor(status)),
+              const SizedBox(width: 10),
+              Text(
+                _getStatusText(status),
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? _getStatusColor(status) : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: _getStatusColor(currentStatus), width: 1.4),
+          color: _getStatusColor(currentStatus).withOpacity(0.12),
+        ),
         child: Row(
           children: [
-            Icon(
-              Icons.circle,
-              size: 12,
-              color: _getStatusColor(status),
-            ),
-            const SizedBox(width: 10),
+            Icon(Icons.circle, size: 12, color: _getStatusColor(currentStatus)),
+            const SizedBox(width: 8),
             Text(
-              _getStatusText(status),
+              _getStatusText(currentStatus),
               style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected
-                    ? _getStatusColor(status)
-                    : Colors.black87,
+                color: _getStatusColor(currentStatus),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 20,
+              color: _getStatusColor(currentStatus),
             ),
           ],
         ),
-      );
-    }).toList(),
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _getStatusColor(currentStatus), width: 1.4),
-        color: _getStatusColor(currentStatus).withOpacity(0.12),
       ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.circle,
-            size: 12,
-            color: _getStatusColor(currentStatus),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            _getStatusText(currentStatus),
-            style: TextStyle(
-              color: _getStatusColor(currentStatus),
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Icon(
-            Icons.keyboard_arrow_down_rounded,
-            size: 20,
-            color: _getStatusColor(currentStatus),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
+    );
+  }
 
   Color _getStatusColor(ApplicationStatus status) {
     switch (status) {

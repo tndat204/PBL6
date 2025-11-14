@@ -104,6 +104,7 @@ class RecruiterJobCard extends StatelessWidget {
                           'Xóa tin tuyển dụng thành công',
                         ),
                         toastAlignment: Alignment.topLeft,
+                        animationType: AnimationType.slideInFromLeft,
                       ).show(context);
                     }
                   } catch (e) {
