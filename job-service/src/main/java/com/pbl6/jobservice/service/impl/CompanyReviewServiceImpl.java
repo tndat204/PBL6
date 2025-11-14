@@ -6,7 +6,7 @@ import com.pbl6.jobservice.dto.request.ReviewRequest;
 import com.pbl6.jobservice.dto.request.ReviewUpdateRequest;
 import com.pbl6.jobservice.dto.response.ReviewResponse;
 import com.pbl6.jobservice.dto.response.ReviewerInfo;
-import com.pbl6.jobservice.dto.response.UserResponse;
+import com.pbl6.jobservice.dto.response.ReviewerInfoResponse;
 import com.pbl6.jobservice.entity.Company;
 import com.pbl6.jobservice.entity.CompanyReview;
 import com.pbl6.jobservice.entity.ReviewImage;
@@ -237,11 +237,11 @@ public class CompanyReviewServiceImpl implements CompanyReviewService {
 
     private ReviewResponse mapToResponse(CompanyReview entity) {
         ReviewResponse response = modelMapper.map(entity, ReviewResponse.class);
-        UserResponse userResponse= userClient.getPublicUserById(String.valueOf(entity.getReviewerId())).getResult();
+        ReviewerInfoResponse reviewInfoResponse = userClient.getReviewerById(String.valueOf(entity.getReviewerId())).getResult();
         ReviewerInfo reviewerInfo =ReviewerInfo.builder()
                 .reviewerId(entity.getReviewerId())
-                .reviewerName(userResponse.getFullName())
-                .reviewerAvatar(userResponse.getAvatarUrl())
+                .reviewerName(reviewInfoResponse.getFullName())
+                .reviewerAvatar(reviewInfoResponse.getAvatarUrl())
                 .build();
         List<String> urls = entity.getImages() == null ? List.of() :
                 entity.getImages().stream()

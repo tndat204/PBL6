@@ -1,10 +1,7 @@
 package com.pbl6.userservice.controller.internal;
 
 import com.pbl6.userservice.dto.response.APIResponse;
-import com.pbl6.userservice.dto.shared.CreateUserRequest;
-import com.pbl6.userservice.dto.shared.LoginRequest;
-import com.pbl6.userservice.dto.shared.ResetPasswordRequest;
-import com.pbl6.userservice.dto.shared.UserResponse;
+import com.pbl6.userservice.dto.shared.*;
 import com.pbl6.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -63,10 +60,10 @@ public class UserInternalController {
                 .build();
     }
     @GetMapping("/{id}")
-    public APIResponse<UserResponse> getUserById(@PathVariable String id) {
-        return APIResponse.<UserResponse>builder()
+    public APIResponse<ReviewerInfoResponse> getReviewerById(@PathVariable String id) {
+        return APIResponse.<ReviewerInfoResponse>builder()
                 .code(200)
-                .result(userService.getUserById(id))
+                .result(userService.getReviewerInfo(id))
                 .build();
     }
 }

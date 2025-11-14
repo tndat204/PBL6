@@ -149,6 +149,19 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public ReviewerInfoResponse getReviewerInfo(String reviewerId) {
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(reviewerId));
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        return ReviewerInfoResponse.builder()
+                .avatarUrl(user.getAvatarUrl())
+                .fullName(user.getFullName())
+                .build();
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     public void changeStatus(String id) {
         Optional<User> userOptional = userRepository.findById(UUID.fromString(id));

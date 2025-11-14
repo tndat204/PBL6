@@ -2,6 +2,7 @@ package com.pbl6.jobservice.client;
 
 import com.pbl6.jobservice.configuration.AuthenticationRequestInterceptor;
 import com.pbl6.jobservice.dto.response.APIResponse;
+import com.pbl6.jobservice.dto.response.ReviewerInfoResponse;
 import com.pbl6.jobservice.dto.response.UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,5 +19,5 @@ public interface UserClient {
     @GetMapping("/users/me")
     APIResponse<UserResponse> getMyInfo();
     @GetMapping("/internal//users/{id}")
-    APIResponse<UserResponse> getPublicUserById(@PathVariable String id);
+    public APIResponse<ReviewerInfoResponse> getReviewerById(@PathVariable String id);
 }
