@@ -7,8 +7,8 @@ class ApplicationRepositoryImpl implements ApplicationRepository{
   final ApplicationRemoteDataSource remoteDataSource;
   ApplicationRepositoryImpl(this.remoteDataSource);
   @override
-  Future<Application> applyJob({required String jobId, String? notes}) async {
-    return await remoteDataSource.applyJob(jobId: jobId, notes: notes);
+  Future<Application> applyJob({required String jobId, String? notes, String? filePath}) async {
+    return await remoteDataSource.applyJob(jobId: jobId, notes: notes, filePath: filePath);
   }
   @override
   Future<List<Application>> getApplicationsForJob(String jobId) async {

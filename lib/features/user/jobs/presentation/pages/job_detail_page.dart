@@ -9,7 +9,8 @@ import 'package:pbl6/features/user/jobs/domain/usecases/apply_job_usecase.dart';
 
 import '../../../../shared/category/domain/usecases/get_category_detail_usecase.dart';
 import '../../../../shared/skill/domain/usecases/get_skill_detail_usecase.dart';
-import '../widgets/apply_note_dialog.dart'; // ✅ thêm dòng này ở đầu file
+// 💡 IMPORT HỘP THOẠI MỚI
+import '../widgets/apply_note_dialog.dart';
 import '../widgets/job_company_tab.dart';
 import '../widgets/job_description_tab.dart';
 import '../widgets/job_detail_header.dart';
@@ -29,6 +30,8 @@ class _JobDetailPageState extends State<JobDetailPage>
   late final GetCompanyDetailsUseCase _getCompanyDetailsUseCase;
   late final GetSkillDetailUseCase _getSkillDetailUseCase;
   late final GetCategoryDetailUseCase _getCategoryDetailUseCase;
+  late final ApplyJobUsecase _applyJobUsecase;
+
 
   Job? _job;
   bool _isLoading = true;
@@ -41,6 +44,7 @@ class _JobDetailPageState extends State<JobDetailPage>
     _getCompanyDetailsUseCase = GetIt.I<GetCompanyDetailsUseCase>();
     _getSkillDetailUseCase = GetIt.I<GetSkillDetailUseCase>();
     _getCategoryDetailUseCase = GetIt.I<GetCategoryDetailUseCase>();
+    _applyJobUsecase = GetIt.I<ApplyJobUsecase>(); 
     _tabController = TabController(length: 3, vsync: this);
     _loadJob();
   }
@@ -61,6 +65,12 @@ class _JobDetailPageState extends State<JobDetailPage>
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -130,7 +140,7 @@ class _JobDetailPageState extends State<JobDetailPage>
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      indicatorSize: TabBarIndicatorSize.tab, // ✅ tab đều nhau
+                      indicatorSize: TabBarIndicatorSize.tab, 
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -181,15 +191,19 @@ class _JobDetailPageState extends State<JobDetailPage>
                           ),
                         ),
                         onPressed: () async {
-                          final note = await showApplyNoteDialog(context);
-                          if (note == null) return; // người dùng nhấn Hủy
-
-                          final applyJobUsecase = GetIt.I<ApplyJobUsecase>();
+                          // 💡 GỌI HỘP THOẠI MỚI VÀ NHẬN VỀ MAP
+                          final result = await showApplyNoteDialog(context);
+                          if (result == null) return; // người dùng nhấn Hủy
+                          
+                          final notes = result['notes'];
+                          final filePath = result['filePath']; 
 
                           try {
-                            final result = await applyJobUsecase.call(
+                           
+                            final applyResult = await _applyJobUsecase.call(
                               jobId: widget.jobId,
-                              notes: note,
+                              notes: notes,
+                              filePath: filePath!.isEmpty ? null : filePath, // TRUYỀN FILE PATH
                             );
 
                             MotionToast.success(
@@ -212,6 +226,7 @@ class _JobDetailPageState extends State<JobDetailPage>
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
                         ),
                       ),

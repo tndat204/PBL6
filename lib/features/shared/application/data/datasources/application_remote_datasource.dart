@@ -1,10 +1,16 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 
 import '../../domain/entities/application.dart';
 
 abstract class ApplicationRemoteDataSource {
-  Future<Application> applyJob({required String jobId, String? notes});
+  Future<Application> applyJob({
+    required String jobId,
+    String? notes,
+    String? filePath,
+  });
   Future<List<Application>> getApplicationsForJob(String jobId);
   Future<Application> getApplicationDetail(String applicationId);
   Future<Application> updateApplicationStatus({
@@ -22,23 +28,37 @@ class ApplicationRemoteDataSourceImpl implements ApplicationRemoteDataSource {
   }
 
   @override
-  Future<Application> applyJob({required String jobId, String? notes}) async {
+  Future<Application> applyJob({
+    required String jobId,
+    String? notes,
+    String? filePath,
+  }) async {
     try {
-      final response = await _dio.post(
-        ApiConstants.applications, // /api/applications
-        data: {'jobId': jobId, 'notes': notes ?? ''},
-      );
-
-      if (response.statusCode == 200 && response.data['result'] != null) {
-        final app = Application.fromJson(response.data['result']);
-        print("✅ Apply job thành công: ${app.id}");
-        return app;
-      } else {
-        throw Exception("❌ Apply job thất bại (${response.statusCode})");
+      final formData = FormData();
+      formData.fields.add(MapEntry('jobId', jobId));
+      formData.fields.add(MapEntry('notes', notes ?? ''));
+      if (filePath != null && filePath.isNotEmpty) {
+        final file = File(filePath);
+        final multipart = await MultipartFile.fromFile(
+          filePath,
+          filename: file.path.split('/').last,
+        );
+        formData.files.add(MapEntry('cv', multipart));
       }
+      final response = await _dio.post(
+        ApiConstants.applications,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      if (response.statusCode == 200 && response.data['result'] != null) {
+        return Application.fromJson(response.data['result']);
+      } else {
+        throw Exception("Apply Job thất bại: ${response.statusCode}");
+      }
+    } on DioException catch (e) {
+      throw Exception("DioException applyJob: ${e.message}");
     } catch (e) {
-      print("Lỗi applyJob: $e");
-      rethrow;
+      throw Exception("Lỗi applyJob: $e");
     }
   }
 

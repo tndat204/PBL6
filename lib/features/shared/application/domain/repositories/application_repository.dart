@@ -2,7 +2,7 @@
  import '../entities/application.dart';
 
 abstract class ApplicationRepository {
-  Future<Application> applyJob({required String jobId, String? notes});
+  Future<Application> applyJob({required String jobId, String? notes, String? filePath});
   Future<List<Application>> getApplicationsForJob(String jobId);
   Future<Application> getApplicationDetail(String applicationId);
   Future<Application> updateApplicationStatus({

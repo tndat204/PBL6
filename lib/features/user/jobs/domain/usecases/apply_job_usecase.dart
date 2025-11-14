@@ -5,7 +5,7 @@ import '../../../../shared/application/domain/repositories/application_repositor
 class ApplyJobUsecase {
   final ApplicationRepository repository;
   ApplyJobUsecase(this.repository);
-  Future<Application> call({required String jobId, String? notes}) async {
-    return await repository.applyJob(jobId: jobId, notes: notes);
+  Future<Application> call({required String jobId, String? notes, String? filePath}) async {
+    return await repository.applyJob(jobId: jobId, notes: notes, filePath: filePath);
   }
 }
