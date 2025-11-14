@@ -22,7 +22,7 @@ import 'package:pbl6/features/shared/skill/domain/entities/skill.dart';
 import 'package:pbl6/features/shared/skill/domain/usecases/get_all_skills_usecase.dart';
 
 class UpsertJobPage extends StatefulWidget {
-  final String? jobId; 
+  final String? jobId;
   const UpsertJobPage({super.key, this.jobId});
 
   bool get isEditMode => jobId != null;

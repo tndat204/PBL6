@@ -80,6 +80,8 @@ class _ProfileCVTabState extends State<ProfileCVTab> {
           setState(() => _currentCvUrl = newUrl);
           MotionToast.success(
             description: const Text('CV đã được tải lên thành công!'),
+            toastAlignment: Alignment.topLeft,
+            animationType: AnimationType.slideInFromLeft,
           ).show(context);
         },
       );
