@@ -41,6 +41,15 @@ import 'package:pbl6/features/shared/job/data/datasources/job_remote_datasource.
 import 'package:pbl6/features/shared/job/data/repositories/job_repository_impl.dart';
 import 'package:pbl6/features/shared/job/domain/repositories/job_repository.dart';
 import 'package:pbl6/features/shared/job/domain/usecases/get_job_details_usecase.dart';
+import 'package:pbl6/features/shared/review/data/datasources/review_remote_datasource.dart';
+import 'package:pbl6/features/shared/review/data/repositories/review_repository_impl.dart';
+import 'package:pbl6/features/shared/review/domain/repositories/review_repository.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/create_review_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/delete_review_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/get_company_reviews_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/get_review_detail_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/toggle_like_review_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/update_review_usecase.dart';
 // ===== COMPANY =====
 
 // ===== JOB =====
@@ -258,5 +267,30 @@ void init() {
   );
   sl.registerLazySingleton<GetMyApplicationsUsecase>(
     () => GetMyApplicationsUsecase(sl<ApplicationRepository>()),
+  );
+  // ======================REVIEW=================
+  sl.registerLazySingleton<ReviewRemoteDataSource>(
+    () => ReviewRemoteDataSourceImpl(sl<DioClient>().instance),
+  );
+  sl.registerLazySingleton<ReviewRepository>(
+    () => ReviewRepositoryImpl(sl<ReviewRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<ToggleLikeReviewUseCase>(
+    () => ToggleLikeReviewUseCase(sl<ReviewRepository>()),
+  );
+  sl.registerLazySingleton<CreateReviewUseCase>(
+    () => CreateReviewUseCase(sl<ReviewRepository>()),
+  );
+  sl.registerLazySingleton<DeleteReviewUseCase>(
+    () => DeleteReviewUseCase(sl<ReviewRepository>()),
+  );
+  sl.registerLazySingleton<GetCompanyReviewsUseCase>(
+    () => GetCompanyReviewsUseCase(sl<ReviewRepository>()),
+  );
+  sl.registerLazySingleton<GetReviewDetailUseCase>(
+    () => GetReviewDetailUseCase(sl<ReviewRepository>()),
+  );
+  sl.registerLazySingleton<UpdateReviewUseCase>(
+    () => UpdateReviewUseCase(sl<ReviewRepository>()),
   );
 }
