@@ -2,6 +2,7 @@ package com.pbl6.jobservice.service.impl;
 
 import com.pbl6.event.dto.ApplicationStatusChangedEvent;
 import com.pbl6.event.dto.ApplicationSubmittedEvent;
+import com.pbl6.jobservice.client.FileClient;
 import com.pbl6.jobservice.client.ProfileClient;
 import com.pbl6.jobservice.client.UserClient;
 import com.pbl6.jobservice.dto.request.ApplicationRequest;
@@ -48,6 +49,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     JobRepository jobRepository;
     ProfileClient profileClient;
     UserClient userClient;
+    FileClient fileClient;
     KafkaTemplate<String, Object> kafkaTemplate;
     static String APP_SUBMITTED_TOPIC = "application_submitted_topic";
     static String APP_STATUS_TOPIC = "application_status_topic";
@@ -60,8 +62,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setAppliedDate(LocalDateTime.now());
         application.setApplicantId(getCurrentUserId());
         application.setStatus(Application.Status.SUBMITTED);
-        if(request.getCvUrl()!=null) {
-            application.setCvFileUrl(request.getCvUrl());
+        if(request.getCv()!=null) {
+            application.setCvFileUrl(fileClient.uploadFile(request.getCv(),"cvs").getResult());
         }
         else{
             application.setCvFileUrl(profileClient.getCv().getResult());

@@ -6,6 +6,7 @@ import com.pbl6.jobservice.dto.response.ApplicationResponse;
 import com.pbl6.jobservice.service.ApplicationService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +21,8 @@ public class ApplicationController {
         this.applicationService = applicationService;
     }
 
-    @PostMapping
-    public APIResponse<ApplicationResponse> createApplication(@RequestBody ApplicationRequest applicationRequest) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public APIResponse<ApplicationResponse> createApplication(@ModelAttribute ApplicationRequest applicationRequest) {
         return APIResponse.<ApplicationResponse>builder()
                 .code(200)
                 .result(applicationService.createApplication(applicationRequest))
