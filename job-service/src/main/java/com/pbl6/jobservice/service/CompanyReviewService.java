@@ -11,7 +11,7 @@ public interface CompanyReviewService {
     public ReviewResponse createReview(ReviewRequest request);
     public ReviewResponse getReviewById(UUID reviewId);
     public Page<ReviewResponse> getReviewsByCompany(UUID companyId, Pageable pageable);
-    public ReviewResponse updateReview(ReviewUpdateRequest request);
+    public ReviewResponse updateReview(UUID reviewId,ReviewUpdateRequest request);
     public void deleteReview(UUID reviewId);
     public ReviewResponse toggleLike(UUID reviewId);
 }

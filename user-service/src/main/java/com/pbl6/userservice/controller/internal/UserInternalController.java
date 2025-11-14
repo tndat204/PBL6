@@ -62,4 +62,11 @@ public class UserInternalController {
                 .result("Reset password succesfully")
                 .build();
     }
+    @GetMapping("/{id}")
+    public APIResponse<UserResponse> getUserById(@PathVariable String id) {
+        return APIResponse.<UserResponse>builder()
+                .code(200)
+                .result(userService.getUserById(id))
+                .build();
+    }
 }

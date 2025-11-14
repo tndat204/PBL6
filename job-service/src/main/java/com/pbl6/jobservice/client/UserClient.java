@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(
         name = "user-service",
-        path = "/api/users",
+        path = "/api",
         configuration = {AuthenticationRequestInterceptor.class}
 )
 public interface UserClient {
-    @GetMapping("/{id}")
+    @GetMapping("/users/{id}")
     APIResponse<UserResponse> getUserById(@PathVariable String id);
-    @GetMapping("/me")
+    @GetMapping("/users/me")
     APIResponse<UserResponse> getMyInfo();
+    @GetMapping("/internal//users/{id}")
+    APIResponse<UserResponse> getPublicUserById(@PathVariable String id);
 }

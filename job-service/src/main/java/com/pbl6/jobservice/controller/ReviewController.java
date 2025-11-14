@@ -40,7 +40,7 @@ public class ReviewController {
             @ModelAttribute ReviewUpdateRequest request) {
         return APIResponse.<ReviewResponse>builder()
                 .code(200)
-                .result(companyReviewService.updateReview(request))
+                .result(companyReviewService.updateReview(reviewId,request))
                 .build();
     }
 

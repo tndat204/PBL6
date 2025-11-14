@@ -245,7 +245,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    @PreAuthorize("hasRole('RECRUITER')")
+    @Override
     public UserResponse getUserById(String id) {
         Optional<User> userOptional = userRepository.findById(UUID.fromString(id));
         if(userOptional.isEmpty()){

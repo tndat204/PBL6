@@ -13,7 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReviewUpdateRequest {
-    UUID reviewId;
     String title;
     String comment;
     Double rating;

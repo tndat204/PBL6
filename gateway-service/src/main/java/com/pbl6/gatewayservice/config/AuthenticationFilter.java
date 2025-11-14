@@ -44,7 +44,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/api/categories",
             "/api/skills",
             "/api/jobs",
-            "/api/companies"
+            "/api/companies",
+            "/api/reviews"
     );
 
     @Override
@@ -63,7 +64,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         if ((path.startsWith("/api/categories")
                 || path.startsWith("/api/skills")
                 || path.startsWith("/api/jobs")
-                || path.startsWith("/api/companies"))
+                || path.startsWith("/api/companies")
+                || path.startsWith("/api/reviews"))
                 && !"GET".equalsIgnoreCase(method)) {
             isPublic = false;
         }

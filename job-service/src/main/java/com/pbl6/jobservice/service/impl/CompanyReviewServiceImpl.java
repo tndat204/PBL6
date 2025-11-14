@@ -1,9 +1,12 @@
 package com.pbl6.jobservice.service.impl;
 
 import com.pbl6.jobservice.client.FileClient;
+import com.pbl6.jobservice.client.UserClient;
 import com.pbl6.jobservice.dto.request.ReviewRequest;
 import com.pbl6.jobservice.dto.request.ReviewUpdateRequest;
 import com.pbl6.jobservice.dto.response.ReviewResponse;
+import com.pbl6.jobservice.dto.response.ReviewerInfo;
+import com.pbl6.jobservice.dto.response.UserResponse;
 import com.pbl6.jobservice.entity.Company;
 import com.pbl6.jobservice.entity.CompanyReview;
 import com.pbl6.jobservice.entity.ReviewImage;
@@ -43,6 +46,8 @@ public class CompanyReviewServiceImpl implements CompanyReviewService {
     ModelMapper modelMapper;
     FileClient fileClient;
     CompanyRepository companyRepository;
+    UserClient userClient;
+
     @Override
     public ReviewResponse createReview(ReviewRequest request) {
         Company company = companyRepository.findById(request.getCompanyId())
@@ -134,8 +139,8 @@ public class CompanyReviewServiceImpl implements CompanyReviewService {
     }
 
     @Transactional
-    public ReviewResponse updateReview(ReviewUpdateRequest request) {
-        CompanyReview review = companyReviewRepository.findById(request.getReviewId())
+    public ReviewResponse updateReview(UUID reviewId,ReviewUpdateRequest request) {
+        CompanyReview review = companyReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
 
         if (!review.getReviewerId().equals(getCurrentUserId())) {
@@ -164,6 +169,7 @@ public class CompanyReviewServiceImpl implements CompanyReviewService {
                 review.getImages().clear();
                 review.getImages().addAll(newImageEntities);
             }
+            review.setUpdatedAt(java.time.LocalDateTime.now());
         }
         return mapToResponse(companyReviewRepository.save(review));
     }
@@ -213,15 +219,30 @@ public class CompanyReviewServiceImpl implements CompanyReviewService {
 
     private UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
-            throw new RuntimeException("Cannot get userId from token");
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
         }
-        return UUID.fromString(jwt.getClaimAsString("userId"));
+
+        Object principal = authentication.getPrincipal();
+
+        // Nếu không phải JWT -> nghĩa là user chưa đăng nhập -> trả null
+        if (!(principal instanceof Jwt jwt)) {
+            return null;
+        }
+
+        String id = jwt.getClaimAsString("userId");
+        return id != null ? UUID.fromString(id) : null;
     }
 
     private ReviewResponse mapToResponse(CompanyReview entity) {
         ReviewResponse response = modelMapper.map(entity, ReviewResponse.class);
-
+        UserResponse userResponse= userClient.getPublicUserById(String.valueOf(entity.getReviewerId())).getResult();
+        ReviewerInfo reviewerInfo =ReviewerInfo.builder()
+                .reviewerId(entity.getReviewerId())
+                .reviewerName(userResponse.getFullName())
+                .reviewerAvatar(userResponse.getAvatarUrl())
+                .build();
         List<String> urls = entity.getImages() == null ? List.of() :
                 entity.getImages().stream()
                         .map(ReviewImage::getImageUrl)
@@ -231,6 +252,9 @@ public class CompanyReviewServiceImpl implements CompanyReviewService {
         getCurrentUserId();
         boolean isLiked = reviewLikeRepository.existsByCompanyReview_ReviewIdAndUserId(entity.getReviewId(), getCurrentUserId());
         response.setLiked(isLiked);
+        response.setReviewerInfo(reviewerInfo);
+        response.setCreatedAt(entity.getCreatedAt());
+        response.setUpdatedAt(entity.getUpdatedAt());
         return response;
     }
 }
