@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public interface CompanyUserRepository extends JpaRepository<CompanyUser, UUID> 
     @Modifying
     void deleteByCompanyId(UUID companyId);
 
-    Optional<CompanyUser> findByUserIdAndStatus(UUID userId, CompanyUser.Status status);
+    Optional<CompanyUser> findByUserIdAndStatusIn(UUID userId, List<CompanyUser.Status> statuses);
 
     Optional<CompanyUser> findByCompanyIdAndUserId(UUID companyId, UUID userId);
 }

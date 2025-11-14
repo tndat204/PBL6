@@ -43,7 +43,7 @@ spring:
         - id: job-service
           uri: lb://job-service
           predicates:
-            - Path=/api/jobs/**, /api/applications/**, /api/companies/**
+            - Path=/api/jobs/**, /api/applications/**, /api/companies/**, /api/reviews/**
           filters:
             - StripPrefix=0  # Don't strip prefix
 

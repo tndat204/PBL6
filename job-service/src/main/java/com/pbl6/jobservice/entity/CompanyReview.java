@@ -1,8 +1,10 @@
 package com.pbl6.jobservice.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -12,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CompanyReview extends Base{
+public class CompanyReview extends Base {
 
     @Id
     @GeneratedValue
@@ -35,12 +37,16 @@ public class CompanyReview extends Base{
     @Column(nullable = false)
     Double rating;
 
+    @Column
+    long likeCount=0;
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     Status status = Status.ACTIVE;
+
+    @OneToMany(mappedBy = "companyReview", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<ReviewImage> images;
 
     public enum Status {
         ACTIVE, INACTIVE
     }
 }
-

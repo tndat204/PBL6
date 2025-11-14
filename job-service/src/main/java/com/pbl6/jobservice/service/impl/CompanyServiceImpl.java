@@ -203,7 +203,7 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyResponse getMyCompany(){
         UUID userId = getCurrentUserId();
         CompanyUser companyUser = companyUserRepository
-                .findByUserIdAndStatus(userId, CompanyUser.Status.ACTIVE)
+                .findByUserIdAndStatusIn(userId,  List.of(CompanyUser.Status.ACTIVE, CompanyUser.Status.INACTIVE))
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_ASSOCIATED_WITH_COMPANY));
         Company company = companyUser.getCompany();
         return modelMapper.map(company, CompanyResponse.class);

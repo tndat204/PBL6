@@ -19,7 +19,10 @@ public enum ErrorCode {
     APPLICATION_NOT_FOUND(2006,"Đơn ứng tuyển không tồn tại", HttpStatus.NOT_FOUND),
     NOT_ALLOW_TO_UPLOAD_LOGO(2007,"Không có quyền cập nhật logo cho công ty này", HttpStatus.FORBIDDEN),
     USER_NOT_ASSOCIATED_WITH_COMPANY(2008,"Bạn không thuộc công ty này", HttpStatus.FORBIDDEN),
-    USER_NOT_FOUND_IN_COMPANY(2009,"Người dùng không tìm thấy trong công ty này", HttpStatus.NOT_FOUND);
+    USER_NOT_FOUND_IN_COMPANY(2009,"Người dùng không tìm thấy trong công ty này", HttpStatus.NOT_FOUND),
+    REVIEW_NOT_FOUND(2010,"Không tìm thấy đánh giá", HttpStatus.NOT_FOUND),
+    NOT_ALLOW_TO_UPDATE_REVIEW(2011,"Bạn không thể cập nhật đánh giá này", HttpStatus.FORBIDDEN),
+    NOT_ALLOW_TO_DELETE_REVIEW(2011,"Bạn không thể xóa đánh giá này", HttpStatus.FORBIDDEN);
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;

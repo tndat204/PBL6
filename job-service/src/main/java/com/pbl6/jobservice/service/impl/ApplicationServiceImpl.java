@@ -60,7 +60,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setAppliedDate(LocalDateTime.now());
         application.setApplicantId(getCurrentUserId());
         application.setStatus(Application.Status.SUBMITTED);
-        application.setCvFileUrl(profileClient.getCv().getResult());
+        if(request.getCvUrl()!=null) {
+            application.setCvFileUrl(request.getCvUrl());
+        }
+        else{
+            application.setCvFileUrl(profileClient.getCv().getResult());
+        }
         Application savedApplication = applicationRepository.save(application);
         ApplicationSubmittedEvent event = new ApplicationSubmittedEvent(
                 savedApplication.getApplicationId().toString(),

@@ -2,7 +2,9 @@ package com.pbl6.jobservice.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -10,8 +12,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApplicationRequest {
-    UUID jobId;
-    String notes;
-    String cvUrl;
+public class ReviewUpdateRequest {
+    UUID reviewId;
+    String title;
+    String comment;
+    Double rating;
+    List<MultipartFile> newImages;
 }

@@ -1,0 +1,236 @@
+package com.pbl6.jobservice.service.impl;
+
+import com.pbl6.jobservice.client.FileClient;
+import com.pbl6.jobservice.dto.request.ReviewRequest;
+import com.pbl6.jobservice.dto.request.ReviewUpdateRequest;
+import com.pbl6.jobservice.dto.response.ReviewResponse;
+import com.pbl6.jobservice.entity.Company;
+import com.pbl6.jobservice.entity.CompanyReview;
+import com.pbl6.jobservice.entity.ReviewImage;
+import com.pbl6.jobservice.entity.ReviewLike;
+import com.pbl6.jobservice.exception.AppException;
+import com.pbl6.jobservice.exception.ErrorCode;
+import com.pbl6.jobservice.repository.CompanyRepository;
+import com.pbl6.jobservice.repository.CompanyReviewRepository;
+import com.pbl6.jobservice.repository.ReviewLikeRepository;
+import com.pbl6.jobservice.service.CompanyReviewService;
+import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class CompanyReviewServiceImpl implements CompanyReviewService {
+    CompanyReviewRepository companyReviewRepository;
+    ReviewLikeRepository reviewLikeRepository;
+    ModelMapper modelMapper;
+    FileClient fileClient;
+    CompanyRepository companyRepository;
+    @Override
+    public ReviewResponse createReview(ReviewRequest request) {
+        Company company = companyRepository.findById(request.getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        CompanyReview review = modelMapper.map(request, CompanyReview.class);
+        review.setCompany(company);
+        review.setStatus(CompanyReview.Status.ACTIVE);
+        review.setLikeCount(0);
+        review.setReviewerId(getCurrentUserId());
+
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+            Set<ReviewImage> reviewImages = request.getImages().stream()
+                    .map(file -> {
+                        String url = fileClient.uploadFile(file,"comment_image").getResult(); // Upload & lấy link
+                        return ReviewImage.builder()
+                                .imageUrl(url)
+                                .companyReview(review)
+                                .build();
+                    }).collect(Collectors.toSet());
+            review.setImages(reviewImages);
+        }
+
+        CompanyReview savedReview =companyReviewRepository.save(review);
+        return mapToResponse(savedReview);
+    }
+
+    @Override
+    public ReviewResponse getReviewById(UUID reviewId) {
+        CompanyReview review = companyReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
+        return mapToResponse(review);
+    }
+
+    @Override
+    public Page<ReviewResponse> getReviewsByCompany(UUID companyId, Pageable pageable) {
+        Page<CompanyReview> reviewPage = companyReviewRepository.findByCompanyIdAndStatus(
+                companyId,
+                CompanyReview.Status.ACTIVE,
+                pageable
+        );
+
+        // Nếu trang trống, trả về luôn để tiết kiệm xử lý
+        if (reviewPage.isEmpty()) {
+            return reviewPage.map(review -> modelMapper.map(review, ReviewResponse.class));
+        }
+
+        // 2. TỐI ƯU HÓA (Batch Query): Check Like status
+        // Thay vì query trong vòng for, ta lấy list ID ra và query 1 lần
+        Set<UUID> likedReviewIds = new java.util.HashSet<>();
+
+        if (getCurrentUserId() != null) {
+            // Lấy danh sách các reviewId đang hiển thị trên page này
+            List<UUID> reviewIdsOnPage = reviewPage.getContent().stream()
+                    .map(CompanyReview::getReviewId)
+                    .toList(); // hoặc .collect(Collectors.toList()) với Java < 16
+
+            // Query DB 1 lần duy nhất để xem user đã like bài nào trong số này
+            likedReviewIds = reviewLikeRepository.findLikedReviewIdsByUserIdAndReviewIds(getCurrentUserId(), reviewIdsOnPage);
+        }
+
+        // Biến final (hoặc effectively final) để dùng trong lambda
+        Set<UUID> finalLikedReviewIds = likedReviewIds;
+
+        // 3. Map sang DTO
+        return reviewPage.map(review -> {
+            // A. Map cơ bản bằng ModelMapper
+            ReviewResponse res = modelMapper.map(review, ReviewResponse.class);
+
+            // B. Map thủ công danh sách ảnh (Entity -> String URL)
+            List<String> imageUrls = (review.getImages() == null) ? List.of() :
+                    review.getImages().stream()
+                            .map(ReviewImage::getImageUrl)
+                            .toList();
+            res.setImageUrls(imageUrls);
+
+            // C. Map companyId (tránh trả về cả object Company)
+            res.setCompanyId(review.getCompany().getId());
+
+            // D. Set trạng thái isLiked (lấy từ Set đã cache ở bước 2 -> Tốc độ cực nhanh O(1))
+            if (getCurrentUserId() != null) {
+                res.setLiked(finalLikedReviewIds.contains(review.getReviewId()));
+            } else {
+                res.setLiked(false); // Khách vãng lai chưa đăng nhập
+            }
+
+            return res;
+        });
+    }
+
+    @Transactional
+    public ReviewResponse updateReview(ReviewUpdateRequest request) {
+        CompanyReview review = companyReviewRepository.findById(request.getReviewId())
+                .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
+
+        if (!review.getReviewerId().equals(getCurrentUserId())) {
+            throw new AppException(ErrorCode.NOT_ALLOW_TO_UPDATE_REVIEW);
+        }
+
+        if (request.getTitle() != null) review.setTitle(request.getTitle());
+        if (request.getComment() != null) review.setComment(request.getComment());
+        if (request.getRating() != null) review.setRating(request.getRating());
+
+        if (request.getNewImages() != null && !request.getNewImages().isEmpty()) {
+
+            Set<ReviewImage> newImageEntities = request.getNewImages().stream()
+                    .map(file -> {
+                        String url = fileClient.uploadFile(file,"comment_image").getResult();
+                        return ReviewImage.builder()
+                                .imageUrl(url)
+                                .companyReview(review)
+                                .build();
+                    })
+                    .collect(Collectors.toSet());
+
+            if (review.getImages() == null) {
+                review.setImages(newImageEntities);
+            } else {
+                review.getImages().clear();
+                review.getImages().addAll(newImageEntities);
+            }
+        }
+        return mapToResponse(companyReviewRepository.save(review));
+    }
+
+    @Override
+    public void deleteReview(UUID reviewId) {
+        CompanyReview review = companyReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
+
+        if (!review.getReviewerId().equals(getCurrentUserId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        review.setStatus(CompanyReview.Status.INACTIVE); // Soft delete
+        companyReviewRepository.save(review);
+    }
+
+    @Transactional
+    public ReviewResponse toggleLike(UUID reviewId) {
+        CompanyReview review = companyReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
+
+        Optional<ReviewLike> existingLike = reviewLikeRepository.findByCompanyReview_ReviewIdAndUserId(reviewId, getCurrentUserId());
+
+        if (existingLike.isPresent()) {
+            reviewLikeRepository.delete(existingLike.get());
+
+            review.setLikeCount(Math.max(0, review.getLikeCount() - 1));
+        } else {
+            ReviewLike newLike = ReviewLike.builder()
+                    .companyReview(review)
+                    .userId(getCurrentUserId())
+                    .build();
+            reviewLikeRepository.save(newLike);
+
+            review.setLikeCount(review.getLikeCount() + 1);
+        }
+
+        CompanyReview savedReview = companyReviewRepository.save(review);
+
+        ReviewResponse response = mapToResponse(savedReview);
+
+        response.setLiked(existingLike.isEmpty());
+
+        return response;
+    }
+
+    private UUID getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new RuntimeException("Cannot get userId from token");
+        }
+        return UUID.fromString(jwt.getClaimAsString("userId"));
+    }
+
+    private ReviewResponse mapToResponse(CompanyReview entity) {
+        ReviewResponse response = modelMapper.map(entity, ReviewResponse.class);
+
+        List<String> urls = entity.getImages() == null ? List.of() :
+                entity.getImages().stream()
+                        .map(ReviewImage::getImageUrl)
+                        .collect(Collectors.toList());
+        response.setImageUrls(urls);
+        response.setCompanyId(entity.getCompany().getId());
+        getCurrentUserId();
+        boolean isLiked = reviewLikeRepository.existsByCompanyReview_ReviewIdAndUserId(entity.getReviewId(), getCurrentUserId());
+        response.setLiked(isLiked);
+        return response;
+    }
+}
