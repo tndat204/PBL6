@@ -22,7 +22,7 @@ import 'package:pbl6/features/shared/skill/domain/entities/skill.dart';
 import 'package:pbl6/features/shared/skill/domain/usecases/get_all_skills_usecase.dart';
 
 class UpsertJobPage extends StatefulWidget {
-  final String? jobId; // null = Add mode, non-null = Edit mode
+  final String? jobId; 
   const UpsertJobPage({super.key, this.jobId});
 
   bool get isEditMode => jobId != null;
@@ -51,29 +51,24 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
 
   // Data for Dropdowns
   List<Category> _categories = [];
-  List<Skill> _skills = [];
+  List<Skill> _allSkills = []; // Đổi tên thành _allSkills để tránh nhầm lẫn
   List<Map<String, dynamic>> _provinces = [];
   final List<ExperienceLevel> _expLevels = ExperienceLevel.values;
   final List<JobType> _jobTypes = JobType.values;
 
-  // Controllers
   final _titleController = TextEditingController();
   final _salaryMinController = TextEditingController();
   final _salaryMaxController = TextEditingController();
   int _expMin = 0;
   int _expMax = 0;
   final _descriptionController = TextEditingController();
-  // SỬA: Xóa _locationController
-  // final _locationController = TextEditingController();
   final _expiryDateController = TextEditingController();
 
-  // Dropdown Values
   ExperienceLevel? _selectedExpLevel;
   JobType? _selectedJobType;
   String? _selectedProvince;
   bool _isActive = true;
 
-  // Multi-select values
   List<Skill> _selectedSkills = [];
   List<Category> _selectedCategories = [];
 
@@ -111,7 +106,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       // 3. Gán dữ liệu
       _myCompany = results[0] as Company;
       _categories = results[1] as List<Category>;
-      _skills = results[2] as List<Skill>;
+      _allSkills = results[2] as List<Skill>;
       _provinces = results[3] as List<Map<String, dynamic>>;
       if (widget.isEditMode) {
         _editingJob = results[4] as Job;
@@ -144,8 +139,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     _expMin = job.requiredYearsOfExpMin;
     _expMax = job.requiredYearsOfExpMax;
     _descriptionController.text = job.description;
-    // SỬA: Xóa _locationController
-    // _locationController.text = job.location;
     _expiryDateController.text = DateFormat('dd/MM/yyyy').format(
       DateTime(job.expiryDate.year, job.expiryDate.month, job.expiryDate.day),
     );
@@ -164,13 +157,46 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         ? foundProvince['province'] as String?
         : null;
 
-    // Tìm skills/categories
-    _selectedSkills = _skills
+    // Tìm skills/categories đã chọn
+    _selectedSkills = _allSkills
         .where((s) => job.skillIds.contains(s.id))
         .toList();
     _selectedCategories = _categories
         .where((c) => job.categoryIds.contains(c.id))
         .toList();
+  }
+
+  // 💡 HÀM XỬ LÝ KHI CHỌN/BỎ CHỌN CATEGORY
+  void _onCategoryChanged(List<Category> newSelectedCategories) {
+    setState(() {
+      _selectedCategories = newSelectedCategories;
+
+      final Set<String> recommendedSkillIds = {};
+      for (final category in newSelectedCategories) {
+        recommendedSkillIds.addAll(category.skills.map((s) => s.id));
+      }
+
+      final Set<Skill> newSkillsSet = {};
+
+      for (final skillId in recommendedSkillIds) {
+        final skill = _allSkills.firstWhere((s) => s.id == skillId);
+        newSkillsSet.add(skill);
+      }
+
+      for (final skill in _selectedSkills) {
+        if (!recommendedSkillIds.contains(skill.id)) {
+          newSkillsSet.add(skill);
+        }
+      }
+
+      _selectedSkills = newSkillsSet.toList();
+    });
+  }
+
+  void _onSkillChanged(List<Skill> selectedSkills) {
+    setState(() {
+      _selectedSkills = selectedSkills;
+    });
   }
 
   Future<void> _selectDate(
@@ -227,19 +253,16 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         experienceLevel: _selectedExpLevel!,
         requiredYearsOfExpMin: _expMin,
         requiredYearsOfExpMax: _expMax,
+        // Dùng danh sách đã chọn
         categoryIds: _selectedCategories.map((c) => c.id).toList(),
         skillIds: _selectedSkills.map((s) => s.id).toList(),
-        // SỬA: Lấy giá trị từ dropdown tỉnh
+
         location: _selectedProvince!,
         expiryDate: _expiryDateController.text.isNotEmpty
             ? (() {
-                try {
-                  return DateFormat(
-                    'dd/MM/yyyy',
-                  ).parseStrict(_expiryDateController.text);
-                } catch (_) {
-                  return DateTime.now();
-                }
+                return DateFormat(
+                  'dd/MM/yyyy',
+                ).parseStrict(_expiryDateController.text);
               })()
             : DateTime.now(),
         postedBy: '', // API sẽ tự gán
@@ -262,18 +285,15 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
           ),
           toastAlignment: Alignment.topLeft,
         ).show(context);
-        context.pop(true); // Gửi tín hiệu 'true' để trang trước refresh
+        context.pop(true);
       }
     } catch (e) {
       if (mounted) {
         final errorString = e.toString();
-
-        // SỬA: Tính toán độ dài an toàn để tránh RangeError
         final maxLength = errorString.length < 100 ? errorString.length : 100;
 
         MotionToast.error(
           description: Text(
-            // Lấy substring an toàn, chỉ thêm "..." nếu chuỗi bị cắt
             'Đã xảy ra lỗi: ${errorString.substring(0, maxLength)}${errorString.length > 100 ? '...' : ''}',
           ),
         ).show(context);
@@ -325,27 +345,28 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Kỹ năng (Multi-select)
-                    _buildMultiSelectChipField<Skill>(
-                      label: 'Kỹ năng *',
-                      icon: Icons.code,
-                      allItems: _skills,
-                      selectedItems: _selectedSkills,
-                      onChanged: (selected) =>
-                          setState(() => _selectedSkills = selected),
-                      validator: (list) =>
-                          list!.isEmpty ? 'Phải chọn ít nhất 1' : null,
-                    ),
-                    const SizedBox(height: 16),
-
                     // Danh mục (Multi-select)
                     _buildMultiSelectChipField<Category>(
                       label: 'Danh mục *',
                       icon: Icons.category,
                       allItems: _categories,
                       selectedItems: _selectedCategories,
-                      onChanged: (selected) =>
-                          setState(() => _selectedCategories = selected),
+                      // 💡 GỌI HÀM XỬ LÝ HYBRID
+                      onChanged: _onCategoryChanged,
+                      validator: (list) =>
+                          list!.isEmpty ? 'Phải chọn ít nhất 1' : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Kỹ năng (Multi-select) - BÂY GIỜ PHỤ THUỘC VÀO CATEGORY
+                    _buildMultiSelectChipField<Skill>(
+                      label: 'Kỹ năng *',
+                      icon: Icons.code,
+                      // 💡 CHỈ LỌC SKILL TỪ CÁC CATEGORY ĐÃ CHỌN ĐỂ ĐỀ XUẤT
+                      allItems:
+                          _allSkills, // Truyền tất cả skills cho dialog chọn
+                      selectedItems: _selectedSkills,
+                      onChanged: _onSkillChanged, // GỌI HÀM CẬP NHẬT SKILL
                       validator: (list) =>
                           list!.isEmpty ? 'Phải chọn ít nhất 1' : null,
                     ),
@@ -629,6 +650,34 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       return item.toString();
     }
 
+    // 💡 Lấy danh sách đề xuất (chỉ áp dụng cho Skill)
+    List<T> getRecommendedItems(List<T> items) {
+      if (T == Skill) {
+        final Set<String> recommendedIds = {};
+        for (final category in _selectedCategories) {
+          recommendedIds.addAll(category.skills.map((s) => s.id));
+        }
+
+        // Lọc ra các skill được đề xuất dựa trên các Category đã chọn
+        return items
+            .where((item) => recommendedIds.contains((item as Skill).id))
+            .cast<T>()
+            .toList();
+      }
+      return allItems; // Trả về tất cả nếu là Category
+    }
+
+    // Sử dụng danh sách đề xuất cho Skills, nếu có Category được chọn
+    final List<T> displayItems = (T == Skill && _selectedCategories.isNotEmpty)
+        ? getRecommendedItems(allItems)
+        : [];
+
+    // Lọc các item đã chọn khỏi danh sách đề xuất để tránh trùng lặp
+    final Set<T> recommendedSet = Set<T>.from(displayItems);
+    final List<T> nonSelectedRecommended = displayItems
+        .where((item) => !selectedItems.contains(item))
+        .toList();
+
     return FormField<List<T>>(
       key: ValueKey('$label-${selectedItems.length}'),
       initialValue: selectedItems,
@@ -681,9 +730,11 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                         fontWeight: FontWeight.w600,
                       ),
                       onDeleted: () {
-                        selectedItems.remove(item);
-                        onChanged(selectedItems);
-                        formFieldState.didChange(selectedItems);
+                        // 💡 LOGIC XÓA
+                        final newSelected = List<T>.from(selectedItems);
+                        newSelected.remove(item);
+                        onChanged(newSelected);
+                        formFieldState.didChange(newSelected);
                       },
                       deleteIconColor: AppPallete.primaryColor,
                     );
@@ -709,6 +760,49 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                 ],
               ),
             ),
+
+            // --- SKILL ĐỀ XUẤT (Chỉ hiển thị cho Skills) ---
+            if (T == Skill && nonSelectedRecommended.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 10, left: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Đề xuất từ danh mục:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppPallete.mutedTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: nonSelectedRecommended.map((item) {
+                        return ActionChip(
+                          label: Text(getItemName(item)),
+                          backgroundColor: AppPallete.primaryColor.withOpacity(
+                            0.05,
+                          ),
+                          labelStyle: const TextStyle(
+                            color: AppPallete.primaryColor,
+                          ),
+                          onPressed: () {
+                            // Thêm skill đề xuất vào danh sách đã chọn
+                            final newSelected = List<T>.from(selectedItems);
+                            newSelected.add(item);
+                            onChanged(newSelected);
+                            formFieldState.didChange(newSelected);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
             // --- Hiển thị lỗi ---
             if (formFieldState.hasError)
               Padding(
