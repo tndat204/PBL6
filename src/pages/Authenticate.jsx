@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../hooks/useAuth";
+import Login from './Login';
 export default function Authenticate() {
+  const { login } = useAuth();  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function Authenticate() {
         console.log("Phản hồi backend:", data);
 
         if (data.result?.token) {
-          localStorage.setItem("token", data.result.token);
+          await login(data.result.token);
           await sleep(400); 
           navigate("/"); // về trang chính
         } else {
@@ -40,7 +42,7 @@ export default function Authenticate() {
     };
 
     authenticate();
-  }, [navigate]);
+  }, [navigate, login]);
 
   return <p>Đang xác thực Google...</p>;
 }

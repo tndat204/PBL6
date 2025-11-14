@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { UserIcon, EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import Button from "../components/Button";
-import { handleLoginSuccess } from "../utils/authUtils";
+import { useAuth } from "../hooks/useAuth";
+import { authService } from "../services"; 
+// thêm authService*
+
 export default function Login() {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,50 +26,48 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
       e.preventDefault();
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+      };
+      try {
+        const response = await fetch("http://localhost:8080/api/auth/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
 
-    const payload = {
-      email: formData.email,
-      password: formData.password,
-    };
-
-    try {
-      const response = await fetch("http://localhost:8080/api/auth/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      // ❌ Nếu đăng nhập thất bại (HTTP status != 2xx)
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Chi tiết lỗi:", errorData);
-
-        if (errorData.message) {
-          alert(`Lỗi: ${errorData.message}`);
-        } else {
-          alert(`Đăng nhập thất bại (HTTP ${response.status})`);
+        // ❌ Nếu đăng nhập thất bại (HTTP status != 2xx)
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Chi tiết lỗi:", errorData);
+          // log ra cái lôi 
+          if (errorData.message) {
+            alert(`Lỗi: ${errorData.message}`);
+          } else {
+            alert(`Đăng nhập thất bại (HTTP ${response.status})`);
+          }
+          return;
         }
-        return;
-      }
 
-      // Đăng nhập thành công
-      const data = await response.json();
-      console.log("Đăng nhập thành công:", data);
-      if (data.result?.token) {
-        await handleLoginSuccess(data.result.token);
+        // Đăng nhập thành công
+        const data = await response.json();
+        console.log("Đăng nhập thành công:", data);
+        if (data.result?.token) {
+          await login(data.result.token);
+        }
+        // // lưu token vào localStorage
+        // if (data.result && data.result.token) {
+        //   localStorage.setItem("token", data.result.token);
+        // }
+        // window.location.href = "/"; // chuyển về trang chủ
+      } catch (error) { 
+        console.error("Lỗi khi gọi API:", error);
+        alert("Không thể kết nối đến server. Vui lòng thử lại sau.");
       }
-      // // lưu token vào localStorage
-      // if (data.result && data.result.token) {
-      //   localStorage.setItem("token", data.result.token);
-      // }
-      // window.location.href = "/"; // chuyển về trang chủ
-    } catch (error) {
-      console.error("Lỗi khi gọi API:", error);
-      alert("Không thể kết nối đến server. Vui lòng thử lại sau.");
-    }
-  };
+    };
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const redirectUri = "http://localhost:3000/authenticate";
   const authUri = "https://accounts.google.com/o/oauth2/auth";

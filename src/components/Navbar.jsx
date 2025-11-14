@@ -1,9 +1,10 @@
 import { useState, useEffect  } from 'react';
-import { handleLogout } from '../utils/authUtils';
 import { useRef } from 'react';
+import { useAuth } from '../hooks/useAuth';
 function Navbar() {
+  const {user, logout} = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -15,21 +16,12 @@ function Navbar() {
   const onLogout = () =>{
     // Xoa token va user khoi LocalStorage
     if(confirm("Bạn có chắc chắn muốn đăng xuất?")){
-      handleLogout();
+      logout();
     }
   }
   const userMenuRef = useRef(null);
   const userToggleRef = useRef(null);
-  useEffect(() => {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch {
-          console.error("Dữ liệu user trong localStorage không hợp lệ");
-        }
-      }
-    }, []);
+ 
   useEffect(() => {
     function handleClickOutside(event) {
       if (

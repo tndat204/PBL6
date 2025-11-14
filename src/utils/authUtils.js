@@ -1,22 +1,14 @@
+import { authService} from '../services';
+
 export async function handleLoginSuccess(token) {
   try {
     localStorage.setItem("token", token); 
     // lấy ra token từ localStorage
 
     // Lấy thông tin người dùng
-    const res = await fetch("http://localhost:8080/api/users/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error("Không thể lấy thông tin người dùng");
-    }
-
-    const data = await res.json();
-    localStorage.setItem("user", JSON.stringify(data.result || data));
+    const userData = await authService.getCurrentUser();
+    localStorage.setItem("user", JSON.stringify(userData));
+    
     // Điều hướng về trang chủ
     window.location.href = "/";
   } catch (err) {

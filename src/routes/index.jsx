@@ -26,13 +26,13 @@ export default function AppRoutes() {
         <Route path="/register-employer" element={<RegisterEmployer />} />
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<About />} />
-        <Route path="/job-details" element={<JobDetails />} />
+        <Route path="/job-details/:id" element={<JobDetails />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/apply-job" element={<ApplyJob />} />
+        <Route path="/apply-job/:id" element={<ApplyJob />} />
         <Route path="/post-job" element={<JobPost />} />
         <Route path="/authenticate" element={<Authenticate />} />
         <Route path="/system-error" element={<SystemError />} />
-        <Route path="/company-profile" element={<CompanyProfile />} />
+        <Route path="/company-profile/:id" element={<CompanyProfile />} />
         <Route path="/company-posts" element={<CompanyPosts />} />
       </Routes>
     </BrowserRouter>
