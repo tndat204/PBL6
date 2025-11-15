@@ -84,59 +84,48 @@ public class CompanyReviewServiceImpl implements CompanyReviewService {
 
     @Override
     public Page<ReviewResponse> getReviewsByCompany(UUID companyId, Pageable pageable) {
+
         Page<CompanyReview> reviewPage = companyReviewRepository.findByCompanyIdAndStatus(
                 companyId,
                 CompanyReview.Status.ACTIVE,
                 pageable
         );
 
-        // Nếu trang trống, trả về luôn để tiết kiệm xử lý
         if (reviewPage.isEmpty()) {
-            return reviewPage.map(review -> modelMapper.map(review, ReviewResponse.class));
+            return reviewPage.map(this::mapToResponse);
         }
 
-        // 2. TỐI ƯU HÓA (Batch Query): Check Like status
-        // Thay vì query trong vòng for, ta lấy list ID ra và query 1 lần
+        UUID currentUserId = getCurrentUserId();
+
+        // ----------- Tối ưu check liked 1 lần -----------
         Set<UUID> likedReviewIds = new java.util.HashSet<>();
 
-        if (getCurrentUserId() != null) {
-            // Lấy danh sách các reviewId đang hiển thị trên page này
+        if (currentUserId != null) {
             List<UUID> reviewIdsOnPage = reviewPage.getContent().stream()
                     .map(CompanyReview::getReviewId)
-                    .toList(); // hoặc .collect(Collectors.toList()) với Java < 16
+                    .toList();
 
-            // Query DB 1 lần duy nhất để xem user đã like bài nào trong số này
-            likedReviewIds = reviewLikeRepository.findLikedReviewIdsByUserIdAndReviewIds(getCurrentUserId(), reviewIdsOnPage);
+            likedReviewIds = reviewLikeRepository
+                    .findLikedReviewIdsByUserIdAndReviewIds(currentUserId, reviewIdsOnPage);
         }
 
-        // Biến final (hoặc effectively final) để dùng trong lambda
         Set<UUID> finalLikedReviewIds = likedReviewIds;
 
-        // 3. Map sang DTO
+        // ----------- Map sang DTO bằng mapToResponse -----------
         return reviewPage.map(review -> {
-            // A. Map cơ bản bằng ModelMapper
-            ReviewResponse res = modelMapper.map(review, ReviewResponse.class);
+            ReviewResponse res = mapToResponse(review);
 
-            // B. Map thủ công danh sách ảnh (Entity -> String URL)
-            List<String> imageUrls = (review.getImages() == null) ? List.of() :
-                    review.getImages().stream()
-                            .map(ReviewImage::getImageUrl)
-                            .toList();
-            res.setImageUrls(imageUrls);
-
-            // C. Map companyId (tránh trả về cả object Company)
-            res.setCompanyId(review.getCompany().getId());
-
-            // D. Set trạng thái isLiked (lấy từ Set đã cache ở bước 2 -> Tốc độ cực nhanh O(1))
-            if (getCurrentUserId() != null) {
+            // Ghi đè lại isLiked để không bị query DB N lần
+            if (currentUserId != null) {
                 res.setLiked(finalLikedReviewIds.contains(review.getReviewId()));
             } else {
-                res.setLiked(false); // Khách vãng lai chưa đăng nhập
+                res.setLiked(false);
             }
 
             return res;
         });
     }
+
 
     @Transactional
     public ReviewResponse updateReview(UUID reviewId,ReviewUpdateRequest request) {
