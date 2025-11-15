@@ -32,6 +32,13 @@ class RecruiterJobCard extends StatelessWidget {
     return '${date.day}/${date.month}/${date.year}';
   }
 
+  String _getProvinceOnly(String fullLocation) {
+    // Tách chuỗi bằng dấu phẩy
+    final parts = fullLocation.split(',');
+    // Lấy phần tử cuối cùng và cắt bỏ khoảng trắng thừa
+    return parts.isNotEmpty ? parts.last.trim() : fullLocation;
+  }
+
   void _showDeleteConfirmDialog(BuildContext context) {
     AwesomeDialog(
       context: context,
@@ -155,13 +162,11 @@ class RecruiterJobCard extends StatelessWidget {
           // Phần có thể chạm để xem chi tiết
           InkWell(
             borderRadius: BorderRadius.circular(12),
-             onTap: () async {
-             
+            onTap: () async {
               final result = await context.push(
                 '/recruiter/jobs/detail/${job.id}',
-                extra: onDelete, 
+                extra: onDelete,
               );
-           
             },
             child: Padding(
               padding: const EdgeInsets.all(18),
@@ -251,7 +256,11 @@ class RecruiterJobCard extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 6,
                     children: [
-                      _buildTag(Icons.location_on_outlined, job.location),
+                      // 💡 GỌI HÀM LỌC TỈNH/THÀNH PHỐ
+                      _buildTag(
+                        Icons.location_on_outlined,
+                        _getProvinceOnly(job.location),
+                      ),
                       _buildTag(
                         Icons.work_outline,
                         job.jobType.name.replaceAll('_', ' '),

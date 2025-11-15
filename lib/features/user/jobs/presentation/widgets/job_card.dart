@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // 💡 Cần import GoRouter
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 
@@ -8,31 +8,29 @@ import '../../../../shared/job/domain/entities/job.dart';
 class JobCard extends StatelessWidget {
   final Job job;
 
-  // ❌ Loại bỏ final VoidCallback? onTap;
-
-  const JobCard({super.key, required this.job}); // ❌ Loại bỏ onTap khỏi constructor
+  const JobCard({super.key, required this.job});
 
   String _formatCurrency(int value) {
     final format = NumberFormat("#,##0", "vi_VN");
     return format.format(value);
   }
-
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
-
+  String _getProvinceOnly(String fullLocation) {
+    final parts = fullLocation.split(',');
+    return parts.isNotEmpty ? parts.last.trim() : fullLocation;
+  }
   @override
   Widget build(BuildContext context) {
-    // 💡 Logic xử lý imageUrl đã được khôi phục
-    final baseUrl = ApiConstants.baseUrl; 
+    final baseUrl = ApiConstants.baseUrl;
     final imageUrl = job.logoUrl != null && job.logoUrl!.isNotEmpty
         ? (job.logoUrl!.startsWith('http')
-            ? job.logoUrl!
-            : '$baseUrl${job.logoUrl}')
+              ? job.logoUrl!
+              : '$baseUrl${job.logoUrl}')
         : null;
 
     return InkWell(
-      // 💡 Thêm logic go_router chuyển trang vào onTap
       onTap: () {
         context.push('/user/jobs/${job.id}');
       },
@@ -81,8 +79,11 @@ class JobCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         color: Colors.grey.shade200,
                       ),
-                      child: const Icon(Icons.business_outlined,
-                          color: Colors.grey, size: 30),
+                      child: const Icon(
+                        Icons.business_outlined,
+                        color: Colors.grey,
+                        size: 30,
+                      ),
                     ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -133,9 +134,14 @@ class JobCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  _buildTag(Icons.location_on_outlined, job.location),
-                  _buildTag(Icons.work_outline,
-                      job.jobType.name.replaceAll('_', ' ')),
+                  _buildTag(
+                    Icons.location_on_outlined,
+                    _getProvinceOnly(job.location),
+                  ),
+                  _buildTag(
+                    Icons.work_outline,
+                    job.jobType.name.replaceAll('_', ' '),
+                  ),
                 ],
               ),
 
@@ -144,15 +150,18 @@ class JobCard extends StatelessWidget {
               /// --- Salary ---
               Row(
                 children: [
-                  const Icon(Icons.payments_outlined,
-                      size: 18, color: Colors.black87),
+                  const Icon(
+                    Icons.payments_outlined,
+                    size: 18,
+                    color: Colors.black87,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '${_formatCurrency(job.salaryMin)} - ${_formatCurrency(job.salaryMax)} VND',
                       style: const TextStyle(
                         fontSize: 15,
-                        color: Colors.green, // 💡 Màu xanh lá cây
+                        color: Colors.green,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -165,15 +174,15 @@ class JobCard extends StatelessWidget {
               /// --- Expiry Date ---
               Row(
                 children: [
-                  Icon(Icons.calendar_today_outlined,
-                      size: 15, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 15,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Hết hạn: ',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   Text(
                     _formatDate(job.expiryDate),
@@ -192,27 +201,25 @@ class JobCard extends StatelessWidget {
     );
   }
 
-  /// --- Widget pill tag (bo góc, có icon) ---
-  // 💡 Khôi phục style cho _buildTag
   Widget _buildTag(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), // 💡 Padding ban đầu
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20), // 💡 Corner radius ban đầu
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min, // 💡 mainAxisSize.min
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: Colors.grey.shade700),
-          const SizedBox(width: 5), // 💡 SizedBox width ban đầu
+          const SizedBox(width: 5),
           Text(
             text,
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey.shade800,
-              fontWeight: FontWeight.w500, // 💡 FontWeight ban đầu
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

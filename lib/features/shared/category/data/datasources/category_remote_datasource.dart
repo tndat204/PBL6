@@ -6,7 +6,7 @@ abstract class CategoryRemoteDataSource {
   Future<List<Category>> fetchAllCategories();
   Future<Category?> fetchCategory(
     String id,
-  ); // 🌟 Đã sửa thành trả về Category?
+  ); 
   Future<Category> createCategory(Map<String, dynamic> body);
   Future<Category> updateCategory(String id, Map<String, dynamic> body);
   Future<void> deleteCategory(String id);
@@ -16,7 +16,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   final Dio _dio;
 
   CategoryRemoteDataSourceImpl(this._dio) {
-    // Đảm bảo Base URL được thiết lập
+    
     _dio.options.baseUrl = ApiConstants.baseUrl;
   }
 
