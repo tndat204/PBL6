@@ -8,6 +8,7 @@ import com.pbl6.jobservice.entity.Job;
 import com.pbl6.jobservice.service.JobService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,8 +25,8 @@ public class JobController {
         this.jobService = jobService;
     }
 
-    @PostMapping
-    public APIResponse<JobResponse> createJob(@RequestBody CreateJobRequest request){
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public APIResponse<JobResponse> createJob(@ModelAttribute CreateJobRequest request){
         return APIResponse.<JobResponse>builder()
                 .code(200)
                 .result(jobService.createJob(request))

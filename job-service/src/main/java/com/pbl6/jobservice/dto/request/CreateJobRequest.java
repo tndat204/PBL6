@@ -3,6 +3,8 @@ package com.pbl6.jobservice.dto.request;
 import com.pbl6.jobservice.entity.Job;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,8 +28,10 @@ public class CreateJobRequest {
     Job.ExperienceLevel experienceLevel;
     Integer requiredYearsOfExpMin;
     Integer requiredYearsOfExpMax;
+    MultipartFile jdFile;
     Set<UUID> categoryIds;
     Set<UUID> skillIds;
     String location;
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     Date expiryDate;
 }

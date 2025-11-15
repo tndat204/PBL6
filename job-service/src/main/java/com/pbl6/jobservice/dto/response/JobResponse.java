@@ -26,6 +26,7 @@ public class JobResponse {
     Job.ExperienceLevel experienceLevel;
     Integer requiredYearsOfExpMin;
     Integer requiredYearsOfExpMax;
+    String jdUrl;
     Set<UUID> categoryIds;
     Set<UUID> skillIds;
     String location;

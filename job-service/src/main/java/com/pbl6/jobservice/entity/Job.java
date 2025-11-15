@@ -63,6 +63,9 @@ public class Job extends Base{
     Integer requiredYearsOfExpMin;
     Integer requiredYearsOfExpMax;
 
+    @Column
+    String jdUrl;
+
     @Column(nullable = false)
     @Builder.Default
     Integer viewCount = 0;

@@ -1,6 +1,7 @@
 package com.pbl6.jobservice.service.impl;
 
 import com.pbl6.event.dto.JobPostedEvent;
+import com.pbl6.jobservice.client.FileClient;
 import com.pbl6.jobservice.dto.request.CreateJobRequest;
 import com.pbl6.jobservice.dto.request.UpdateJobRequest;
 import com.pbl6.jobservice.dto.response.JobResponse;
@@ -37,6 +38,7 @@ public class JobServiceImpl implements JobService {
     CompanyUserRepository companyUserRepository;
     ModelMapper modelMapper;
     KafkaTemplate<String, Object> kafkaTemplate;
+    FileClient fileClient;
     static String JOB_POSTED_TOPIC = "job_posted_topic";
     static String JOB_CLOSED_TOPIC = "job_closed_topic";
     @Transactional
@@ -72,6 +74,7 @@ public class JobServiceImpl implements JobService {
                 .requiredYearsOfExpMax(request.getRequiredYearsOfExpMax())
                 .requiredYearsOfExpMin(request.getRequiredYearsOfExpMin())
                 .expiryDate(request.getExpiryDate())
+                .jdUrl(fileClient.uploadFile(request.getJdFile(),"job_decription").getResult())
                 .build();
 
         job = jobRepository.save(job);
