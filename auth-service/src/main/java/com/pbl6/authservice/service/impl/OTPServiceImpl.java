@@ -47,7 +47,7 @@ public class OTPServiceImpl implements OTPService {
         if (userServiceClient.checkEmail(request.getEmail()).getResult()) {
             otpStore.remove(request.getEmail());
             Random random = new Random();
-            int otp = 111111;
+            int otp = 100000 + random.nextInt(900000);
             otpStore.put(request.getEmail(), new OTPInfo(otp));
             NotificationEvent notificationEvent = NotificationEvent.builder()
                     .channel("EMAIL")
