@@ -32,6 +32,7 @@ dependencies:
   jwt_decode: ^0.3.1
   file_picker: ^10.3.3
   url_launcher: ^6.3.2
+  flutter_rating_bar: ^4.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

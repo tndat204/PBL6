@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-// 1. Thông tin người đánh giá (lồng trong Review)
+/// 1. Thông tin người đánh giá
 class ReviewerInfo extends Equatable {
   final String reviewerId;
   final String reviewerName;
@@ -19,9 +19,9 @@ class ReviewerInfo extends Equatable {
       reviewerAvatar: json['reviewerAvatar'] ?? '',
     );
   }
-  
+
   factory ReviewerInfo.empty() {
-     return const ReviewerInfo(
+    return const ReviewerInfo(
       reviewerId: '',
       reviewerName: 'N/A',
       reviewerAvatar: '',
@@ -32,13 +32,13 @@ class ReviewerInfo extends Equatable {
   List<Object?> get props => [reviewerId, reviewerName, reviewerAvatar];
 }
 
-// 2. Đối tượng Review chính
+/// 2. Đối tượng Review
 class Review extends Equatable {
   final String reviewId;
   final String companyId;
   final String title;
   final String comment;
-  final double rating; // 💡 Đổi thành double (theo API là number($double))
+  final double rating;
   final int likeCount;
   final String status;
   final List<String> imageUrls;
@@ -75,15 +75,65 @@ class Review extends Equatable {
       reviewerInfo: (json['reviewerInfo'] != null)
           ? ReviewerInfo.fromJson(json['reviewerInfo'])
           : ReviewerInfo.empty(),
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] ?? '')?.toLocal() ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] ?? '')?.toLocal() ??
+          DateTime.now(),
+
       liked: json['liked'] ?? false,
     );
   }
 
   @override
   List<Object?> get props => [
-        reviewId, companyId, title, comment, rating, likeCount,
-        status, imageUrls, reviewerInfo, createdAt, updatedAt, liked
-      ];
+    reviewId,
+    companyId,
+    title,
+    comment,
+    rating,
+    likeCount,
+    status,
+    imageUrls,
+    reviewerInfo,
+    createdAt,
+    updatedAt,
+    liked,
+  ];
+}
+
+/// ------------------ Extensions copyWith ------------------
+
+extension ReviewerInfoCopy on ReviewerInfo {
+  ReviewerInfo copyWith({
+    String? reviewerId,
+    String? reviewerName,
+    String? reviewerAvatar,
+  }) {
+    return ReviewerInfo(
+      reviewerId: reviewerId ?? this.reviewerId,
+      reviewerName: reviewerName ?? this.reviewerName,
+      reviewerAvatar: reviewerAvatar ?? this.reviewerAvatar,
+    );
+  }
+}
+
+extension ReviewCopy on Review {
+  Review copyWith({ReviewerInfo? reviewerInfo}) {
+    return Review(
+      reviewId: reviewId,
+      companyId: companyId,
+      title: title,
+      comment: comment,
+      rating: rating,
+      likeCount: likeCount,
+      status: status,
+      imageUrls: imageUrls,
+      reviewerInfo: reviewerInfo ?? this.reviewerInfo,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      liked: liked,
+    );
+  }
 }

@@ -7,6 +7,7 @@ import 'package:pbl6/features/shared/company/domain/usecases/get_company_details
 import 'package:pbl6/features/shared/job/domain/entities/job.dart';
 import 'package:pbl6/features/shared/job/domain/usecases/get_job_details_usecase.dart';
 import 'package:pbl6/features/user/jobs/domain/usecases/apply_job_usecase.dart';
+import 'package:pbl6/features/user/jobs/presentation/widgets/job_review_tab.dart';
 
 import '../../../../shared/category/domain/usecases/get_category_detail_usecase.dart';
 import '../../../../shared/skill/domain/usecases/get_skill_detail_usecase.dart';
@@ -173,7 +174,9 @@ class _JobDetailPageState extends State<JobDetailPage>
                           companyId: _job!.companyId,
                           useCase: _getCompanyDetailsUseCase,
                         ),
-                        const Center(child: Text('Comment sẽ được thêm sau.')),
+                        JobReviewTab(
+                          companyId: _job!.companyId,
+                        ),
                       ],
                     ),
                   ),
