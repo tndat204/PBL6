@@ -7,9 +7,13 @@ import tempfile
 import traceback
 import json
 
-from src.extract_text import extract_text_from_pdf, extract_text_from_jd
-from src.llm_extract import load_client, analyze_cv, analyze_jd
-from src.scoring import compute_match_score
+from LangchainClient import client
+
+from extract_text import extract_text_from_pdf, extract_text_from_jd
+from llm_extract import  analyze_cv, analyze_jd
+from scoring import compute_match_score
+
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # ==========================
@@ -17,24 +21,31 @@ from src.scoring import compute_match_score
 # ==========================
 app = FastAPI(title="CV–JD Matching API")
 
-client = load_client()
+# client = load_client()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],     # Cho phép mọi domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # ==========================
 # UTILS
 # ==========================
-def extract_and_analyze(file_path: str, file_type: str):
+async def extract_and_analyze(file_path: str, file_type: str):
     """Trích xuất và phân tích CV hoặc JD."""
     if file_type == "cv":
         with open(file_path, "rb") as f:
             text = extract_text_from_pdf(f)
-        return analyze_cv(client, text)
+        return await analyze_cv(client, text)
     elif file_type == "jd":
         text = extract_text_from_jd(file_path)
-        return analyze_jd(client, text)
+        return await analyze_jd(client, text)
     else:
         raise ValueError("file_type phải là 'cv' hoặc 'jd'")
-
 
 # ==========================
 # ROUTES
@@ -63,8 +74,8 @@ async def match_single_cv_jd(
             jd_tmp.write(await jd.read())
             jd_path = jd_tmp.name
 
-        cv_json = extract_and_analyze(cv_path, "cv")
-        jd_json = extract_and_analyze(jd_path, "jd")
+        cv_json = await extract_and_analyze(cv_path, "cv")
+        jd_json = await extract_and_analyze(jd_path, "jd")
 
         scores = compute_match_score(cv_json, jd_json, weights=user_weights)
 
@@ -93,7 +104,7 @@ async def match_multiple_cvs(
             jd_tmp.write(await jd.read())
             jd_path = jd_tmp.name
 
-        jd_json = extract_and_analyze(jd_path, "jd")
+        jd_json = await extract_and_analyze(jd_path, "jd")
         results = []
 
         for cv in cvs:
@@ -102,7 +113,7 @@ async def match_multiple_cvs(
                 cv_path = cv_tmp.name
 
             try:
-                cv_json = extract_and_analyze(cv_path, "cv")
+                cv_json = await extract_and_analyze(cv_path, "cv")
                 scores = compute_match_score(cv_json, jd_json, weights=user_weights)
                 results.append({
                     "cv_filename": cv.filename,

@@ -2,14 +2,11 @@ import os
 import json
 import time
 from dotenv import load_dotenv
-from openai import OpenAI
 from typing import Dict, Any
+import asyncio
+from LangchainClient import client
 
-MODEL = "minimax/minimax-m2:free"
 
-# ===============================
-# 📘 Skill Dictionary (chuẩn hoá)
-# ===============================
 SKILL_DICTIONARY = {
     "ProgrammingLanguages": [
         "Python", "Java", "JavaScript", "TypeScript", "C", "C++", "C#", "PHP",
@@ -44,18 +41,12 @@ SKILL_DICTIONARY = {
 }
 
 
-# ===============================
-# 🔍 Helper to format dict text
-# ===============================
 def skill_dict_text(skill_dict: dict) -> str:
     return "\n".join(
         [f"- {key}: {', '.join(values)}" for key, values in skill_dict.items()]
     )
 
 
-# ===============================
-# 🧠 Prompt Templates
-# ===============================
 def cv_extraction_prompt(cv_text: str, skill_dict: dict) -> str:
     return f"""
 You are an expert resume parser. Extract information from the resume below and return a **pure JSON**.
@@ -110,9 +101,6 @@ Return ONLY the valid JSON object.
 
 def jd_extraction_prompt(job_description: str, skill_dict: dict) -> str:
     return f"""
-You are an expert HR assistant.
-Extract structured information from the job description below into JSON.
-
 ### STRICT RULES
 1. Only use exact skill names from this dictionary:
 {skill_dict_text(skill_dict)}
@@ -159,21 +147,6 @@ Now extract structured data from this job description:
 Return only the JSON object.
 """
 
-
-# ===============================
-# 🚀 Client Loader
-# ===============================
-def load_client() -> OpenAI:
-    load_dotenv()
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENROUTER_API_KEY not found in .env file.")
-    return OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-
-
-# ===============================
-# 🧩 JSON-safe Parsing + Cleanup
-# ===============================
 def safe_json_parse(content: str) -> Dict[str, Any]:
     """Parse JSON safely, avoid crash if model returns junk."""
     content = content.strip()
@@ -191,9 +164,6 @@ def safe_json_parse(content: str) -> Dict[str, Any]:
         return {"error": "invalid_json", "raw_output": content}
 
 
-# ===============================
-# 🧩 Post-filter (enforce skills)
-# ===============================
 def filter_valid_skills(extracted: Dict[str, Any], skill_dict: Dict[str, list]) -> Dict[str, Any]:
     """Remove skills not in SKILL_DICTIONARY."""
     valid = {k: {s.lower(): s for s in v} for k, v in skill_dict.items()}
@@ -205,53 +175,50 @@ def filter_valid_skills(extracted: Dict[str, Any], skill_dict: Dict[str, list]) 
         extracted["TechnicalSkills"][cat] = cleaned
     return extracted
 
-
-# ===============================
-# 🔁 Retry Wrapper
-# ===============================
-def with_retry(func, max_retries=3, delay=2):
-    """Retry a function if invalid JSON is returned."""
+async def with_retry(func, max_retries=3, delay=2):
     for attempt in range(1, max_retries + 1):
-        result = func()
+        result = await func()
         if isinstance(result, dict) and "error" not in result:
             return result
         print(f"[Retry {attempt}/{max_retries}] Invalid JSON, retrying...")
-        time.sleep(delay)
+        await asyncio.sleep(delay)
     return {"error": "max_retries_exceeded"}
 
 
-# ===============================
-# 🔎 Extraction Wrappers
-# ===============================
-def analyze_cv(client: OpenAI, cv_text: str) -> Dict[str, Any]:
-    def _extract():
+
+
+async def analyze_cv(client, cv_text: str) -> Dict[str, Any]:
+    async def _extract():
         prompt = cv_extraction_prompt(cv_text, SKILL_DICTIONARY)
-        resp = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
-            max_tokens=1500,
+        
+        # Gọi LLM async
+        res = await client.generate(
+            system_prompt="Bạn là một chuyên gia HR. Trích xuất thông tin từ CV dưới đây thành JSON có cấu trúc.",
+            user_prompt=prompt,
         )
-        result = safe_json_parse(resp.choices[0].message.content)
+
+        # Parse JSON an toàn
+        result = safe_json_parse(res)
         if "error" not in result:
             result = filter_valid_skills(result, SKILL_DICTIONARY)
         return result
 
-    return with_retry(_extract)
-
-
-def analyze_jd(client: OpenAI, jd_text: str) -> Dict[str, Any]:
-    def _extract():
+    # Retry wrapper async
+    return await with_retry(_extract)
+async def analyze_jd(client, jd_text: str) -> Dict[str, Any]:
+    async def _extract():
         prompt = jd_extraction_prompt(jd_text, SKILL_DICTIONARY)
-        resp = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
-            max_tokens=1500,
+        res = await client.generate(
+            system_prompt="Bạn là một chuyên gia HR. Trích xuất thông tin từ Job Description dưới đây thành JSON có cấu trúc.",
+            user_prompt=prompt,
         )
-        result = safe_json_parse(resp.choices[0].message.content)
+        result = safe_json_parse(res)
         if "error" not in result:
             result = filter_valid_skills(result, SKILL_DICTIONARY)
         return result
 
-    return with_retry(_extract)
+    return await with_retry(_extract)
+
+
+
+
