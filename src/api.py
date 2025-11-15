@@ -9,9 +9,9 @@ import json
 
 from LangchainClient import client
 
-from extract_text import extract_text_from_pdf, extract_text_from_jd
-from llm_extract import  analyze_cv, analyze_jd
-from scoring import compute_match_score
+from ExtractText import extract_text_from_pdf, extract_text_from_jd
+from ExtractLLM import  analyze_cv, analyze_jd
+from Scoring import compute_match_score
 
 from fastapi.middleware.cors import CORSMiddleware
 
