@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +64,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
   final _salaryMaxController = TextEditingController();
   int _expMin = 0;
   int _expMax = 0;
-  final _descriptionController = TextEditingController();
   final _expiryDateController = TextEditingController();
 
   // Dropdown Values
@@ -75,8 +77,12 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
   String? _selectedProvinceName;
   String? _selectedWardName;
   final _detailedAddressController = TextEditingController();
-  // 💡 BỎ CÁC BIẾN LOADING ĐỊA CHỈ RIÊNG
 
+  // 💡 STATE CHO FILE JD
+  String? _jdFilePath; 
+  String? _jdFileName; 
+  bool _isJdFilePicked = false; 
+  
   bool _isActive = true;
 
   // Multi-select values
@@ -99,13 +105,44 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     _loadInitialData();
   }
 
+  Future<void> _pickJdFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result == null || result.files.single.path == null) return;
+
+    final filePath = result.files.single.path!;
+    final fileName = result.files.single.name;
+    final file = File(filePath);
+
+    if (!fileName.toLowerCase().endsWith('.pdf')) {
+      MotionToast.error(description: const Text('Chỉ chấp nhận PDF.')).show(context);
+      return;
+    }
+
+    final fileSize = await file.length();
+    if (fileSize > 5 * 1024 * 1024) {
+      MotionToast.error(description: const Text('Kích thước file vượt quá 5MB.')).show(context);
+      return;
+    }
+    
+    setState(() {
+      _jdFilePath = filePath;
+      _jdFileName = fileName;
+      _isJdFilePicked = true;
+    });
+    
+    MotionToast.info(description: Text('Đã chọn file: $fileName')).show(context);
+  }
+
+  // 💡 SỬA LOGIC ASYNC: TẢI DATA VÀ PREFILL ĐỒNG BỘ
   Future<void> _loadInitialData() async {
     try {
-      // 1. Lấy ID công ty (bắt buộc)
       _companyId = await _authRepository.getCompanyId();
       if (_companyId == null) throw Exception("Không tìm thấy công ty");
 
-      // 2. Tải song song các dữ liệu cho dropdown
       final results = await Future.wait([
         _getCompanyDetailsUseCase(_companyId!),
         _getAllCategoriesUseCase(),
@@ -114,7 +151,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         if (widget.isEditMode) _getJobDetailsUseCase(widget.jobId!),
       ]);
 
-      // 3. Gán dữ liệu
       _myCompany = results[0] as Company;
       _categories = results[1] as List<Category>;
       _allSkills = results[2] as List<Skill>;
@@ -122,19 +158,16 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       
       if (widget.isEditMode) {
         _editingJob = results[4] as Job;
-        // 💡 Prefill cần gọi setState sau khi hoàn tất
+        // ⭐️ CHỜ PREFILL ADDRESS HOÀN TẤT
         await _prefillForm(); 
       } else {
-        // Gán giá trị mặc định cho form Add
         _selectedJobType = JobType.FULL_TIME;
         _selectedExpLevel = ExperienceLevel.ANY;
         _isActive = true;
       }
     } catch (e) {
       if (mounted) {
-        MotionToast.error(
-          description: Text("Lỗi tải dữ liệu: $e"),
-        ).show(context);
+        MotionToast.error(description: Text("Lỗi tải dữ liệu: $e")).show(context);
         context.pop();
       }
     } finally {
@@ -142,7 +175,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     }
   }
 
-  // 💡 CHUYỂN THÀNH ASYNC
+  // 💡 HÀM NÀY CHẠY ASYNC ĐỂ CHỜ WARDS
   Future<void> _prefillForm() async {
     if (_editingJob == null) return;
     final job = _editingJob!;
@@ -152,28 +185,30 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     _salaryMaxController.text = NumberFormat('#,###').format(job.salaryMax);
     _expMin = job.requiredYearsOfExpMin;
     _expMax = job.requiredYearsOfExpMax;
-    _descriptionController.text = job.description;
     _expiryDateController.text = DateFormat('dd/MM/yyyy').format(
       DateTime(job.expiryDate.year, job.expiryDate.month, job.expiryDate.day),
     );
+    
+    // Xử lý file JD cũ
+    if (job.jdFile.isNotEmpty) {
+        setState(() {
+            _jdFileName = job.jdFile.split('/').last; 
+            _isJdFilePicked = true;
+        });
+    }
 
     _selectedExpLevel = job.experienceLevel;
     _selectedJobType = job.jobType;
     _isActive = job.status == JobStatus.ACTIVE;
 
-    // 💡 GỌI HÀM PREFILL ADDRESS
+    // ⭐️ GỌI ASYNC VÀ CHỜ
     await _prefillAddress(job.location);
 
-    // Tìm skills/categories đã chọn
-    _selectedSkills = _allSkills
-        .where((s) => job.skillIds.contains(s.id))
-        .toList();
-    _selectedCategories = _categories
-        .where((c) => job.categoryIds.contains(c.id))
-        .toList();
+    _selectedSkills = _allSkills.where((s) => job.skillIds.contains(s.id)).toList();
+    _selectedCategories = _categories.where((c) => job.categoryIds.contains(c.id)).toList();
   }
 
-  // 💡 LOGIC CẬP NHẬT: PHẢI CHỜ fetchWards xong mới set state
+  // 💡 HÀM PREFILL ADDRESS ĐẢM BẢO TẢI WARDS ĐỒNG BỘ
   Future<void> _prefillAddress(String location) async {
     if (location.isEmpty) return;
 
@@ -184,7 +219,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     String initialDetailedAddress = location;
 
     if (parts.length >= 3) {
-      // [Chi tiết], [Phường/Xã], [Tỉnh/Thành phố]
       initialDetailedAddress = parts[0];
       initialWardName = parts[1];
       initialProvinceName = parts[2];
@@ -202,52 +236,44 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         _selectedProvinceId = prov['id'];
         _selectedProvinceName = initialProvinceName;
         
-        // ⭐️ CHỜ TẢI WARDS XONG
+        // ⭐️ CHỜ TẢI WARDS TRƯỚC KHI GÁN
         await _fetchWards(initialProvinceName); 
         
-        // Sau khi wards tải, kiểm tra và gán tên phường
         if (_wards.any((w) => w['name'] == initialWardName)) {
            _selectedWardName = initialWardName;
         }
       }
     }
-    // SetState tổng thể sẽ chạy sau khi _prefillForm hoàn tất
+    // Không gọi setState ở đây, _loadInitialData sẽ gọi chung khi xong
   }
 
 
-  // 💡 HÀM XỬ LÝ KHI CHỌN/BỎ CHỌN CATEGORY
   void _onCategoryChanged(List<Category> newSelectedCategories) {
     setState(() {
       _selectedCategories = newSelectedCategories;
-
       final Set<String> recommendedSkillIds = {};
       for (final category in newSelectedCategories) {
         recommendedSkillIds.addAll(category.skills.map((s) => s.id));
       }
 
       final Set<Skill> newSkillsSet = {};
-
       for (final skillId in recommendedSkillIds) {
         final skill = _allSkills.firstWhere((s) => s.id == skillId);
         newSkillsSet.add(skill);
       }
-
       for (final skill in _selectedSkills) {
         if (!recommendedSkillIds.contains(skill.id)) {
           newSkillsSet.add(skill);
         }
       }
-
       _selectedSkills = newSkillsSet.toList();
     });
   }
 
-  // 💡 HÀM TẢI WARDS (CHUYỂN VỀ FUTURE<VOID> KHÔNG SETSTATE)
+  // 💡 HÀM TẢI WARDS (BÂY GIỜ LÀ ASYNC KHÔNG SETSTATE)
   Future<void> _fetchWards(String provinceName) async {
-    // 💡 KHÔNG SETSTATE Ở ĐÂY, CHỈ UPDATE BIẾN
     final wards = await _authDataSource.fetchWards(provinceName);
     _wards = wards;
-    // 💡 BỎ setState(() => _loadingWards = false);
   }
 
   Future<void> _onProvinceChanged(String? id) async {
@@ -271,10 +297,8 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       _wards = [];
     });
 
-    // ⭐️ GỌI ASYNC HÀM MÀ KHÔNG CẦN AWAIT (Vì setState đã được gọi)
     await _fetchWards(provinceName); 
-    // Sau khi fetch wards xong, gọi setState lại để dropdown wards render
-    setState(() {});
+    setState(() {}); // Gọi setState để cập nhật dropdown Wards
   }
 
   void _onWardChanged(String? name) {
@@ -309,83 +333,76 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
-      MotionToast.error(
-        description: Text('Vui lòng kiểm tra lại các trường'),
-      ).show(context);
+      MotionToast.error(description: Text('Vui lòng kiểm tra lại các trường')).show(context);
       return;
     }
-
-    if (_myCompany == null) {
-      MotionToast.error(
-        description: Text('Lỗi thông tin công ty'),
-      ).show(context);
-      return;
-    }
-
-    // 💡 VALIDATE ĐỊA CHỈ CUỐI CÙNG
-    if (_selectedProvinceId == null) {
-      MotionToast.error(description: Text('Vui lòng chọn Tỉnh/Thành phố')).show(context);
-      return;
-    }
-    if (_wards.isNotEmpty && _selectedWardName == null) {
-        MotionToast.error(description: Text('Vui lòng chọn Phường/Xã')).show(context);
+   
+    final bool hasExistingJd = widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false);
+    final bool isJdRequired = !widget.isEditMode || !hasExistingJd; 
+    
+    if (isJdRequired && _jdFilePath == null) {
+        MotionToast.error(description: Text('Vui lòng tải lên file Mô tả công việc (PDF)')).show(context);
         return;
     }
+
 
     setState(() => _isLoading = true);
 
     try {
       // 1. Tạo đối tượng Job
       final jobData = Job(
-        id: _editingJob?.id ?? '', // Sẽ bị bỏ qua bởi API khi tạo mới
+        id: _editingJob?.id ?? '', 
         companyId: _myCompany!.id,
         title: _titleController.text,
-        description: _descriptionController.text,
+        description: "", // 💡 GỬI DESCRIPTION RỖNG
         status: _isActive ? JobStatus.ACTIVE : JobStatus.INACTIVE,
-        salaryMin:
-            int.tryParse(_salaryMinController.text.replaceAll(',', '')) ?? 0,
-        salaryMax:
-            int.tryParse(_salaryMaxController.text.replaceAll(',', '')) ?? 0,
+        salaryMin: int.tryParse(_salaryMinController.text.replaceAll(',', '')) ?? 0,
+        salaryMax: int.tryParse(_salaryMaxController.text.replaceAll(',', '')) ?? 0,
 
         jobType: _selectedJobType!,
         experienceLevel: _selectedExpLevel!,
         requiredYearsOfExpMin: _expMin,
         requiredYearsOfExpMax: _expMax,
-        // Dùng danh sách đã chọn
         categoryIds: _selectedCategories.map((c) => c.id).toList(),
         skillIds: _selectedSkills.map((s) => s.id).toList(),
-
-        // 💡 LẤY ĐỊA CHỈ CUỐI CÙNG
+        
         location: [
           _detailedAddressController.text.trim(),
           _selectedWardName ?? '',
           _selectedProvinceName ?? '',
         ].where((e) => e.isNotEmpty).join(', '),
         expiryDate: _expiryDateController.text.isNotEmpty
-            ? (() {
-                  return DateFormat(
-                    'dd/MM/yyyy',
-                  ).parseStrict(_expiryDateController.text);
-              })()
+            ? (() { return DateFormat('dd/MM/yyyy').parseStrict(_expiryDateController.text); })()
             : DateTime.now(),
-        postedBy: '', // API sẽ tự gán
+        postedBy: '', 
+        // 💡 GÁN FILE CŨ CHO ENTITY NẾU KHÔNG TẢI MỚI (để API không xóa)
+        jdFile: (widget.isEditMode && _jdFilePath == null) ? _editingJob!.jdFile : '',
       );
-
-      // 2. Gọi UseCase
+      
+      final filePathToSend = _jdFilePath;
+      print('🟦 Submitting Job with JD file path: $filePathToSend');
+      print ('🟦 Job Data: ${jobData.toJsonForUpsert()}');
+      // 2. Gọi UseCase (ĐÃ DÙNG PARAMS OBJECT)
       if (widget.isEditMode) {
         await _updateJobUseCase(
-          UpdateJobParams(jobId: widget.jobId!, job: jobData),
+          UpdateJobParams(
+            jobId: widget.jobId!, 
+            job: jobData, 
+            jdFilePath: filePathToSend, 
+          ),
         );
       } else {
-        await _createJobUseCase(jobData);
+        await _createJobUseCase(
+          CreateJobParams(
+            job: jobData, 
+            jdFilePath: filePathToSend,
+          ),
+        );
       }
 
-      // 3. Thông báo thành công và quay lại
       if (mounted) {
         MotionToast.success(
-          description: Text(
-            widget.isEditMode ? 'Cập nhật thành công!' : 'Đăng tin thành công!',
-          ),
+          description: Text(widget.isEditMode ? 'Cập nhật thành công!' : 'Đăng tin thành công!'),
           toastAlignment: Alignment.topLeft,
         ).show(context);
         context.pop(true);
@@ -394,7 +411,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       if (mounted) {
         final errorString = e.toString();
         final maxLength = errorString.length < 100 ? errorString.length : 100;
-
         MotionToast.error(
           description: Text(
             'Đã xảy ra lỗi: ${errorString.substring(0, maxLength)}${errorString.length > 100 ? '...' : ''}',
@@ -415,13 +431,8 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black),
         title: Text(
-          widget.isEditMode
-              ? 'Chỉnh sửa tin tuyển dụng'
-              : 'Đăng tin tuyển dụng',
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          widget.isEditMode ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng tin tuyển dụng',
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -442,8 +453,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       controller: _titleController,
                       label: 'Tên tin tuyển dụng *',
                       icon: Icons.title,
-                      validator: (val) =>
-                          val!.isEmpty ? 'Không được để trống' : null,
+                      validator: (val) => val!.isEmpty ? 'Không được để trống' : null,
                       obscureText: false,
                     ),
                     const SizedBox(height: 16),
@@ -455,8 +465,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       allItems: _categories,
                       selectedItems: _selectedCategories,
                       onChanged: _onCategoryChanged,
-                      validator: (list) =>
-                          list!.isEmpty ? 'Phải chọn ít nhất 1' : null,
+                      validator: (list) => list!.isEmpty ? 'Phải chọn ít nhất 1' : null,
                     ),
                     const SizedBox(height: 16),
 
@@ -467,16 +476,13 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       allItems: _allSkills,
                       selectedItems: _selectedSkills,
                       onChanged: _onSkillChanged,
-                      validator: (list) =>
-                          list!.isEmpty ? 'Phải chọn ít nhất 1' : null,
+                      validator: (list) => list!.isEmpty ? 'Phải chọn ít nhất 1' : null,
                     ),
                     const SizedBox(height: 16),
 
                     // Công ty (disabled)
                     CustomTextField(
-                      controller: TextEditingController(
-                        text: _myCompany?.name ?? '',
-                      ),
+                      controller: TextEditingController(text: _myCompany?.name ?? ''),
                       label: 'Công ty *',
                       icon: Icons.business,
                       enabled: false,
@@ -490,10 +496,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       icon: Icons.location_on_outlined,
                       value: _selectedProvinceId,
                       items: _provinces.map((p) {
-                        return DropdownMenuItem<String>(
-                          value: p['id'],
-                          child: Text(p['province']),
-                        );
+                        return DropdownMenuItem<String>(value: p['id'], child: Text(p['province']));
                       }).toList(),
                       onChanged: _onProvinceChanged,
                       validator: (v) => v == null ? 'Chọn tỉnh/thành phố' : null,
@@ -507,20 +510,11 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       value: _selectedWardName,
                       items: _wards.map((w) {
                         final name = w['name'] as String;
-                        return DropdownMenuItem<String>(
-                          value: name,
-                          child: Text(name),
-                        );
+                        return DropdownMenuItem<String>(value: name, child: Text(name));
                       }).toList(),
-                      onChanged: _wards.isEmpty
-                          ? null
-                          : (v) {
-                              setState(() => _selectedWardName = v);
-                            },
+                      onChanged: _wards.isEmpty ? null : (v) { setState(() => _selectedWardName = v); },
                       validator: (v) {
-                        if (_wards.isNotEmpty && v == null) {
-                          return "Chọn phường/xã";
-                        }
+                        if (_wards.isNotEmpty && v == null) { return "Chọn phường/xã"; }
                         return null;
                       },
                     ),
@@ -530,8 +524,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       icon: Icons.place,
                       obscureText: false,
                       controller: _detailedAddressController,
-                      validator: (value) =>
-                          value!.isEmpty ? 'Nhập địa chỉ chi tiết' : null,
+                      validator: (value) => value!.isEmpty ? 'Nhập địa chỉ chi tiết' : null,
                     ),
                     const SizedBox(height: 16),
                     
@@ -545,8 +538,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                             icon: Icons.attach_money,
                             keyboardType: TextInputType.number,
                             inputFormatters: [CurrencyInputFormatter()],
-                            validator: (val) =>
-                                val!.isEmpty ? 'Không để trống' : null,
+                            validator: (val) => val!.isEmpty ? 'Không để trống' : null,
                             obscureText: false,
                           ),
                         ),
@@ -558,8 +550,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                             icon: Icons.money_off,
                             keyboardType: TextInputType.number,
                             inputFormatters: [CurrencyInputFormatter()],
-                            validator: (val) =>
-                                val!.isEmpty ? 'Không để trống' : null,
+                            validator: (val) => val!.isEmpty ? 'Không để trống' : null,
                             obscureText: false,
                           ),
                         ),
@@ -573,14 +564,8 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       icon: Icons.bar_chart,
                       value: _selectedExpLevel,
                       hint: 'Chọn trình độ',
-                      items: _expLevels
-                          .map(
-                            (e) =>
-                                DropdownMenuItem(value: e, child: Text(e.name)),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedExpLevel = val),
+                      items: _expLevels.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
+                      onChanged: (val) => setState(() => _selectedExpLevel = val),
                       validator: (val) => val == null ? 'Vui lòng chọn' : null,
                     ),
                     const SizedBox(height: 16),
@@ -598,43 +583,16 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                               Row(
                                 children: [
                                   IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (_expMin > 0) {
-                                          _expMin--;
-                                          // Đồng bộ expMax nếu cần
-                                          if (_expMax < _expMin)
-                                            _expMax = _expMin;
-                                        }
-                                      });
-                                    },
-                                    icon: const Icon(
-                                      Icons.remove_circle_outline,
-                                    ),
+                                    onPressed: () { setState(() { if (_expMin > 0) { _expMin--; if (_expMax < _expMin) _expMax = _expMin; } }); },
+                                    icon: const Icon(Icons.remove_circle_outline),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '$_expMin',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(8)),
+                                    child: Text('$_expMin', style: const TextStyle(fontSize: 16)),
                                   ),
                                   IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _expMin++;
-                                        // Đồng bộ expMax nếu cần
-                                        if (_expMax < _expMin)
-                                          _expMax = _expMin;
-                                      });
-                                    },
+                                    onPressed: () { setState(() { _expMin++; if (_expMax < _expMin) _expMax = _expMin; }); },
                                     icon: const Icon(Icons.add_circle_outline),
                                   ),
                                 ],
@@ -653,35 +611,16 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                               Row(
                                 children: [
                                   IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (_expMax > _expMin) _expMax--;
-                                      });
-                                    },
-                                    icon: const Icon(
-                                      Icons.remove_circle_outline,
-                                    ),
+                                    onPressed: () { setState(() { if (_expMax > _expMin) _expMax--; }); },
+                                    icon: const Icon(Icons.remove_circle_outline),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '$_expMax',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(8)),
+                                    child: Text('$_expMax', style: const TextStyle(fontSize: 16)),
                                   ),
                                   IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _expMax++;
-                                      });
-                                    },
+                                    onPressed: () { setState(() { _expMax++; }); },
                                     icon: const Icon(Icons.add_circle_outline),
                                   ),
                                 ],
@@ -701,8 +640,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       icon: Icons.calendar_today,
                       readOnly: true,
                       onTap: () => _selectDate(context, _expiryDateController),
-                      validator: (val) =>
-                          val!.isEmpty ? 'Vui lòng chọn ngày' : null,
+                      validator: (val) => val!.isEmpty ? 'Vui lòng chọn ngày' : null,
                       obscureText: false,
                     ),
                     const SizedBox(height: 16),
@@ -713,14 +651,8 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       icon: Icons.work,
                       value: _selectedJobType,
                       hint: 'Chọn loại hình',
-                      items: _jobTypes
-                          .map(
-                            (e) =>
-                                DropdownMenuItem(value: e, child: Text(e.name)),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedJobType = val),
+                      items: _jobTypes.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
+                      onChanged: (val) => setState(() => _selectedJobType = val),
                       validator: (val) => val == null ? 'Vui lòng chọn' : null,
                     ),
                     const SizedBox(height: 16),
@@ -735,19 +667,68 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Mô tả
-                    CustomTextField(
-                      controller: _descriptionController,
-                      label: 'Mô tả *',
-                      icon: Icons.description,
-                      minLines: 5,
-                      maxLines: 8,
-                      validator: (val) =>
-                          val!.isEmpty ? 'Không được để trống' : null,
-                      obscureText: false,
+                    // 💡 KHU VỰC TẢI FILE JD (THAY THẾ MÔ TẢ)
+                    const Text('Tải file Mô tả công việc (JD) *', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _isJdFilePicked ? AppPallete.primaryColor : Colors.grey.shade300,
+                          width: _isJdFilePicked ? 2.0 : 1.0,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _isJdFilePicked ? Icons.description : Icons.upload_file,
+                                color: _isJdFilePicked ? AppPallete.primaryColor : Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _jdFileName ?? (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false) ? 'File cũ: ${(_editingJob?.jdFile.split('/').last ?? 'JD.pdf')}' : 'Chưa chọn file PDF nào'),
+                                  style: TextStyle(
+                                    color: _isJdFilePicked || (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false)) ? Colors.black87 : Colors.grey.shade600,
+                                    fontWeight: _isJdFilePicked || (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false)) ? FontWeight.w600 : FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (_isJdFilePicked)
+                                IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                        _jdFilePath = null;
+                                        _jdFileName = null;
+                                        _isJdFilePicked = false;
+                                    });
+                                  },
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Nút hành động
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _pickJdFile, 
+                              icon: const Icon(Icons.folder_open),
+                              label: Text(_isJdFilePicked ? 'Chọn lại file' : 'Chọn file JD (PDF)'),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 32),
-
+                    
                     // Nút submit
                     SizedBox(
                       width: double.infinity,
@@ -803,7 +784,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         : [];
 
     // Lọc các item đã chọn khỏi danh sách đề xuất để tránh trùng lặp
-    final Set<T> recommendedSet = Set<T>.from(displayItems);
     final List<T> nonSelectedRecommended = displayItems
         .where((item) => !selectedItems.contains(item))
         .toList();

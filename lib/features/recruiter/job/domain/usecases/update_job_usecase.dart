@@ -7,18 +7,26 @@ class UpdateJobUseCase {
 
   UpdateJobUseCase(this.repository);
 
-  
   Future<Job> call(UpdateJobParams params) async {
-    return repository.updateJob(params.jobId, params.job);
+    return repository.updateJob(
+      params.jobId,
+      params.job,
+      jdFilePath: params.jdFilePath,
+    );
   }
 }
 
 class UpdateJobParams extends Equatable {
   final String jobId;
-  final Job job; // Đối tượng Job với thông tin đã cập nhật
+  final Job job;
+  final String? jdFilePath;
 
-  const UpdateJobParams({required this.jobId, required this.job});
+  const UpdateJobParams({
+    required this.jobId,
+    required this.job,
+    this.jdFilePath,
+  });
 
   @override
-  List<Object?> get props => [jobId, job];
+  List<Object?> get props => [jobId, job, jdFilePath];
 }

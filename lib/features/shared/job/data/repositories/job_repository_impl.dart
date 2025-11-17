@@ -30,13 +30,13 @@ class JobRepositoryImpl implements JobRepository {
   }
 
   @override
-  Future<Job> createJob(Job job) async {
-    return remoteDataSource.createJob(job);
+  Future<Job> createJob(Job job, {String? jdFilePath}) async {
+     return remoteDataSource.createJob(job, jdFilePath: jdFilePath);
   }
 
   @override
-  Future<Job> updateJob(String jobId, Job job) async {
-    return remoteDataSource.updateJob(jobId, job);
+  Future<Job> updateJob(String jobId, Job job, {String? jdFilePath}) async {
+    return remoteDataSource.updateJob(jobId, job, jdFilePath: jdFilePath);
   }
 
   @override

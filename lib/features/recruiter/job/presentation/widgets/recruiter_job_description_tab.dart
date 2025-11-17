@@ -1,10 +1,10 @@
-// lib/features/recruiter/job/presentation/pages/recruiter_job_description_tab.dart
 import 'package:flutter/material.dart';
 import 'package:pbl6/features/shared/category/domain/entities/category.dart';
-import 'package:pbl6/features/shared/category/domain/usecases/get_all_categories_usecase.dart'; // Dùng GetAll
+import 'package:pbl6/features/shared/category/domain/usecases/get_all_categories_usecase.dart';
 import 'package:pbl6/features/shared/job/domain/entities/job.dart';
 import 'package:pbl6/features/shared/skill/domain/entities/skill.dart';
-import 'package:pbl6/features/shared/skill/domain/usecases/get_all_skills_usecase.dart'; // Dùng GetAll
+import 'package:pbl6/features/shared/skill/domain/usecases/get_all_skills_usecase.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RecruiterJobDescriptionTab extends StatefulWidget {
   final Job job;
@@ -47,7 +47,6 @@ class _RecruiterJobDescriptionTabState
       _allSkills = results[0] as List<Skill>;
       _allCategories = results[1] as List<Category>;
 
-      // Lọc ra các Skill và Category của Job hiện tại
       _jobSkills = _allSkills
           .where((s) => widget.job.skillIds.contains(s.id))
           .toList();
@@ -61,7 +60,7 @@ class _RecruiterJobDescriptionTabState
     }
   }
 
-  // Helper định dạng trình độ (Tái sử dụng)
+  // --- Helper ---
   String _formatExperienceLevel(ExperienceLevel level) {
     switch (level) {
       case ExperienceLevel.INTERN:
@@ -81,15 +80,13 @@ class _RecruiterJobDescriptionTabState
     }
   }
 
-  // Helper định dạng số năm kinh nghiệm (Tái sử dụng)
   String _formatYearsExperience(int min, int max) {
     if (min == 0 && max == 0) return 'Không yêu cầu';
     if (min == max) return '$min năm';
-    if (max > 15) return 'Trên $min năm'; 
+    if (max > 15) return 'Trên $min năm';
     return '$min - $max năm';
   }
 
-  // Widget build tiêu đề (Tái sử dụng)
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -102,7 +99,6 @@ class _RecruiterJobDescriptionTabState
     );
   }
 
-  // Widget build dòng thông tin (Tái sử dụng)
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +128,6 @@ class _RecruiterJobDescriptionTabState
     );
   }
 
-  // Widget build chip (Tái sử dụng)
   Widget _buildChip(IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -159,18 +154,73 @@ class _RecruiterJobDescriptionTabState
     );
   }
 
+  // --- JD File Section ---
+  Widget _buildJdFileSection() {
+    final jdUrl = widget.job.jdFile.trim();
+
+    if (jdUrl.isEmpty) return const SizedBox.shrink();
+
+    final Uri url = Uri.parse(jdUrl);
+    final fileName = jdUrl.split('/').last.split('?').first;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("File JD"),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  fileName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.remove_red_eye, color: Colors.blueAccent),
+                tooltip: "Xem JD",
+                onPressed: () async {
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Không thể mở file JD.')),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    if (_loading) return const Center(child: CircularProgressIndicator());
+
+    final showDescription = widget.job.description.isNotEmpty;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Mục yêu cầu công việc
+          // --- Yêu cầu công việc ---
           _buildSectionTitle("Yêu cầu công việc"),
           const SizedBox(height: 16),
           _buildInfoRow(
@@ -189,28 +239,25 @@ class _RecruiterJobDescriptionTabState
           ),
           const SizedBox(height: 32),
 
-          // --- Mục mô tả ---
+          // --- Mô tả công việc (Text) ---
           _buildSectionTitle("Mô tả công việc"),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Text(
-              widget.job.description,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-
-          // --- Mục danh mục ---
+          showDescription
+              ? Text(
+                  widget.job.description,
+                  style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+                )
+              : Text(
+                  "Thông tin mô tả công việc sẽ được cập nhật sau.",
+                  style: TextStyle(color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                ),
           const SizedBox(height: 32),
+
+          // --- File JD ---
+          if (widget.job.jdFile.isNotEmpty) _buildJdFileSection(),
+          const SizedBox(height: 32),
+
+          // --- Danh mục ---
           _buildSectionTitle("Danh mục"),
           const SizedBox(height: 12),
           Wrap(
@@ -222,9 +269,9 @@ class _RecruiterJobDescriptionTabState
                     .map((c) => _buildChip(Icons.category_outlined, c.name))
                     .toList(),
           ),
-
-          // --- Mục kỹ năng ---
           const SizedBox(height: 32),
+
+          // --- Kỹ năng ---
           _buildSectionTitle("Kỹ năng yêu cầu"),
           const SizedBox(height: 12),
           Wrap(
@@ -234,6 +281,7 @@ class _RecruiterJobDescriptionTabState
                 ? [const Text("Không có kỹ năng")]
                 : _jobSkills.map((s) => _buildChip(Icons.code, s.name)).toList(),
           ),
+          const SizedBox(height: 50),
         ],
       ),
     );

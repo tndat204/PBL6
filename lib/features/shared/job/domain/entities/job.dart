@@ -1,5 +1,3 @@
-
-
 enum JobStatus { ACTIVE, INACTIVE, CLOSED }
 
 enum JobType { FULL_TIME, PART_TIME, CONTRACT, REMOTE }
@@ -25,6 +23,7 @@ class Job {
   final ExperienceLevel experienceLevel;
   final int requiredYearsOfExpMin;
   final int requiredYearsOfExpMax;
+  final String jdFile; // 💡 TRƯỜNG FILE JD (URL sau khi tải lên)
 
   final List<String> categoryIds;
   final List<String> skillIds;
@@ -43,8 +42,8 @@ class Job {
     required this.status,
     required this.salaryMin,
     required this.salaryMax,
+    required this.jdFile,
     required this.jobType,
-    // THÊM: vào constructor
     required this.experienceLevel,
     required this.requiredYearsOfExpMin,
     required this.requiredYearsOfExpMax,
@@ -69,7 +68,6 @@ class Job {
       return DateTime.now();
     }
 
-    // THÊM: Helper để parse ExperienceLevel
     ExperienceLevel parseExperienceLevel(String? level) {
       switch (level?.toUpperCase()) {
         case 'INTERN':
@@ -102,22 +100,22 @@ class Job {
       ),
       salaryMin: safeParseInt(json['salaryMin']),
       salaryMax: safeParseInt(json['salaryMax']),
+      jdFile: json['jdFile'] ?? json['jdUrl'] ?? '',
       jobType: JobType.values.firstWhere(
         (e) => e.name == (json['jobType']?.toUpperCase() ?? 'FULL_TIME'),
         orElse: () => JobType.FULL_TIME,
       ),
-      // THÊM: Parse các trường mới
       experienceLevel: parseExperienceLevel(json['experienceLevel']),
       requiredYearsOfExpMin: safeParseInt(json['requiredYearsOfExpMin']),
       requiredYearsOfExpMax: safeParseInt(json['requiredYearsOfExpMax']),
 
       categoryIds: (json['categoryIds'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
+            ?.map((e) => e.toString())
+            .toList() ??
           [],
       skillIds: (json['skillIds'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
+            ?.map((e) => e.toString())
+            .toList() ??
           [],
       location: json['location'] ?? '',
       locationProvince: null,
@@ -130,10 +128,10 @@ class Job {
     String? companyName,
     String? logoUrl,
     String? locationProvince,
-    // THÊM: Các trường mới vào copyWith (mặc dù có thể bạn không cần)
     ExperienceLevel? experienceLevel,
     int? requiredYearsOfExpMin,
     int? requiredYearsOfExpMax,
+    String? jdFile, // 💡 THÊM jdFile vào copyWith
   }) {
     return Job(
       id: id,
@@ -145,8 +143,8 @@ class Job {
       status: status,
       salaryMin: salaryMin,
       salaryMax: salaryMax,
+      jdFile: jdFile ?? this.jdFile, // 💡 CẬP NHẬT jdFile
       jobType: jobType,
-      // THÊM
       experienceLevel: experienceLevel ?? this.experienceLevel,
       requiredYearsOfExpMin:
           requiredYearsOfExpMin ?? this.requiredYearsOfExpMin,
@@ -160,22 +158,22 @@ class Job {
       postedBy: postedBy,
     );
   }
+  
   Map<String, dynamic> toJsonForUpsert() {
     return {
-      // id và postedBy không được gửi, chúng được server tự gán
       "companyId": companyId,
       "title": title,
-      "description": description,
-      "status": status.name, // Gửi tên enum (ví dụ: "ACTIVE")
+      "description": description, 
+      "status": status.name, 
       "salaryMin": salaryMin,
       "salaryMax": salaryMax,
-      "jobType": jobType.name, // Gửi tên enum (ví dụ: "FULL_TIME")
-      "experienceLevel":
-          experienceLevel.name, // Gửi tên enum (ví dụ: "INTERN")
+      "jdFile": "", // 💡 GỬI CHUỖI RỖNG (File sẽ được gửi qua Multipart)
+      "jobType": jobType.name, 
+      "experienceLevel": experienceLevel.name,
       "requiredYearsOfExpMin": requiredYearsOfExpMin,
       "requiredYearsOfExpMax": requiredYearsOfExpMax,
-      "categoryIds": categoryIds,
-      "skillIds": skillIds,
+      "categoryIds": categoryIds, // Gửi List of String
+      "skillIds": skillIds, // Gửi List of String
       "location": location,
       "expiryDate": expiryDate.toIso8601String(),
     };

@@ -14,10 +14,10 @@ abstract class JobRepository {
   Future<Job> fetchJobDetails(String jobId);
 
   /// Creates a new job posting.
-  Future<Job> createJob(Job job);
+  Future<Job> createJob(Job job, {String? jdFilePath});
 
   /// Updates an existing job posting by its ID.
-  Future<Job> updateJob(String jobId, Job job);
+  Future<Job> updateJob(String jobId, Job job, {String? jdFilePath});
 
   /// Deletes a job posting by its ID.
   Future<APIResponse<String>> deleteJob(String jobId);

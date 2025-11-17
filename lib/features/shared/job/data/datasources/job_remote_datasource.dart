@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 import 'package:pbl6/features/shared/auth/data/models/api_response_model.dart';
@@ -6,8 +5,6 @@ import 'package:pbl6/features/shared/auth/data/models/api_response_model.dart';
 import '../../domain/entities/job.dart';
 
 abstract class JobRemoteDataSource {
-  /// Fetches a list of all jobs based on optional filters.
-  /// (Based on GET /api/jobs)
   Future<List<Job>> fetchAllJobs({
     String? category,
     String? keyword,
@@ -15,20 +12,12 @@ abstract class JobRemoteDataSource {
     JobStatus? status,
   });
 
-  /// Fetches the details for a single job by its ID.
-  /// (Based on GET /api/jobs/{id})
   Future<Job> fetchJobDetails(String jobId);
 
-  /// Creates a new job posting.
-  /// (Based on POST /api/jobs)
-  Future<Job> createJob(Job job);
+  Future<Job> createJob(Job job, {String? jdFilePath});
 
-  /// Updates an existing job posting by its ID.
-  /// (Based on PUT /api/jobs/{id})
-  Future<Job> updateJob(String jobId, Job job);
+  Future<Job> updateJob(String jobId, Job job, {String? jdFilePath});
 
-  /// Deletes a job posting by its ID.
-  /// (Based on DELETE /api/jobs/{id})
   Future<APIResponse<String>> deleteJob(String jobId);
 }
 
@@ -52,11 +41,10 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         if (category != null) "category": category,
         if (keyword != null) "q": keyword,
         if (companyId != null) "companyId": companyId,
-        if (status != null) "status": status.name, // Gửi tên enum (ví dụ: "ACTIVE")
+        if (status != null) "status": status.name,
       },
     );
 
-    // Dựa trên response API của bạn (có 'result' là một List)
     final List<dynamic> data = response.data['result'];
     return data.map((job) => Job.fromJson(job)).toList();
   }
@@ -64,39 +52,115 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   @override
   Future<Job> fetchJobDetails(String jobId) async {
     final response = await _dio.get("${ApiConstants.jobs}/$jobId");
-    // Dựa trên response API của bạn (có 'result' là một Object)
+
     final jobData = response.data['result'];
     return Job.fromJson(jobData);
   }
 
-  @override
-  Future<Job> createJob(Job job) async {
-    final response = await _dio.post(
-      ApiConstants.jobs,
-      data: job.toJsonForUpsert(), // Gửi Map đã được chuẩn bị
-    );
-    // Dựa trên response API (trả về {code, message, result: {job}})
-    final jobData = response.data['result'];
-    return Job.fromJson(jobData);
+    @override
+  Future<Job> createJob(Job job, {String? jdFilePath}) async {
+    try {
+      final formData = FormData();
+
+      final data = job.toJsonForUpsert();
+
+      data.forEach((key, value) {
+        if (value is List) {
+          for (var item in value) {
+            formData.fields.add(MapEntry(key, item.toString()));
+          }
+        } else {
+          formData.fields.add(MapEntry(key, value.toString()));
+        }
+      });
+
+      if (jdFilePath != null && jdFilePath.isNotEmpty) {
+        formData.files.add(
+          MapEntry(
+            "jdFile",
+            await MultipartFile.fromFile(
+              jdFilePath,
+              filename: jdFilePath.split('/').last,
+            ),
+          ),
+        );
+      }
+       print(  formData.fields);
+      final response = await _dio.post(
+        ApiConstants.jobs,
+        data: formData,
+        options: Options(contentType: "multipart/form-data"),
+      );
+      print ('🟩 Job created : ${response.data}');
+      // 💡 LOGIC KIỂM TRA ĐÃ ĐÚNG: Đảm bảo resultData không null
+      final resultData = response.data?['result'];
+      if (resultData != null) {
+        return Job.fromJson(resultData);
+      } else {
+        throw Exception("Create Job thành công nhưng không nhận được dữ liệu Job.");
+      }
+
+    } catch (e) {
+      if (e is DioException) {
+        print('🟥 Dio error creating job: ${e.response?.data}');
+        throw Exception("Lỗi create job (Dio): ${e.response?.data ?? e.message}");
+      }
+      throw Exception("Lỗi create job: $e");
+    }
   }
 
   @override
-  Future<Job> updateJob(String jobId, Job job) async {
-    final response = await _dio.put(
-      "${ApiConstants.jobs}/$jobId",
-      data: job.toJsonForUpsert(), // Gửi Map đã được chuẩn bị
-    );
-    // Dựa trên response API (trả về {code, message, result: {job}})
-    final jobData = response.data['result'];
-    return Job.fromJson(jobData);
+  Future<Job> updateJob(String jobId, Job job, {String? jdFilePath}) async {
+    try {
+      final formData = FormData();
+
+      final data = job.toJsonForUpsert();
+
+      data.forEach((key, value) {
+        if (value is List) {
+          for (var item in value) {
+            formData.fields.add(MapEntry(key, item.toString()));
+          }
+        } else {
+          formData.fields.add(MapEntry(key, value.toString()));
+        }
+      });
+
+      if (jdFilePath != null && jdFilePath.isNotEmpty) {
+        formData.files.add(
+          MapEntry(
+            "jdFile",
+            await MultipartFile.fromFile(
+              jdFilePath,
+              filename: jdFilePath.split('/').last,
+            ),
+          ),
+        );
+      }
+
+      final response = await _dio.put(
+        "${ApiConstants.jobs}/$jobId",
+        data: formData,
+        options: Options(contentType: "multipart/form-data"),
+      );
+
+      final resultData = response.data?["result"];
+      if (response.statusCode == 200 && resultData != null) {
+        return Job.fromJson(resultData);
+      } else {
+        throw Exception("Update Job thất bại: ${response.data}");
+      }
+    } on DioException catch (e) {
+      throw Exception("Lỗi updateJob (Dio): ${e.response?.data ?? e.message}");
+    } catch (e) {
+      throw Exception("Lỗi không xác định updateJob: $e");
+    }
   }
 
   @override
   Future<APIResponse<String>> deleteJob(String jobId) async {
-    final response = await _dio.delete(
-      "${ApiConstants.jobs}/$jobId",
-    );
-    // Dựa trên response API (trả về {code, message, result: "string"})
+    final response = await _dio.delete("${ApiConstants.jobs}/$jobId");
+
     return APIResponse.fromJson(response.data, (json) => json.toString());
   }
 }
