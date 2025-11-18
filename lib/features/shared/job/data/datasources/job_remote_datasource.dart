@@ -85,14 +85,14 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
           ),
         );
       }
-       print(  formData.fields);
+     
       final response = await _dio.post(
         ApiConstants.jobs,
         data: formData,
         options: Options(contentType: "multipart/form-data"),
       );
-      print ('🟩 Job created : ${response.data}');
-      // 💡 LOGIC KIỂM TRA ĐÃ ĐÚNG: Đảm bảo resultData không null
+   
+     
       final resultData = response.data?['result'];
       if (resultData != null) {
         return Job.fromJson(resultData);
@@ -102,7 +102,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
 
     } catch (e) {
       if (e is DioException) {
-        print('🟥 Dio error creating job: ${e.response?.data}');
+      
         throw Exception("Lỗi create job (Dio): ${e.response?.data ?? e.message}");
       }
       throw Exception("Lỗi create job: $e");
@@ -137,7 +137,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
           ),
         );
       }
-
+    
       final response = await _dio.put(
         "${ApiConstants.jobs}/$jobId",
         data: formData,

@@ -167,7 +167,7 @@ class Job {
       "status": status.name, 
       "salaryMin": salaryMin,
       "salaryMax": salaryMax,
-      "jdFile": "", // 💡 GỬI CHUỖI RỖNG (File sẽ được gửi qua Multipart)
+    
       "jobType": jobType.name, 
       "experienceLevel": experienceLevel.name,
       "requiredYearsOfExpMin": requiredYearsOfExpMin,
