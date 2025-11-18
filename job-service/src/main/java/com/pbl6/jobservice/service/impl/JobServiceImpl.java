@@ -74,7 +74,7 @@ public class JobServiceImpl implements JobService {
                 .requiredYearsOfExpMax(request.getRequiredYearsOfExpMax())
                 .requiredYearsOfExpMin(request.getRequiredYearsOfExpMin())
                 .expiryDate(request.getExpiryDate())
-                .jdUrl(fileClient.uploadFile(request.getJdFile(),"job_decription").getResult())
+                .jdUrl(fileClient.uploadFile(request.getJdFile(),"job_description").getResult())
                 .build();
 
         job = jobRepository.save(job);
@@ -221,6 +221,9 @@ public class JobServiceImpl implements JobService {
                         .build();
                 job.getSkills().add(js);
             });
+        }
+        if(request.getJdFile()!=null){
+            job.setJdUrl(fileClient.uploadFile(request.getJdFile(),"job_description").getResult());
         }
 
         // Lưu job

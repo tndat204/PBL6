@@ -50,7 +50,7 @@ public class JobController {
     @PutMapping("/{id}")
     public APIResponse<JobResponse> updateJob(
             @PathVariable String id,
-            @RequestBody UpdateJobRequest request) {
+            @ModelAttribute UpdateJobRequest request) {
         return APIResponse.<JobResponse>builder()
                 .code(200)
                 .result(jobService.updateJob(id, request))
