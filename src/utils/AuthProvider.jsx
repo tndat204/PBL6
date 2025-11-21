@@ -1,21 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { handleLoginSuccess, handleLogout } from "./authUtils";
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
+   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Dữ liệu user không hợp lệ", error);
-        localStorage.removeItem("user");
-      }
+    if (!storedUser) return null;
+
+    try {
+      return JSON.parse(storedUser);
+    } catch (error) {
+      console.error("Dữ liệu user không hợp lệ", error);
+      localStorage.removeItem("user");
+      return null;
     }
-  }, []);
+  });
 
   const login = async (token) => {
     await handleLoginSuccess(token);
@@ -33,9 +32,10 @@ export function AuthProvider({ children }) {
     await handleLogout();
     setUser(null);
   };
+  const role = user?.roles?.[0]?.name || null;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, role, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
