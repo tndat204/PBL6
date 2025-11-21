@@ -6,7 +6,7 @@ from typing import List, Optional
 import tempfile
 import traceback
 import json
-
+import httpx
 from LangchainClient import client
 
 from ExtractText import extract_text_from_pdf, extract_text_from_jd
@@ -89,45 +89,89 @@ async def match_single_cv_jd(
         print("[Error]", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Server error: {e}")
 
+async def download_file_from_url(url: str) -> str:
+    """Tải file từ URL về và trả về file path."""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+
+        suffix = ".pdf"  # tùy bạn
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(response.content)
+            return tmp.name
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Không tải được file từ URL: {e}")
+
 
 @app.post("/match/multiple")
 async def match_multiple_cvs(
-    jd: UploadFile = File(...),
-    cvs: List[UploadFile] = File(...),
+    jd: Optional[UploadFile] = File(None),
+    jd_url: Optional[str] = Form(None),
+    cvs: Optional[List[UploadFile]] = File(None),
+    cv_urls: Optional[str] = Form(None),  # dạng JSON list string
     weights: Optional[str] = Form(None)
 ):
-    """Nhận 1 JD và nhiều CV, có thể cấu hình trọng số."""
+    """Nhận 1 JD và nhiều CV từ file hoặc URL."""
     try:
         user_weights = json.loads(weights) if weights else None
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as jd_tmp:
-            jd_tmp.write(await jd.read())
-            jd_path = jd_tmp.name
+        # --- Xử lý JD ---
+        if jd:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as jd_tmp:
+                jd_tmp.write(await jd.read())
+                jd_path = jd_tmp.name
+        elif jd_url:
+            jd_path = await download_file_from_url(jd_url)
+        else:
+            raise HTTPException(status_code=400, detail="Bạn phải gửi JD hoặc JD URL!")
 
         jd_json = await extract_and_analyze(jd_path, "jd")
         results = []
 
-        for cv in cvs:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as cv_tmp:
-                cv_tmp.write(await cv.read())
-                cv_path = cv_tmp.name
+        # --- Xử lý danh sách CV ---
+        cv_url_list = json.loads(cv_urls) if cv_urls else []
 
+        # 1) File upload
+        if cvs:
+            for cv in cvs:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as cv_tmp:
+                    cv_tmp.write(await cv.read())
+                    cv_path = cv_tmp.name
+
+                try:
+                    cv_json = await extract_and_analyze(cv_path, "cv")
+                    scores = compute_match_score(cv_json, jd_json, weights=user_weights)
+                    results.append({
+                        "cv_filename": cv.filename,
+                        "match_score": scores,
+                        "cv_data": cv_json
+                    })
+                except Exception as inner_e:
+                    results.append({
+                        "cv_filename": cv.filename,
+                        "error": str(inner_e)
+                    })
+
+        # 2) CV từ URLs
+        for url in cv_url_list:
             try:
+                cv_path = await download_file_from_url(url)
                 cv_json = await extract_and_analyze(cv_path, "cv")
                 scores = compute_match_score(cv_json, jd_json, weights=user_weights)
                 results.append({
-                    "cv_filename": cv.filename,
+                    "cv_url": url,
                     "match_score": scores,
                     "cv_data": cv_json
                 })
             except Exception as inner_e:
                 results.append({
-                    "cv_filename": cv.filename,
+                    "cv_url": url,
                     "error": str(inner_e)
                 })
 
         return JSONResponse({
-            "jd_filename": jd.filename,
+            "jd_source": jd.filename if jd else jd_url,
             "results": results
         })
 
