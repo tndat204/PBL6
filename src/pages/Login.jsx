@@ -2,10 +2,11 @@ import { useState } from "react";
 import { UserIcon, EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import Button from "../components/Button";
 import { useAuth } from "../hooks/useAuth";
-import { authService } from "../services"; 
+// import { authService } from "../services"; 
 // thêm authService*
 
 export default function Login() {
+  console.log("GOOGLE CLIENT:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
