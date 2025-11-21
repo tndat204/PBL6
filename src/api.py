@@ -1,14 +1,13 @@
-
-
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from typing import List, Optional
 import tempfile
 import traceback
 import json
 import httpx
+import os
 from LangchainClient import client
-
+from utils import export_results_to_excel
 from ExtractText import extract_text_from_pdf, extract_text_from_jd
 from ExtractLLM import  analyze_cv, analyze_jd
 from Scoring import compute_match_score
@@ -104,6 +103,15 @@ async def download_file_from_url(url: str) -> str:
         raise HTTPException(status_code=400, detail=f"Không tải được file từ URL: {e}")
 
 
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    file_path = f"/tmp/{filename}"
+    return FileResponse(
+        file_path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=filename
+    )
+
 @app.post("/match/multiple")
 async def match_multiple_cvs(
     jd: Optional[UploadFile] = File(None),
@@ -169,10 +177,12 @@ async def match_multiple_cvs(
                     "cv_url": url,
                     "error": str(inner_e)
                 })
-
+        excel_path = export_results_to_excel(results)
+        excel_filename = os.path.basename(excel_path)
         return JSONResponse({
             "jd_source": jd.filename if jd else jd_url,
-            "results": results
+            "results": results,
+            "excel_download_url": f"http://127.0.0.1:8000/download/{excel_filename}"
         })
 
     except Exception as e:
