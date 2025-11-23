@@ -9,9 +9,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ExperienceLevelStat {
 
     @Id
-    private String level; // Chính là tên của ExperienceLevel (ví dụ: "JUNIOR", "SENIOR")
+    private String level;
 
-    private long count = 0; // Số lượng job đang active
+    private long count = 0;
 
     public ExperienceLevelStat(String level) {
         this.level = level;

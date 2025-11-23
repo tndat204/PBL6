@@ -87,10 +87,14 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                     if (introspectResponse.getResult().isValid()) {
                         return chain.filter(exchange);
                     } else {
+                        log.error("Token isValid = false. Introspect response: {}", introspectResponse);
                         return unauthenticated(exchange.getResponse());
                     }
                 })
-                .onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
+                .onErrorResume(throwable -> {
+                    log.error("LỖI GỌI AUTH SERVICE: ", throwable);
+                    return unauthenticated(exchange.getResponse());
+                });
     }
 
     @Override

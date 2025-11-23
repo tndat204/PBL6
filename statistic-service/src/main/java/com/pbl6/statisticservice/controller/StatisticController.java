@@ -1,13 +1,12 @@
 package com.pbl6.statisticservice.controller;
 
-import com.pbl6.statisticservice.dto.response.APIResponse;
-import com.pbl6.statisticservice.dto.response.ExperienceLevelStatResponse;
-import com.pbl6.statisticservice.dto.response.GlobalSummaryResponse;
+import com.pbl6.statisticservice.dto.response.*;
 import com.pbl6.statisticservice.service.StatisticService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,6 +31,37 @@ public class StatisticController {
         return APIResponse.<List<ExperienceLevelStatResponse>>builder()
                 .code(200)
                 .result(statisticService.getExperienceStatistics())
+                .build();
+    }
+    @GetMapping("/top-skills")
+    public APIResponse<List<SkillStatResponse>> getTopSkills(
+            @RequestParam(value = "limit", defaultValue = "10") int limit
+    ) {
+        return APIResponse.<List<SkillStatResponse>>builder()
+                .code(200)
+                .result(statisticService.getTopSkills(limit))
+                .build();
+    }
+    @GetMapping("/salary")
+    public APIResponse<List<SalaryStatResponse>> getSalaryStats() {
+        return APIResponse.<List<SalaryStatResponse>>builder()
+                .code(200)
+                .result(statisticService.getSalaryStatistics())
+                .build();
+    }
+    @GetMapping("/growth")
+    public APIResponse<List<DailyStatResponse>> getGrowthStats(
+            @RequestParam(value = "days", defaultValue = "7") int days) {
+        return APIResponse.<List<DailyStatResponse>>builder()
+                .code(200)
+                .result(statisticService.getGrowthStats(days))
+                .build();
+    }
+    @GetMapping("/locations")
+    public APIResponse<List<LocationStatResponse>> getLocationStats() {
+        return APIResponse.<List<LocationStatResponse>>builder()
+                .code(200)
+                .result(statisticService.getLocationStats())
                 .build();
     }
 }

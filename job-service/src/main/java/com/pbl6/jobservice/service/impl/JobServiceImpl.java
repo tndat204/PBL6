@@ -1,5 +1,6 @@
 package com.pbl6.jobservice.service.impl;
 
+import com.pbl6.event.dto.JobClosedEvent;
 import com.pbl6.event.dto.JobPostedEvent;
 import com.pbl6.jobservice.client.FileClient;
 import com.pbl6.jobservice.dto.request.CreateJobRequest;
@@ -101,7 +102,11 @@ public class JobServiceImpl implements JobService {
         JobPostedEvent event = new JobPostedEvent(
                 job.getId().toString(),
                 job.getCompany().getId().toString(),
-                job.getExperienceLevel().toString()
+                job.getExperienceLevel().toString(),
+                request.getSkillIds(),
+                job.getSalaryMin(),
+                job.getSalaryMax(),
+                job.getLocation()
         );
 
         // 3. Bắn event "Đăng tin mới"
@@ -177,6 +182,8 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(UUID.fromString(jobId))
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
+        Job.JobStatus oldStatus = job.getStatus();
+
         boolean allowed = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(
                 job.getCompany().getId(),
                 userId,
@@ -191,7 +198,6 @@ public class JobServiceImpl implements JobService {
         // Cấu hình ModelMapper skip null
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setPropertyCondition(Conditions.isNotNull());
-
         // Map request -> entity
         mapper.map(request, job);
 
@@ -229,6 +235,24 @@ public class JobServiceImpl implements JobService {
         // Lưu job
         Job updatedJob = jobRepository.save(job);
 
+        if (Job.JobStatus.CLOSED.equals(updatedJob.getStatus()) && !Job.JobStatus.CLOSED.equals(oldStatus)) {
+
+            // Lấy danh sách Skill ID thực tế từ Job (Không lấy từ request vì request có thể null)
+            Set<UUID> currentSkillIds = updatedJob.getSkills().stream()
+                    .map(JobSkill::getSkillId)
+                    .collect(Collectors.toSet());
+
+            JobClosedEvent event = new JobClosedEvent(
+                    updatedJob.getId().toString(),
+                    updatedJob.getExperienceLevel().toString(), // Level để trừ thống kê lương/số lượng
+                    currentSkillIds,                            // Skill để trừ Top Skill
+                    updatedJob.getSalaryMin(),                  // Lương để trừ thống kê lương
+                    updatedJob.getSalaryMax(),
+                    updatedJob.getLocation()                    // Location để trừ thống kê địa điểm
+            );
+
+            kafkaTemplate.send(JOB_CLOSED_TOPIC, updatedJob.getId().toString(), event);
+        }
         // Map entity -> response
         JobResponse response = mapper.map(updatedJob, JobResponse.class);
         response.setCategoryIds(updatedJob.getCategories().stream()

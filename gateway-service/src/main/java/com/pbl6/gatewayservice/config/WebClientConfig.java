@@ -2,6 +2,7 @@ package com.pbl6.gatewayservice.config;
 
 
 import com.pbl6.gatewayservice.client.AuthClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -15,10 +16,13 @@ import java.util.List;
 
 @Configuration
 public class WebClientConfig {
+
+    @Value("${app.services.auth-url}")
+    private String authServiceUrl;
     @Bean
     WebClient webClient(){
         return WebClient.builder()
-                .baseUrl("http://localhost:8081/api/auth")
+                .baseUrl(authServiceUrl)
                 .build();
     }
     @Bean

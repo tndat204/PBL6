@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -16,4 +18,8 @@ public class JobPostedEvent {
     String companyId;
     String jobId;
     String experienceLevel;
+    Set<UUID> skillIds;
+    BigDecimal salaryMin;
+    BigDecimal salaryMax;
+    String location;
 }
