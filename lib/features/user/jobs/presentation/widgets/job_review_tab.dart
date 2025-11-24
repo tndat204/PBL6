@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -8,10 +6,13 @@ import 'package:pbl6/features/shared/auth/presentation/widgets/custom_text_field
 import 'package:pbl6/features/shared/review/domain/entities/review.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review_paginated_response.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/create_review_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/delete_review_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/get_company_reviews_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/toggle_like_review_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/update_review_usecase.dart';
 import 'package:pbl6/features/user/jobs/presentation/widgets/create_review_dialog.dart';
 import 'package:pbl6/features/user/jobs/presentation/widgets/review_list_item.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Enum cho bộ lọc Sort
 enum ReviewSortType { newest, highest, lowest }
@@ -30,8 +31,11 @@ class _JobReviewTabState extends State<JobReviewTab> {
   late final GetCompanyReviewsUseCase _getCompanyReviewsUseCase;
   late final CreateReviewUseCase _createReviewUseCase;
   late final ToggleLikeReviewUseCase _toggleLikeReviewUseCase;
+  late final UpdateReviewUseCase _updateReviewUseCase;
+  late final DeleteReviewUseCase _deleteReviewUseCase;
 
   // State
+  String _currentUserId = '';
   bool _isLoading = true;
   String? _errorMessage;
   ReviewPaginatedResponse _reviewData = ReviewPaginatedResponse.empty();
@@ -57,10 +61,18 @@ class _JobReviewTabState extends State<JobReviewTab> {
     _getCompanyReviewsUseCase = GetIt.I<GetCompanyReviewsUseCase>();
     _createReviewUseCase = GetIt.I<CreateReviewUseCase>();
     _toggleLikeReviewUseCase = GetIt.I<ToggleLikeReviewUseCase>();
-
+    _updateReviewUseCase = GetIt.I<UpdateReviewUseCase>();
+    _deleteReviewUseCase = GetIt.I<DeleteReviewUseCase>();
     _searchController.addListener(_onSearchChanged);
 
-    _loadReviews();
+    _loadCurrentUser().then((_) => _loadReviews());
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentUserId = prefs.getString('user_id') ?? '';
+    });
   }
 
   void _calculateRatingMetrics() {
@@ -93,66 +105,65 @@ class _JobReviewTabState extends State<JobReviewTab> {
   }
 
   Future<void> _loadReviews({bool refresh = false}) async {
-  if (refresh) {
-    _currentPage = 0;
-    _reviews.clear();
-    _hasNextPage = true;
-  }
+    if (refresh) {
+      _currentPage = 0;
+      _reviews.clear();
+      _hasNextPage = true;
+    }
 
-  if (_isLoadingMore || !_hasNextPage) return;
-
-  if (mounted) {
-    setState(() {
-      if (refresh) _isLoading = true;
-      _isLoadingMore = true;
-      _errorMessage = null;
-    });
-  }
-
-  try {
-    final data = await _getCompanyReviewsUseCase(
-      GetCompanyReviewsParams(
-        companyId: widget.companyId,
-        page: _currentPage,
-        size: 10,
-      ),
-    );
-
-    // Chuẩn hóa reviewerInfo ngay khi load API
-    final fixedReviews = data.content.map((review) {
-      final info = review.reviewerInfo;
-      final fixedInfo = info.reviewerName.isEmpty
-          ? info.copyWith(reviewerName: 'N/A')
-          : info;
-      return review.copyWith(reviewerInfo: fixedInfo);
-    }).toList();
+    if (_isLoadingMore || !_hasNextPage) return;
 
     if (mounted) {
       setState(() {
-        _reviews.addAll(fixedReviews);
-        _reviewData = data;
-        _currentPage++;
-        _hasNextPage = !data.last;
-        _calculateRatingMetrics();
-        _onSearchChanged(); // Lọc theo search hiện tại
+        if (refresh) _isLoading = true;
+        _isLoadingMore = true;
+        _errorMessage = null;
       });
     }
-  } catch (e) {
-    if (mounted) {
-      setState(() {
-        _errorMessage = 'Lỗi tải đánh giá: $e';
-      });
-    }
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _isLoadingMore = false;
-      });
+
+    try {
+      final data = await _getCompanyReviewsUseCase(
+        GetCompanyReviewsParams(
+          companyId: widget.companyId,
+          page: _currentPage,
+          size: 10,
+        ),
+      );
+
+      // Chuẩn hóa reviewerInfo ngay khi load API
+      final fixedReviews = data.content.map((review) {
+        final info = review.reviewerInfo;
+        final fixedInfo = info.reviewerName.isEmpty
+            ? info.copyWith(reviewerName: 'N/A')
+            : info;
+        return review.copyWith(reviewerInfo: fixedInfo);
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _reviews.addAll(fixedReviews);
+          _reviewData = data;
+          _currentPage++;
+          _hasNextPage = !data.last;
+          _calculateRatingMetrics();
+          _onSearchChanged(); // Lọc theo search hiện tại
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Lỗi tải đánh giá: $e';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+        });
+      }
     }
   }
-}
-
 
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase().trim();
@@ -169,33 +180,27 @@ class _JobReviewTabState extends State<JobReviewTab> {
     });
   }
 
-  Future<void> _showCreateReviewDialog() async {
+ Future<void> _showCreateReviewDialog() async {
+  
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => const CreateReviewDialog(),
+      builder: (context) => const CreateReviewDialog(existingReview: null),
     );
 
     if (result == null || !mounted) return;
-
-    final title = result['title'];
-    final comment = result['comment'];
-    final rating = result['rating'];
-    final List<File> images = result['images'];
 
     try {
       final newReview = await _createReviewUseCase(
         CreateReviewParams(
           companyId: widget.companyId,
-          title: title,
-          comment: comment,
-          rating: rating,
-          images: images,
+          title: result['title'],
+          comment: result['comment'],
+          rating: result['rating'],
+          images: result['images'],
         ),
       );
 
-      MotionToast.success(
-        description: const Text("Đăng đánh giá thành công!"),
-      ).show(context);
+      MotionToast.success(description: const Text("Đăng đánh giá thành công!")).show(context);
       if (mounted) {
         setState(() {
           _reviews.insert(0, newReview);
@@ -204,12 +209,83 @@ class _JobReviewTabState extends State<JobReviewTab> {
         });
       }
     } catch (e) {
-      MotionToast.error(
-        description: Text("Lỗi tạo đánh giá: $e"),
-      ).show(context);
+      MotionToast.error(description: Text("Lỗi: $e")).show(context);
+    }
+  }
+Future<void> _handleEditReview(Review review) async {
+    // Gọi dialog có truyền review -> Chế độ edit
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => CreateReviewDialog(existingReview: review),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      // Gọi UseCase Update
+      final updatedReview = await _updateReviewUseCase(
+        UpdateReviewParams(
+          reviewId: review.reviewId,
+          title: result['title'],
+          comment: result['comment'],
+          rating: result['rating'],
+          newImages: result['images'], // List<File>
+        ),
+      );
+
+      MotionToast.success(description: const Text("Cập nhật thành công!")).show(context);
+      
+      // Cập nhật UI
+      if (mounted) {
+        setState(() {
+          final index = _reviews.indexWhere((r) => r.reviewId == review.reviewId);
+          if (index != -1) {
+            _reviews[index] = updatedReview;
+            _onSearchChanged();
+            _calculateRatingMetrics();
+          }
+        });
+      }
+    } catch (e) {
+      MotionToast.error(description: Text("Lỗi cập nhật: $e")).show(context);
     }
   }
 
+ 
+  Future<void> _handleDeleteReview(Review review) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận xóa'),
+        content: const Text('Bạn có chắc chắn muốn xóa đánh giá này không?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xóa', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      final response = await _deleteReviewUseCase(review.reviewId);
+      
+      if (response.code == 200) { // Giả sử 200 là thành công
+         MotionToast.success(description: const Text("Đã xóa đánh giá")).show(context);
+         if (mounted) {
+          setState(() {
+            _reviews.removeWhere((r) => r.reviewId == review.reviewId);
+            _onSearchChanged();
+            _calculateRatingMetrics();
+          });
+        }
+      } else {
+         MotionToast.error(description: Text("Lỗi: ${response.message}")).show(context);
+      }
+    } catch (e) {
+      MotionToast.error(description: Text("Lỗi xóa: $e")).show(context);
+    }
+  }
   Future<void> _toggleLike(String reviewId) async {
     try {
       final updatedReview = await _toggleLikeReviewUseCase(reviewId);
@@ -439,6 +515,9 @@ class _JobReviewTabState extends State<JobReviewTab> {
         return ReviewListItem(
           review: review,
           onLikePressed: () => _toggleLike(review.reviewId),
+          currentUserId: _currentUserId,
+          onEditPressed: _handleEditReview,
+          onDeletePressed: _handleDeleteReview,
         );
       },
     );

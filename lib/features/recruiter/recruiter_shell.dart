@@ -18,7 +18,7 @@ class _RecruiterShellState extends State<RecruiterShell> {
     '/recruiter/dashboard',
     '/recruiter/jobs',
     // SỬA: Dựa trên router của bạn, route này nên là /projects
-    '/recruiter/projects',
+    '/recruiter/reviews',
     '/recruiter/profile',
   ];
 
@@ -57,7 +57,7 @@ class _RecruiterShellState extends State<RecruiterShell> {
                       label: 'Quản lý Job'),
                   BottomNavigationBarItem(
                       icon: Icon(Icons.assessment_outlined),
-                      label: 'Thống kê'), // Dựa trên route '/projects'
+                      label: 'Đánh giá'), // Dựa trên route '/projects'
                   BottomNavigationBarItem(
                       icon: Icon(Icons.person_outline_rounded),
                       label: 'Công ty'), // Hoặc 'Hồ sơ'

@@ -1,6 +1,11 @@
 import 'package:get_it/get_it.dart';
 import 'package:pbl6/core/network/dio_client.dart';
 import 'package:pbl6/core/services/api_service.dart';
+import 'package:pbl6/features/ai_matching/data/datasources/ai_match_remote_datasource.dart';
+import 'package:pbl6/features/ai_matching/data/repositories/ai_match_repository_impl.dart';
+import 'package:pbl6/features/ai_matching/domain/repositories/ai_match_repository.dart';
+import 'package:pbl6/features/ai_matching/domain/usecases/match_multiple_cvs_usecase.dart';
+import 'package:pbl6/features/ai_matching/domain/usecases/match_single_cv_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/create_job_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/delete_job_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/get_application_detail_usecase.dart';
@@ -293,4 +298,19 @@ void init() {
   sl.registerLazySingleton<UpdateReviewUseCase>(
     () => UpdateReviewUseCase(sl<ReviewRepository>()),
   );
+
+  // ================= AI MATCHING =================
+  sl.registerLazySingleton<AiMatchRemoteDataSource>(
+    () => AiMatchRemoteDataSourceImpl(sl<DioClient>().instance),
+  );
+  sl.registerLazySingleton<AiMatchRepository>(
+    () => AiMatchRepositoryImpl(sl<AiMatchRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<MatchMultipleCvsUseCase>(
+    () => MatchMultipleCvsUseCase(sl<AiMatchRepository>()),
+  );
+  sl.registerLazySingleton< MatchSingleCvUseCase>(
+    () =>  MatchSingleCvUseCase(sl<AiMatchRepository>()),
+  );
+
 }

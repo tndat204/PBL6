@@ -75,13 +75,13 @@ class AuthRepositoryImpl implements AuthRepository {
           final Company company = await _companyRemoteDataSource.fetchMyCompany();
           if (company.id.isNotEmpty) {
             await prefs.setString('company_id', company.id);
-            print('Recruiter logged in, saved companyId: ${company.id}');
+          
           }
         } catch (e) {
           // Lỗi này có thể xảy ra nếu Recruiter mới đăng ký
           // và CHƯA TẠO công ty.
           // Chúng ta không muốn dừng việc đăng nhập.
-          print('Recruiter logged in, but failed to fetch/save companyId: $e');
+        
           // Xóa ID công ty cũ (nếu có) để đảm bảo tính nhất quán
           await prefs.remove('company_id');
         }

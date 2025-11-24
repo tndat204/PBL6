@@ -8,6 +8,7 @@ import 'package:pbl6/features/recruiter/job/presentation/pages/recruiter_job_pag
 // THÊM IMPORT MỚI
 import 'package:pbl6/features/recruiter/job/presentation/pages/upsert_job_page.dart';
 import 'package:pbl6/features/recruiter/recruiter_shell.dart';
+import 'package:pbl6/features/recruiter/review/presentation/pages/recruiter_review_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/forgot_password_email_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/recruiter_signup_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/reset_password_page.dart';
@@ -254,8 +255,8 @@ final GoRouter router = GoRouter(
           builder: (_, __) => const RecruiterJobPage(),
         ),
         GoRoute(
-          path: '/recruiter/projects',
-          builder: (_, __) => const PlaceholderScreen(title: 'Projects'),
+          path: '/recruiter/reviews',
+          builder: (_, __) => const RecruiterReviewPage() ,
         ),
         GoRoute(
           path: '/recruiter/profile',
