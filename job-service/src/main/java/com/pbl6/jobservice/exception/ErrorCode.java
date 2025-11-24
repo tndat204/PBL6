@@ -22,7 +22,13 @@ public enum ErrorCode {
     USER_NOT_FOUND_IN_COMPANY(2009,"Người dùng không tìm thấy trong công ty này", HttpStatus.NOT_FOUND),
     REVIEW_NOT_FOUND(2010,"Không tìm thấy đánh giá", HttpStatus.NOT_FOUND),
     NOT_ALLOW_TO_UPDATE_REVIEW(2011,"Bạn không thể cập nhật đánh giá này", HttpStatus.FORBIDDEN),
-    NOT_ALLOW_TO_DELETE_REVIEW(2011,"Bạn không thể xóa đánh giá này", HttpStatus.FORBIDDEN);
+    NOT_ALLOW_TO_DELETE_REVIEW(2012,"Bạn không thể xóa đánh giá này", HttpStatus.FORBIDDEN),
+    REVIEW_SELF_REPORT_NOT_ALLOWED(2013,"Bạn không thể báo cáo review của chính mình", HttpStatus.FORBIDDEN),
+    REVIEW_ALREADY_REPORTED(2014,"Bạn đã báo cáo review này rồi",HttpStatus.FORBIDDEN),
+    REVIEW_REPORT_OTHER_DETAIL_REQUIRED(2015,"Vui lòng cung cấp chi tiết khi chọn lý do “Khác",HttpStatus.BAD_REQUEST),
+    REPORT_NOT_FOUND(2016,"Báo cáo không tồn tại", HttpStatus.NOT_FOUND),
+    REPORT_STATUS_REVERT_NOT_ALLOWED(2017,"Không thể đổi trạng thái trở lại PENDING",HttpStatus.FORBIDDEN);
+
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;

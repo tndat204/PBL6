@@ -1,10 +1,17 @@
 package com.pbl6.jobservice.controller;
 
+import com.pbl6.jobservice.dto.request.ReportRequest;
+import com.pbl6.jobservice.dto.request.ReportStatusRequest;
 import com.pbl6.jobservice.dto.request.ReviewRequest;
 import com.pbl6.jobservice.dto.request.ReviewUpdateRequest;
 import com.pbl6.jobservice.dto.response.APIResponse;
+import com.pbl6.jobservice.dto.response.ReasonResponse;
+import com.pbl6.jobservice.dto.response.ReportResponse;
 import com.pbl6.jobservice.dto.response.ReviewResponse;
+import com.pbl6.jobservice.entity.ReviewReport;
 import com.pbl6.jobservice.service.CompanyReviewService;
+import com.pbl6.jobservice.service.ReviewReportService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
@@ -14,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,8 +29,10 @@ import java.util.UUID;
 @FieldDefaults(level= AccessLevel.PRIVATE,makeFinal=true)
 public class ReviewController {
     CompanyReviewService companyReviewService;
-    public ReviewController(CompanyReviewService companyReviewService) {
+    ReviewReportService reviewReportService;
+    public ReviewController(CompanyReviewService companyReviewService, ReviewReportService reviewReportService) {
         this.companyReviewService = companyReviewService;
+        this.reviewReportService = reviewReportService;
     }
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<ReviewResponse> createReview(
@@ -78,6 +88,40 @@ public class ReviewController {
         return APIResponse.<ReviewResponse>builder()
                 .code(200)
                 .result(companyReviewService.toggleLike(reviewId))
+                .build();
+    }
+    @PostMapping("/reports/{reviewId}")
+    public APIResponse<ReportResponse> createReport(@PathVariable UUID reviewId, @RequestBody ReportRequest request){
+        return APIResponse.<ReportResponse>builder()
+                .code(200)
+                .result(reviewReportService.createReport(reviewId,request))
+                .build();
+    }
+    @GetMapping("/report-reasons")
+    public APIResponse<List<ReasonResponse>> getAllReasons(){
+        return APIResponse.<List<ReasonResponse>>builder()
+                .code(200)
+                .result(reviewReportService.getAllReportReasons())
+                .build();
+    }
+    @GetMapping("/reports")
+    public APIResponse<Page<ReportResponse>> getAllReports(@RequestParam(required = false) ReviewReport.ReportStatus status,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return APIResponse.<Page<ReportResponse>>builder()
+                .code(200)
+                .result(reviewReportService.getAllReports(status, pageable))
+                .build();
+    }
+
+    @PutMapping("/reports/{reportId}/process")
+    public APIResponse<String> processReport(@PathVariable UUID reportId,
+                                             @RequestBody @Valid ReportStatusRequest request){
+        reviewReportService.processReport(reportId,request);
+        return APIResponse.<String>builder()
+                .code(200)
+                .result("Process successfully")
                 .build();
     }
 }
