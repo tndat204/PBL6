@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Security, Depends
+from fastapi.security import APIKeyHeader
 from fastapi.responses import JSONResponse, FileResponse
 from typing import List, Optional
 import tempfile
@@ -8,6 +9,11 @@ import httpx
 import os
 import sys
 from pathlib import Path
+import dotenv
+
+# Load environment variables
+env_path = Path(__file__).parent.parent / '.env'
+dotenv.load_dotenv(dotenv_path=env_path)
 
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -20,6 +26,42 @@ from Scoring import compute_match_score
 
 from fastapi.middleware.cors import CORSMiddleware
 
+# ==========================
+# API KEY AUTHENTICATION
+# ==========================
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+# Get API key from environment
+API_KEY = os.getenv("API_SECRET_KEY")
+
+if not API_KEY:
+    print("WARNING: API_SECRET_KEY not set in .env file. API will be unprotected!")
+    API_KEY = None  
+
+
+async def verify_api_key(api_key: str = Security(api_key_header)):
+    """Verify the API key from request header."""
+    # If no API key is configured, allow all requests (development mode)
+    if API_KEY is None:
+        return True
+    
+    # Check if API key is provided
+    if api_key is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing API Key. Please provide X-API-Key header."
+        )
+    
+    # Verify API key matches
+    if api_key != API_KEY:
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API Key"
+        )
+    
+    return True
+
 
 # ==========================
 # INIT
@@ -28,13 +70,6 @@ app = FastAPI(title="CV–JD Matching API")
 
 # client = load_client()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],     # Cho phép mọi domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 # ==========================
@@ -64,7 +99,8 @@ def root():
 async def match_single_cv_jd(
     cv: UploadFile = File(...),
     jd: UploadFile = File(...),
-    weights: Optional[str] = Form(None)
+    weights: Optional[str] = Form(None),
+    authenticated: bool = Depends(verify_api_key)
 ):
     """Phân tích 1 CV và 1 JD, trả về điểm khớp với trọng số tùy chọn."""
     try:
@@ -124,7 +160,8 @@ async def match_multiple_cvs(
     jd_url: Optional[str] = Form(None),
     cvs: Optional[List[UploadFile]] = File(None),
     cv_urls: Optional[str] = Form(None),  # dạng JSON list string
-    weights: Optional[str] = Form(None)
+    weights: Optional[str] = Form(None),
+    authenticated: bool = Depends(verify_api_key)
 ):
     """Nhận 1 JD và nhiều CV từ file hoặc URL."""
     try:
