@@ -185,11 +185,56 @@ public class ReviewReportServiceImpl implements ReviewReportService {
             if (report.getCompanyReview() != null) {
                 response.setReviewId(report.getCompanyReview().getReviewId());
             }
+            if (report.getDescription() != null && !report.getDescription().isEmpty()) {
+                response.setDescription(report.getDescription());
+            } else {
+                response.setDescription(getDefaultDescription(report.getReason()));
+            }
             return response;
         });
     }
 
+    private String getDefaultDescription(ReviewReport.ReportReason reason) {
+        if (reason == null) return "";
 
+        switch (reason) {
+            case SPAM:
+                return "Spam, nội dung rác, quảng cáo bán hàng hoặc link không liên quan.";
+
+            case SCAM_OR_FRAUD:
+                return "Lừa đảo, đa cấp biến tướng, dụ dỗ đầu tư hoặc chứa link độc hại.";
+
+            case INAPPROPRIATE_CONTENT:
+                return "Nội dung khiêu dâm, bạo lực, hình ảnh hoặc ngôn từ phản cảm.";
+
+            case HATE_SPEECH:
+                return "Ngôn từ thù ghét, phân biệt chủng tộc, tôn giáo, giới tính hoặc vùng miền.";
+
+            case HARASSMENT:
+                return "Quấy rối, đe dọa, bắt nạt hoặc công kích một cá nhân cụ thể.";
+
+            case FAKE_INFORMATION:
+                return "Thông tin sai sự thật, bịa đặt vô căn cứ về công ty hoặc chính sách.";
+
+            case CONFLICT_OF_INTEREST:
+                return "Xung đột lợi ích (Nhân viên tự khen công ty hoặc đối thủ cạnh tranh cố tình dìm hàng).";
+
+            case PRIVACY_VIOLATION:
+                return "Xâm phạm quyền riêng tư (Công khai SĐT, địa chỉ nhà, Facebook cá nhân của người khác).";
+
+            case SHARING_CONFIDENTIAL_INFO:
+                return "Tiết lộ bí mật công ty (Lộ source code, tài liệu nội bộ, quy trình kinh doanh, mức lương bảo mật).";
+
+            case IRRELEVANT_CONTENT:
+                return "Nội dung không liên quan đến trải nghiệm làm việc hoặc phỏng vấn.";
+
+            case OTHER:
+                return "Lý do khác (Người dùng không nhập chi tiết).";
+
+            default:
+                return "Vi phạm tiêu chuẩn cộng đồng.";
+        }
+    }
     private UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication.getPrincipal() instanceof Jwt jwt)) {

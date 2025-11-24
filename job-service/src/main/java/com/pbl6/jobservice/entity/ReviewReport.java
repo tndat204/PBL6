@@ -48,25 +48,29 @@ public class ReviewReport extends Base { // Base chứa createdDate
     }
 
     public enum ReportReason {
-        // 1. Nhóm rác và lừa đảo
-        SPAM,                   // Spam, nội dung rác, quảng cáo không liên quan
-        SCAM_OR_FRAUD,          // Lừa đảo, dụ dỗ đầu tư, link độc hại
+        SPAM("Spam hoặc quảng cáo", "Nội dung rác, quảng cáo bán hàng, link không liên quan."),
 
-        // 2. Nhóm nội dung độc hại
-        INAPPROPRIATE_CONTENT,  // Nội dung khiêu dâm, bạo lực, phản cảm
-        HATE_SPEECH,            // Ngôn từ thù ghét (phân biệt chủng tộc, tôn giáo, giới tính...)
-        HARASSMENT,             // Quấy rối, đe dọa hoặc bắt nạt cá nhân cụ thể
+        SCAM_OR_FRAUD("Lừa đảo hoặc gian lận", "Quảng cáo đa cấp, yêu cầu nộp tiền, hoặc lừa đảo."),
 
-        // 3. Nhóm tính xác thực (Quan trọng cho Review Công ty)
-        FAKE_INFORMATION,       // Thông tin sai lệch, không đúng sự thật
-        CONFLICT_OF_INTEREST,   // Xung đột lợi ích (HR tự khen công ty, đối thủ chơi xấu)
+        INAPPROPRIATE_CONTENT("Nội dung không phù hợp", "Hình ảnh/ngôn từ khiêu dâm, bạo lực hoặc phản cảm."),
 
-        // 4. Nhóm quyền riêng tư & Bảo mật
-        PRIVACY_VIOLATION,      // Lộ thông tin cá nhân (SĐT, địa chỉ nhà riêng của nhân viên khác)
-        SHARING_CONFIDENTIAL_INFO, // Tiết lộ bí mật kinh doanh, công nghệ nội bộ, lương thưởng bảo mật
+        HATE_SPEECH("Ngôn từ thù ghét", "Phân biệt chủng tộc, tôn giáo, giới tính, vùng miền."),
 
-        // 5. Khác
-        IRRELEVANT_CONTENT,     // Nội dung không liên quan đến trải nghiệm làm việc/công ty
-        OTHER                   // Lý do khác
+        HARASSMENT("Quấy rối hoặc công kích", "Tấn công, xúc phạm cá nhân cụ thể (đồng nghiệp, HR, sếp)."),
+
+        FAKE_INFORMATION("Thông tin sai sự thật", "Bịa đặt thông tin sai lệch về công ty hoặc chính sách."),
+
+        CONFLICT_OF_INTEREST("Xung đột lợi ích", "HR tự khen công ty (Seeding) hoặc đối thủ dìm hàng."),
+
+        PRIVACY_VIOLATION("Xâm phạm quyền riêng tư", "Công khai SĐT, địa chỉ, Facebook cá nhân của người khác."),
+
+        SHARING_CONFIDENTIAL_INFO("Lộ bí mật công ty", "Tiết lộ source code, tài liệu nội bộ, bảng lương bảo mật."),
+
+        IRRELEVANT_CONTENT("Không liên quan", "Nội dung không liên quan đến trải nghiệm làm việc."),
+
+        OTHER("Lý do khác", "Người dùng tự nhập mô tả chi tiết.");
+
+        ReportReason(String label, String defaultDescription) {
+        }
     }
 }
