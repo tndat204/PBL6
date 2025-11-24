@@ -6,7 +6,13 @@ import traceback
 import json
 import httpx
 import os
-from LangchainClient import client
+import sys
+from pathlib import Path
+
+# Add src directory to Python path
+sys.path.insert(0, str(Path(__file__).parent))
+
+from OpenRouter import client
 from utils import export_results_to_excel
 from ExtractText import extract_text_from_pdf, extract_text_from_jd
 from ExtractLLM import  analyze_cv, analyze_jd

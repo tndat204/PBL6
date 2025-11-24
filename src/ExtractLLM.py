@@ -4,7 +4,7 @@ import time
 from dotenv import load_dotenv
 from typing import Dict, Any
 import asyncio
-from LangchainClient import client
+from OpenRouter import client
 
 
 SKILL_DICTIONARY = {
