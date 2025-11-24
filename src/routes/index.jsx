@@ -11,6 +11,8 @@ import Authenticate from "../pages/Authenticate";
 import SystemError from "../pages/SystemError";
 import CompanyProfile from "../pages/CompanyProfile";
 import CompanyPosts from "../pages/CompanyPosts";
+import CompanyList from "../pages/admin/CompanyList";
+import ResumeAnalyze from "../pages/ResumeAnalyze";
 
 export default function AppRoutes() {
   return (
@@ -28,6 +30,8 @@ export default function AppRoutes() {
         <Route path="/system-error" element={<SystemError />} />
         <Route path="/company-profile" element={<CompanyProfile />} />
         <Route path="/company-posts" element={<CompanyPosts />} />
+        <Route path="/admin/companies" element={<CompanyList />} />
+        <Route path="/resume-analyze" element={<ResumeAnalyze />} />
       </Routes>
     </BrowserRouter>
   );
