@@ -75,6 +75,13 @@ public class UserController {
                 .result(userService.updateMyInfo(request))
                 .build();
     }
+    @PutMapping("/{id}")
+    public APIResponse<UserResponse> updateUser(@PathVariable String id,@RequestBody UpdateUserRequest request){
+        return APIResponse.<UserResponse>builder()
+                .code(200)
+                .result(userService.updateUser(id,request))
+                .build();
+    }
     @DeleteMapping("/{id}")
     public APIResponse<String> deleteUser(@PathVariable String id){
         userService.deleteUser(id);

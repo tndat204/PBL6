@@ -33,6 +33,7 @@ public interface UserService {
 
     public void upgradeRole(String userId,String roleId);
 
+    public UserResponse updateUser(String userId,UpdateUserRequest request);
     public void changePassword(ChangePasswordRequest request);
     public UserResponse getUserById(String id);
     public UserResponse login(LoginRequest request);

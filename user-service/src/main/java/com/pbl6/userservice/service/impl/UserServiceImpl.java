@@ -241,6 +241,19 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse updateUser(String userId, UpdateUserRequest request) {
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
+        modelMapper.map(request,user);
+        userRepository.save(user);
+        return modelMapper.map(user,UserResponse.class);
+    }
+
     @Override
     public void changePassword(ChangePasswordRequest request) {
         var context = SecurityContextHolder.getContext();
