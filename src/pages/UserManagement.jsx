@@ -527,13 +527,15 @@ const UserRow = ({ user, onView, onBan, onDelete }) => {
                     >
                         <Search size={16} />
                     </button>
-                    <button
-                        onClick={() => onBan(user.id)}
-                        className={`p-2 ${user.status === 'Active' ? 'text-orange-600 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'} rounded-lg transition-colors`}
-                        title={user.status === 'Active' ? 'Cấm người dùng' : 'Bỏ cấm'}
-                    >
-                        {user.status === 'Active' ? <Ban size={16} /> : <CheckCircle size={16} />}
-                    </button>
+                    {user.role !== 'ADMIN' && (
+                        <button
+                            onClick={() => onBan(user.id)}
+                            className={`p-2 ${user.status === 'Active' ? 'text-orange-600 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'} rounded-lg transition-colors`}
+                            title={user.status === 'Active' ? 'Cấm người dùng' : 'Bỏ cấm'}
+                        >
+                            {user.status === 'Active' ? <Ban size={16} /> : <CheckCircle size={16} />}
+                        </button>
+                    )}
                     {user.role !== 'ADMIN' && (
                         <button
                             onClick={() => onDelete(user.id)}

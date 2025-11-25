@@ -100,7 +100,7 @@ class UserService {
      */
     async toggleUserStatus(userId, isEnabled) {
         try {
-            const response = await apiService.patch(`/users/${userId}/status`, { isEnabled });
+            const response = await apiService.put(`/users/${userId}/status`, { isEnabled });
             return response.result || response;
         } catch (error) {
             console.error(`Error toggling user status ${userId}:`, error);
