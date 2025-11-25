@@ -28,6 +28,7 @@ class ApiService {
 
   // Generic method để gọi API
   async request(endpoint, options = {}) {
+
     const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: this.getHeaders(options.auth !== false),
@@ -36,7 +37,7 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -55,6 +56,7 @@ class ApiService {
 
   // POST request
   async post(endpoint, data, options = {}) {
+
     return this.request(endpoint, {
       method: "POST",
       body: JSON.stringify(data),

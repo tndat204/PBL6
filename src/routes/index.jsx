@@ -14,11 +14,13 @@ import CompanyPosts from "../pages/CompanyPosts";
 import RegisterRoleModal from "../components/RegisterRoleModal";
 import RegisterCandidate from "../pages/RegisterCandidate";
 import RegisterEmployer from "../pages/RegisterEmployer";
-import AdminDashboard from "../pages/AdminDashboard"; 
+import AdminDashboard from "../pages/AdminDashboard";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { USER_ROLES } from "../contexts/AuthContext";
 import Unauthorized from "../pages/Unauthorized";
 import RecruiterDashboard from "../pages/RecruiterDashboard";
+import UserManagement from "../pages/UserManagement";
+import AdminLayout from "../layouts/AdminLayout";
 export default function AppRoutes() {
   return (
     <BrowserRouter>
@@ -41,14 +43,14 @@ export default function AppRoutes() {
             <Profile />
           </ProtectedRoute>
         } />
-        
+
         {/* USER only routes */}
         <Route path="/apply-job/:id" element={
           <ProtectedRoute allowedRoles={[USER_ROLES.USER]}>
             <ApplyJob />
           </ProtectedRoute>
         } />
-        
+
         {/* RECRUITER only routes */}
         <Route path="/post-job" element={
           <ProtectedRoute allowedRoles={[USER_ROLES.RECRUITER]}>
@@ -60,30 +62,20 @@ export default function AppRoutes() {
             <CompanyPosts />
           </ProtectedRoute>
         } />
-        
-        {/* ADMIN only routes */}
-        {/* <Route path="/admin" element={
-          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        } /> */}
-        <Route path="/admin" element={
-          // <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
-            <AdminDashboard />
-          // {/* </ProtectedRoute> */}
-        } />
-        
-        {/* Multi-role routes */}
-        <Route path="/authenticate" element={
-          <ProtectedRoute allowedRoles={[USER_ROLES.RECRUITER, USER_ROLES.ADMIN]}>
-            <Authenticate />
-          </ProtectedRoute>
-        } />
 
-        {/* <Route path="/system-error" element={<SystemError />} /> */}
-        <Route path="/unauthorized" element={<Unauthorized />} />
+        {/* ADMIN routes with Layout */}
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          {/* Add other admin routes here */}
+        </Route>
+
         {/* Nhap */}
-        <Route path="/recruiter-dashboard" element= {<RecruiterDashboard />} />
+        <Route path="/recruiter-dashboard" element={<RecruiterDashboard />} />
       </Routes>
     </BrowserRouter>
   );
