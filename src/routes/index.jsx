@@ -63,6 +63,12 @@ export default function AppRoutes() {
           </ProtectedRoute>
         } />
 
+        {/* ADMIN only routes */}
+        {/* <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } /> */}
         {/* ADMIN routes with Layout */}
         <Route path="/admin" element={
           <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
@@ -71,8 +77,17 @@ export default function AppRoutes() {
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
-          {/* Add other admin routes here */}
         </Route>
+
+        {/* Multi-role routes */}
+        <Route path="/authenticate" element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.RECRUITER, USER_ROLES.ADMIN]}>
+            <Authenticate />
+          </ProtectedRoute>
+        } />
+
+        {/* <Route path="/system-error" element={<SystemError />} /> */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Nhap */}
         <Route path="/recruiter-dashboard" element={<RecruiterDashboard />} />
