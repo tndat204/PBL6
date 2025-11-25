@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -5,12 +6,14 @@ import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/shared/auth/presentation/widgets/custom_text_field.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review_paginated_response.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/create_report_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/create_review_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/delete_review_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/get_company_reviews_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/toggle_like_review_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/update_review_usecase.dart';
 import 'package:pbl6/features/user/jobs/presentation/widgets/create_review_dialog.dart';
+import 'package:pbl6/features/user/jobs/presentation/widgets/report_review_modal.dart';
 import 'package:pbl6/features/user/jobs/presentation/widgets/review_list_item.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,6 +36,7 @@ class _JobReviewTabState extends State<JobReviewTab> {
   late final ToggleLikeReviewUseCase _toggleLikeReviewUseCase;
   late final UpdateReviewUseCase _updateReviewUseCase;
   late final DeleteReviewUseCase _deleteReviewUseCase;
+  late final CreateReportUseCase _createReportUseCase;
 
   // State
   String _currentUserId = '';
@@ -180,8 +184,7 @@ class _JobReviewTabState extends State<JobReviewTab> {
     });
   }
 
- Future<void> _showCreateReviewDialog() async {
-  
+  Future<void> _showCreateReviewDialog() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => const CreateReviewDialog(existingReview: null),
@@ -200,7 +203,9 @@ class _JobReviewTabState extends State<JobReviewTab> {
         ),
       );
 
-      MotionToast.success(description: const Text("Đăng đánh giá thành công!")).show(context);
+      MotionToast.success(
+        description: const Text("Đăng đánh giá thành công!"),
+      ).show(context);
       if (mounted) {
         setState(() {
           _reviews.insert(0, newReview);
@@ -212,7 +217,8 @@ class _JobReviewTabState extends State<JobReviewTab> {
       MotionToast.error(description: Text("Lỗi: $e")).show(context);
     }
   }
-Future<void> _handleEditReview(Review review) async {
+
+  Future<void> _handleEditReview(Review review) async {
     // Gọi dialog có truyền review -> Chế độ edit
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -233,12 +239,16 @@ Future<void> _handleEditReview(Review review) async {
         ),
       );
 
-      MotionToast.success(description: const Text("Cập nhật thành công!")).show(context);
-      
+      MotionToast.success(
+        description: const Text("Cập nhật thành công!"),
+      ).show(context);
+
       // Cập nhật UI
       if (mounted) {
         setState(() {
-          final index = _reviews.indexWhere((r) => r.reviewId == review.reviewId);
+          final index = _reviews.indexWhere(
+            (r) => r.reviewId == review.reviewId,
+          );
           if (index != -1) {
             _reviews[index] = updatedReview;
             _onSearchChanged();
@@ -251,7 +261,6 @@ Future<void> _handleEditReview(Review review) async {
     }
   }
 
- 
   Future<void> _handleDeleteReview(Review review) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -259,8 +268,14 @@ Future<void> _handleEditReview(Review review) async {
         title: const Text('Xác nhận xóa'),
         content: const Text('Bạn có chắc chắn muốn xóa đánh giá này không?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xóa', style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -269,10 +284,13 @@ Future<void> _handleEditReview(Review review) async {
 
     try {
       final response = await _deleteReviewUseCase(review.reviewId);
-      
-      if (response.code == 200) { // Giả sử 200 là thành công
-         MotionToast.success(description: const Text("Đã xóa đánh giá")).show(context);
-         if (mounted) {
+
+      if (response.code == 200) {
+        // Giả sử 200 là thành công
+        MotionToast.success(
+          description: const Text("Đã xóa đánh giá"),
+        ).show(context);
+        if (mounted) {
           setState(() {
             _reviews.removeWhere((r) => r.reviewId == review.reviewId);
             _onSearchChanged();
@@ -280,12 +298,73 @@ Future<void> _handleEditReview(Review review) async {
           });
         }
       } else {
-         MotionToast.error(description: Text("Lỗi: ${response.message}")).show(context);
+        MotionToast.error(
+          description: Text("Lỗi: ${response.message}"),
+        ).show(context);
       }
     } catch (e) {
       MotionToast.error(description: Text("Lỗi xóa: $e")).show(context);
     }
   }
+
+  Future<void> _handleReportReview(
+    String reviewId,
+    String reason,
+    String description,
+  ) async {
+    try {
+      // Gọi API
+      await _createReportUseCase(
+        CreateReportParams(
+          reviewId: reviewId,
+          reason: reason,
+          description: description,
+        ),
+      );
+
+      if (!mounted) return;
+      MotionToast.success(
+        description: const Text("Báo cáo đánh giá thành công!"),
+        toastAlignment: Alignment.topLeft,
+        animationType: AnimationType.slideInFromLeft,
+      ).show(context);
+
+      // await _loadReviews(refresh: true);
+    } on DioException catch (e) {
+      if (!mounted) return;
+
+      String displayError = "Có lỗi xảy ra";
+
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+
+        if (data is Map<String, dynamic>) {
+          if (data['message'] != null) {
+            displayError = data['message'].toString();
+          } else if (data['error'] != null) {
+            displayError = data['error'].toString();
+          }
+        } else {
+          displayError = data.toString();
+        }
+      } else if (e.error != null) {
+        displayError = e.error.toString();
+      } else if (e.message != null) {
+        displayError = e.message!;
+      }
+
+      MotionToast.warning(
+        title: const Text("Thông báo"),
+        description: Text(displayError),
+        toastAlignment: Alignment.topLeft,
+        animationType: AnimationType.slideInFromLeft,
+      ).show(context);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(description: Text("Lỗi hệ thống: $e")).show(context);
+    }
+  }
+
   Future<void> _toggleLike(String reviewId) async {
     try {
       final updatedReview = await _toggleLikeReviewUseCase(reviewId);
@@ -518,6 +597,16 @@ Future<void> _handleEditReview(Review review) async {
           currentUserId: _currentUserId,
           onEditPressed: _handleEditReview,
           onDeletePressed: _handleDeleteReview,
+          onReportPressed: (review) {
+            showDialog(
+              context: context,
+              builder: (_) => ReportReviewModal(
+                onSubmit: (reason, description) {
+                  _handleReportReview(review.reviewId, reason, description);
+                },
+              ),
+            );
+          },
         );
       },
     );

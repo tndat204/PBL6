@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:pbl6/core/constants/api_constants.dart';
 import 'package:pbl6/features/shared/auth/data/models/api_response_model.dart';
+import 'package:pbl6/features/shared/review/domain/entities/ReviewReport.dart';
+import 'package:pbl6/features/shared/review/domain/entities/report_reason.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review_paginated_response.dart'; // Cho MediaType
 
@@ -36,6 +38,12 @@ abstract class ReviewRemoteDataSource {
   Future<Review> toggleLikeReview(String reviewId);
 
   Future<APIResponse<String>> deleteReview(String reviewId);
+  Future<ReviewReport> createReport({
+    required String reviewId,
+    required String reason,
+    required String description,
+  });
+  Future<List<ReportReason>> getReportReasons();
 }
 
 // Lớp triển khai
@@ -219,6 +227,64 @@ class ReviewRemoteDataSourceImpl implements ReviewRemoteDataSource {
 
       // API này trả về APIResponse<String>
       return APIResponse.fromJson(response.data, (data) => data.toString());
+    } on DioException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  @override
+  Future<ReviewReport> createReport({
+    required String reviewId,
+    required String reason,
+    required String description,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '${ApiConstants.reviews}/reports/$reviewId',
+        data: {'reason': reason, 'description': description},
+      );
+
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          response.data['result'] != null) {
+        return ReviewReport.fromJson(response.data['result']);
+      } else if (response.data['message'] != null) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: response.data['message'],
+        );
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          message: "Phản hồi không hợp lệ từ server",
+        );
+      }
+    } on DioException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  @override
+  Future<List<ReportReason>> getReportReasons() async {
+    try {
+      final response = await _dio.get('${ApiConstants.reviews}/report-reasons');
+
+      if (response.statusCode == 200 && response.data['result'] != null) {
+        final List<dynamic> reasonsJson = response.data['result'];
+        return reasonsJson.map((json) => ReportReason.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
     } on DioException {
       rethrow;
     } catch (e) {

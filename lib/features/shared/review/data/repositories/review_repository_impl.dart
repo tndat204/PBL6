@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:pbl6/features/shared/auth/data/models/api_response_model.dart';
 import 'package:pbl6/features/shared/review/data/datasources/review_remote_datasource.dart';
+import 'package:pbl6/features/shared/review/domain/entities/ReviewReport.dart';
+import 'package:pbl6/features/shared/review/domain/entities/report_reason.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review_paginated_response.dart';
 import 'package:pbl6/features/shared/review/domain/repositories/review_repository.dart';
-
 
 class ReviewRepositoryImpl implements ReviewRepository {
   final ReviewRemoteDataSource remote;
@@ -18,7 +19,11 @@ class ReviewRepositoryImpl implements ReviewRepository {
     int page = 0,
     int size = 10,
   }) {
-    return remote.getCompanyReviews(companyId: companyId, page: page, size: size);
+    return remote.getCompanyReviews(
+      companyId: companyId,
+      page: page,
+      size: size,
+    );
   }
 
   @override
@@ -69,4 +74,21 @@ class ReviewRepositoryImpl implements ReviewRepository {
   Future<APIResponse<String>> deleteReview(String reviewId) {
     return remote.deleteReview(reviewId);
   }
+
+  @override
+  Future<ReviewReport> createReport({
+    required String reviewId,
+    required String reason,
+    required String description,
+  }) {
+    return remote.createReport(
+      reviewId: reviewId,
+      reason: reason,
+      description: description,
+    );
+  }
+  @override
+   Future<List <ReportReason>> getReportReasons() {
+    return remote.getReportReasons();
+   }
 }

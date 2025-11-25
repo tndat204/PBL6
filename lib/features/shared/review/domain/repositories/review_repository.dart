@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:pbl6/features/shared/auth/data/models/api_response_model.dart';
+import 'package:pbl6/features/shared/review/domain/entities/ReviewReport.dart';
+import 'package:pbl6/features/shared/review/domain/entities/report_reason.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review.dart';
 import 'package:pbl6/features/shared/review/domain/entities/review_paginated_response.dart';
 
@@ -32,4 +34,10 @@ abstract class ReviewRepository {
   Future<Review> toggleLikeReview(String reviewId);
 
   Future<APIResponse<String>> deleteReview(String reviewId);
+  Future<ReviewReport> createReport({
+    required String reviewId,
+    required String reason,
+    required String description,
+  });
+  Future<List <ReportReason>> getReportReasons();
 }

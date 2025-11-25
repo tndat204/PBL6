@@ -49,9 +49,11 @@ import 'package:pbl6/features/shared/job/domain/usecases/get_job_details_usecase
 import 'package:pbl6/features/shared/review/data/datasources/review_remote_datasource.dart';
 import 'package:pbl6/features/shared/review/data/repositories/review_repository_impl.dart';
 import 'package:pbl6/features/shared/review/domain/repositories/review_repository.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/create_report_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/create_review_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/delete_review_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/get_company_reviews_usecase.dart';
+import 'package:pbl6/features/shared/review/domain/usecases/get_report_reason_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/get_review_detail_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/toggle_like_review_usecase.dart';
 import 'package:pbl6/features/shared/review/domain/usecases/update_review_usecase.dart';
@@ -297,6 +299,12 @@ void init() {
   );
   sl.registerLazySingleton<UpdateReviewUseCase>(
     () => UpdateReviewUseCase(sl<ReviewRepository>()),
+  );
+  sl.registerLazySingleton<CreateReportUseCase>(
+    () => CreateReportUseCase(sl<ReviewRepository>()),
+  );
+ sl.registerLazySingleton<GetReportReasonsUseCase>(
+    () => GetReportReasonsUseCase(sl<ReviewRepository>()),
   );
 
   // ================= AI MATCHING =================

@@ -6,8 +6,9 @@ class ReviewListItem extends StatelessWidget {
   final Review review;
   final String currentUserId;
   final VoidCallback onLikePressed;
-  final Function(Review) onEditPressed;
-  final Function(Review) onDeletePressed;
+  final Function(Review)? onEditPressed;
+  final Function(Review)? onDeletePressed;
+  final Function(Review)? onReportPressed;
 
   const ReviewListItem({
     super.key,
@@ -16,6 +17,7 @@ class ReviewListItem extends StatelessWidget {
     required this.onLikePressed,
     required this.onEditPressed,
     required this.onDeletePressed,
+    required this.onReportPressed,
   });
 
   String _timeAgo(DateTime date) {
@@ -121,8 +123,11 @@ class ReviewListItem extends StatelessWidget {
                         PopupMenuButton<String>(
                           icon: const Icon(Icons.more_vert, color: Colors.grey),
                           onSelected: (value) {
-                            if (value == 'edit') onEditPressed(review);
-                            if (value == 'delete') onDeletePressed(review);
+                            if (value == 'edit') onEditPressed?.call(review);
+                            if (value == 'delete')
+                              onDeletePressed?.call(review);
+                            if (value == 'report')
+                              onReportPressed?.call(review);
                           },
                           itemBuilder: (BuildContext context) {
                             if (isOwner) {
@@ -141,8 +146,11 @@ class ReviewListItem extends StatelessWidget {
                                   value: 'delete',
                                   child: Row(
                                     children: [
-                                      Icon(Icons.delete,
-                                          color: Colors.red, size: 20),
+                                      Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                        size: 20,
+                                      ),
                                       SizedBox(width: 8),
                                       Text(
                                         'Xóa',
@@ -153,10 +161,20 @@ class ReviewListItem extends StatelessWidget {
                                 ),
                               ];
                             } else {
-                              return [
-                                const PopupMenuItem(
+                              return const [
+                                PopupMenuItem(
                                   value: 'report',
-                                  child: Text("Báo cáo"),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.flag,
+                                        size: 20,
+                                        color: Colors.redAccent,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text("Báo cáo"),
+                                    ],
+                                  ),
                                 ),
                               ];
                             }
@@ -192,10 +210,7 @@ class ReviewListItem extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         review.comment,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.4,
-                        ),
+                        style: const TextStyle(fontSize: 15, height: 1.4),
                       ),
                     ],
 
