@@ -44,6 +44,7 @@ const UserManagement = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showUserModal, setShowUserModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editingUser, setEditingUser] = useState(null); // New state for editing
     const [toast, setToast] = useState(null);
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
@@ -161,6 +162,29 @@ const UserManagement = () => {
         setShowUserModal(true);
     };
 
+    const handleEditUser = async (user) => {
+        try {
+            // Show loading or some indication if needed, but for now just fetch
+            const fullUserData = await userService.getUserById(user.id);
+            console.log('Fetched full user data:', fullUserData);
+
+            // Transform if necessary, or ensure the modal can handle the backend format directly.
+            // The modal expects specific fields. Let's check if we need to transform.
+            // userService.getUserById returns the raw result. 
+            // CreateUserModal expects: username, email, phone, fullName (mapped from name), address, taxCode, nameCompany, avatarUrl (mapped from avatar), birthDate.
+            // The transformUser function in userService maps backend fields to frontend fields.
+            // Let's use transformUser to be consistent.
+            const transformedUser = userService.transformUser(fullUserData);
+
+            setEditingUser(transformedUser);
+            setShowCreateModal(true);
+            setShowUserModal(false); // Close detail modal if open
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+            showToast('Không thể tải thông tin chi tiết người dùng.', 'error');
+        }
+    };
+
     const handleBanUser = async (userId) => {
         try {
             const user = users.find(u => u.id === userId);
@@ -203,22 +227,34 @@ const UserManagement = () => {
         }
     };
 
-    const handleCreateUser = async (userData) => {
+    const handleSaveUser = async (userData) => {
         try {
-            console.log('user sent: ', userData)
-            const response = await userService.createUser(userData);
-            if (response.code === 200 || response.code === 0) {
+            console.log('user sent: ', userData);
+            let response;
+            if (editingUser) {
+                response = await userService.updateUser(editingUser.id, userData);
+            } else {
+                response = await userService.createUser(userData);
+            }
+
+            if (response.code === 200 || response.code === 0 || response.id) { // Check for id as update might return user object directly
                 // Refresh user list
                 await fetchUsers();
                 setShowCreateModal(false);
-                showToast('Người dùng đã được tạo thành công!', 'success');
+                setEditingUser(null);
+                showToast(`Người dùng đã được ${editingUser ? 'cập nhật' : 'tạo'} thành công!`, 'success');
             } else {
-                throw new Error(response.message || 'Không thể tạo người dùng.');
+                throw new Error(response.message || `Không thể ${editingUser ? 'cập nhật' : 'tạo'} người dùng.`);
             }
         } catch (error) {
-            console.error('Error creating user:', error);
+            console.error(`Error ${editingUser ? 'updating' : 'creating'} user:`, error);
             throw error;
         }
+    };
+
+    const handleCloseCreateModal = () => {
+        setShowCreateModal(false);
+        setEditingUser(null);
     };
 
     return (
@@ -275,7 +311,10 @@ const UserManagement = () => {
                                 <div className="flex items-center gap-4">
                                     <h3 className="font-bold text-gray-800">Danh sách người dùng</h3>
                                     <button
-                                        onClick={() => setShowCreateModal(true)}
+                                        onClick={() => {
+                                            setEditingUser(null);
+                                            setShowCreateModal(true);
+                                        }}
                                         className="
                                                 flex items-center gap-2 px-5 py-2.5 
                                                 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600
@@ -404,14 +443,17 @@ const UserManagement = () => {
                     <UserDetailModal
                         user={selectedUser}
                         onClose={() => setShowUserModal(false)}
+                        onEdit={handleEditUser}
                     />
                 )}
 
-                {/* Create User Modal */}
+                {/* Create/Edit User Modal */}
                 {showCreateModal && (
                     <CreateUserModal
-                        onClose={() => setShowCreateModal(false)}
-                        onCreate={handleCreateUser}
+                        onClose={handleCloseCreateModal}
+                        onSubmit={handleSaveUser}
+                        user={editingUser}
+                        isEdit={!!editingUser}
                     />
                 )}
 
@@ -551,7 +593,7 @@ const UserRow = ({ user, onView, onBan, onDelete }) => {
     );
 };
 
-const UserDetailModal = ({ user, onClose }) => (
+const UserDetailModal = ({ user, onClose, onEdit }) => (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-scale-in relative">
 
@@ -599,7 +641,10 @@ const UserDetailModal = ({ user, onClose }) => (
                 </div>
 
                 {/* Actions */}
-                <button className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2">
+                <button
+                    onClick={() => onEdit(user)}
+                    className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2"
+                >
                     <Edit size={18} />
                     Chỉnh sửa thông tin
                 </button>

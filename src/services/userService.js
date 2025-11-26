@@ -130,7 +130,10 @@ class UserService {
             // Additional fields that might be useful
             username: backendUser.username,
             permissions: backendUser.roles?.[0]?.permissions || [],
-            isEnabled: backendUser.isEnabled
+            isEnabled: backendUser.isEnabled,
+            birthDate: backendUser.birthDate,
+            nameCompany: backendUser.nameCompany,
+            taxCode: backendUser.taxCode
         };
     }
 
