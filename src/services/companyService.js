@@ -22,4 +22,26 @@ export const companyService = {
       throw error;
     }
   },
+
+  // Kích hoạt company
+  async activateCompany(id) {
+    try {
+      const response = await apiService.put(`/companies/${id}/activate`, {});
+      return response;
+    } catch (error) {
+      console.error(`Lỗi khi kích hoạt company ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Vô hiệu hóa company
+  async deactivateCompany(id) {
+    try {
+      const response = await apiService.put(`/companies/${id}/deactivate`, {});
+      return response;
+    } catch (error) {
+      console.error(`Lỗi khi vô hiệu hóa company ${id}:`, error);
+      throw error;
+    }
+  },
 };
