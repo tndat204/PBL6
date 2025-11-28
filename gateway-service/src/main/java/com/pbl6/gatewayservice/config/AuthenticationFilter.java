@@ -54,7 +54,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String method = exchange.getRequest().getMethod().name();
         // 🚀 Nếu request trùng public endpoint hoặc WebSocket thì bỏ qua filter
         boolean isPublic = publicEndpoints.stream().anyMatch(path::startsWith)
-                || path.startsWith("/ws"); // <-- tất cả /ws/** là public
+                || path.startsWith("/ws")||path.startsWith("/ws-chat"); // <-- tất cả /ws/** là public
 
 
         if (path.startsWith("/api/internal/users") && !"POST".equalsIgnoreCase(method)) {

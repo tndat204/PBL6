@@ -12,8 +12,6 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    @Autowired
-    ChannelInterceptor jwtChannelInterceptor;
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         // Destination prefix cho tin nhắn riêng tư (server -> client)
@@ -28,12 +26,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:5173/")
+        registry.addEndpoint("/ws-chat")
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
-    @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(jwtChannelInterceptor);
-    }
+
 }

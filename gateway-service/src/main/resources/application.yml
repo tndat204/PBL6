@@ -16,55 +16,88 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+
+      # --- CẤU HÌNH CORS (QUAN TRỌNG ĐỂ FIX LỖI) ---
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            # Phải chỉ định rõ domain Frontend (KHÔNG DÙNG "*")
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true # Bắt buộc true để SockJS chạy
+      # ----------------------------------------------
+
       routes:
         - id: auth-service
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
           filters:
-            - StripPrefix=0  # Don't strip prefix for auth service
+            - StripPrefix=0
 
         - id: user-service
           uri: lb://user-service
           predicates:
             - Path=/api/users/**, /api/permissions/**, /api/roles/**, /api/internal/users/**
           filters:
-            - StripPrefix=0  # Don't strip prefix
+            - StripPrefix=0
 
         - id: notification-service
           uri: lb://notification-service
           predicates:
             - Path=/api/notifications/**
           filters:
-            - StripPrefix=0  # Don't strip prefix
+            - StripPrefix=0
+
+        # --- ROUTE WEBSOCKET CHO NOTIFICATION ---
+        - id: notification-service-ws
+          uri: lb:ws://notification-service
+          predicates:
+            - Path=/ws/**
+          filters:
+            # Filter này giúp loại bỏ header CORS bị trùng lặp
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_LAST
 
         - id: file-service
           uri: lb://file-service
           predicates:
             - Path=/api/files/**
           filters:
-            - StripPrefix=0  # Don't strip prefix
+            - StripPrefix=0
 
         - id: job-service
           uri: lb://job-service
           predicates:
             - Path=/api/jobs/**, /api/applications/**, /api/companies/**, /api/reviews/**
           filters:
-            - StripPrefix=0  # Don't strip prefix
+            - StripPrefix=0
 
         - id: profile-service
           uri: lb://profile-service
           predicates:
             - Path=/api/profiles/**, /api/categories/**, /api/skills/**
           filters:
-            - StripPrefix=0  # Don't strip prefix
+            - StripPrefix=0
 
         - id: chat-service
           uri: lb://chat-service
           predicates:
-            - Path=/api/messages/**, /api/conversations/**, /ws/**
+            - Path=/api/messages/**, /api/conversations/**
           filters:
             - StripPrefix=0
+
+        - id: chat-service-ws
+          uri: lb:ws://chat-service
+          predicates:
+            - Path=/ws-chat/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_LAST
 
         - id: statistic-service
           uri: lb://statistic-service
@@ -72,6 +105,7 @@ spring:
             - Path=/api/statistics/**
           filters:
             - StripPrefix=0
+
 # Eureka Server Configuration
 eureka:
   client:
@@ -82,8 +116,6 @@ eureka:
     instance-id: ${spring.application.name}:${server.port}
     hostname: localhost
 
-
-
 # Logging configuration
 logging:
   level:
@@ -91,4 +123,3 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     com.netflix.eureka: OFF
     com.netflix.discovery: OFF
-

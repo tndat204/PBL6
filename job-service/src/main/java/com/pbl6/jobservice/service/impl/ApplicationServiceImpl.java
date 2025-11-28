@@ -20,6 +20,7 @@ import com.pbl6.jobservice.repository.CompanyRepository;
 import com.pbl6.jobservice.repository.CompanyUserRepository;
 import com.pbl6.jobservice.repository.JobRepository;
 import com.pbl6.jobservice.service.ApplicationService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -124,35 +125,49 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    @Transactional
     public ApplicationResponse updateStatus(UUID applicationId, String newStatus) {
-        UUID recruiter=getCurrentUserId();
-        Optional<Company> optionalCompany=applicationRepository.findCompanyByApplicationId(applicationId);
-        Company company=optionalCompany.orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+        UUID recruiterId = getCurrentUserId();
+
+        Optional<Company> optionalCompany = applicationRepository.findCompanyByApplicationId(applicationId);
+        Company company = optionalCompany.orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
         boolean allowed = companyUserRepository.existsByCompanyIdAndUserIdAndStatusInAndRoleIn(
                 company.getId(),
-                recruiter,
+                recruiterId,
                 List.of(CompanyUser.Status.ACTIVE),
                 List.of(CompanyUser.Role.RECRUITER)
         );
-        if(!allowed) {
+
+        if (!allowed) {
             throw new AppException(ErrorCode.NOT_ALLOW_TO_UPDATE);
         }
+
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
 
-        Application.Status status = Application.Status.valueOf(newStatus.toUpperCase());
-        application.setStatus(status);
-
+        Application.Status statusEnum = Application.Status.valueOf(newStatus.toUpperCase());
+        application.setStatus(statusEnum);
         Application updatedApplication = applicationRepository.save(application);
+
+
+        Job job = jobRepository.findById(updatedApplication.getJob().getId())
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+
         ApplicationStatusChangedEvent event = new ApplicationStatusChangedEvent(
                 updatedApplication.getApplicationId().toString(),
-                updatedApplication.getStatus().toString() // Gửi tên của Enum (ví dụ: "HIRED")
+                updatedApplication.getApplicantId().toString(),
+                updatedApplication.getStatus().toString(),
+                job.getTitle(),
+                company.getName()
         );
 
-        // 3. Bắn event "Thay đổi trạng thái"
         kafkaTemplate.send(APP_STATUS_TOPIC, updatedApplication.getApplicationId().toString(), event);
+
         ApplicationResponse response = modelMapper.map(updatedApplication, ApplicationResponse.class);
         response.setApplicantInfo(getApplicantInfo(updatedApplication.getApplicantId()));
+
         return response;
     }
 

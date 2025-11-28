@@ -1,4 +1,4 @@
-package com.pbl6.notificationservice.controller.external;
+package com.pbl6.notificationservice.listener;
 import com.pbl6.event.dto.NotificationEvent;
 import com.pbl6.notificationservice.dto.request.Recipient;
 import com.pbl6.notificationservice.dto.request.SendEmailRequest;
@@ -16,7 +16,7 @@ import org.thymeleaf.context.Context;
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class NotificationController {
+public class NotificationListener {
 
     EmailService emailService;
     TemplateEngine templateEngine; // inject template engine

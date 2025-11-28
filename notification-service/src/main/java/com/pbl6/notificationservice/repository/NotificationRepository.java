@@ -1,9 +1,12 @@
 package com.pbl6.notificationservice.repository;
 
 import com.pbl6.notificationservice.entity.Notification;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
 
-@Repository
-public interface NotificationRepository extends JpaRepository<Notification,Integer> {
+public interface NotificationRepository extends MongoRepository<Notification, String> {
+
+    List<Notification> findByRecipientIdOrderByCreatedAtDesc(String recipientId);
+
+    long countByRecipientIdAndIsReadFalse(String recipientId);
 }

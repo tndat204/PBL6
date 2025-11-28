@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+// Tại Notification Service
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
