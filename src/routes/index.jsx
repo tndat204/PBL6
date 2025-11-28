@@ -19,6 +19,11 @@ import { ProtectedRoute } from "../components/ProtectedRoute";
 import { USER_ROLES } from "../contexts/AuthContext";
 import Unauthorized from "../pages/Unauthorized";
 import RecruiterDashboard from "../pages/RecruiterDashboard";
+
+///////////////////////////////////////////////// 
+// ADMIN ROUTES
+///////////////////////////////////////////////////
+
 import UserManagement from "../pages/UserManagement";
 import CompanyManagement from "../pages/CompanyManagement";
 import AdminLayout from "../layouts/AdminLayout";
