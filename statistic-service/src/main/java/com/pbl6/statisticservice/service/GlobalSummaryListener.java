@@ -96,7 +96,7 @@ public class GlobalSummaryListener {
             groupId = "statistic-summary-group")
     public void handleApplicationStatusChanged(ApplicationStatusChangedEvent event) {
         // Chỉ tăng khi trạng thái là "HIRED"
-        if ("HIRED".equals(event.getNewStatus())) {
+        if ("HIRED".equals(event.getStatus())) {
             incrementCounter("total_jobs_hired", 1);
         }
     }

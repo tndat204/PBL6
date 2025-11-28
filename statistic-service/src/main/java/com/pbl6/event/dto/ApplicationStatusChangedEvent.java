@@ -14,5 +14,8 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApplicationStatusChangedEvent {
     String applicationId;
-    String newStatus;
+    String applicantId;
+    String status;
+    String jobTitle;
+    String companyName;
 }
