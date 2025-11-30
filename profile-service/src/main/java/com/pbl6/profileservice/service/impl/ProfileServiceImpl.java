@@ -153,10 +153,12 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public ProfileResponse getProfileByUserId(String userId) {
-        // Sửa lỗi: dùng findByUserId thay cho findById
         Profile profile = profileRepository.findByUserId(UUID.fromString(userId))
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
-        return modelMapper.map(profile, ProfileResponse.class);
+        if(profile.getIsActive()){
+            return modelMapper.map(profile, ProfileResponse.class);
+        }
+        return new ProfileResponse();
     }
 
     @Override
