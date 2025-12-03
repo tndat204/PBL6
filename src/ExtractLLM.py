@@ -220,5 +220,73 @@ async def analyze_jd(client, jd_text: str) -> Dict[str, Any]:
     return await with_retry(_extract)
 
 
+def jd_summary_prompt(job_description: str) -> str:
+    """Generate prompt for summarizing job description."""
+    return f"""
+You are an expert HR assistant. Analyze the job description below and create a concise, structured summary.
+
+### STRICT RULES
+1. Extract the most important information from the job description
+2. Be concise but comprehensive
+3. Output must be **valid JSON only**, no markdown fences, no explanation
+4. Use professional language
+5. If information is not available, use null
+
+### JSON STRUCTURE
+{{
+  "jobTitle": "string - The job position title",
+  "company": "string - Company name if mentioned, otherwise null",
+  "location": "string - Job location if mentioned, otherwise null",
+  "employmentType": "string - Full-time/Part-time/Contract/etc., otherwise null",
+  "summary": "string - A brief 2-3 sentence overview of the position",
+  "keyResponsibilities": [
+    "string - Main responsibility 1",
+    "string - Main responsibility 2",
+    "string - Main responsibility 3"
+  ],
+  "keyRequirements": [
+    "string - Essential requirement 1",
+    "string - Essential requirement 2",
+    "string - Essential requirement 3"
+  ],
+  "experienceLevel": "string - Entry/Junior/Mid/Senior level, otherwise null",
+  "salaryRange": "string - Salary information if mentioned, otherwise null",
+  "benefits": [
+    "string - Benefit 1",
+    "string - Benefit 2"
+  ]
+}}
+
+Now summarize this job description:
+---
+{job_description}
+---
+
+Return ONLY the valid JSON object.
+"""
+
+
+async def summarize_jd(client, jd_text: str) -> Dict[str, Any]:
+    """
+    Summarize a job description and return structured JSON.
+    
+    Args:
+        client: OpenRouter client instance
+        jd_text: The job description text to summarize
+        
+    Returns:
+        Dictionary containing structured summary of the job description
+    """
+    async def _summarize():
+        prompt = jd_summary_prompt(jd_text)
+        res = await client.generate(
+            system_prompt="You are an expert HR assistant specializing in job description analysis. Provide clear, concise summaries in JSON format.",
+            user_prompt=prompt,
+            temperature=0.3  # Lower temperature for more consistent, factual output
+        )
+        result = safe_json_parse(res)
+        return result
+
+    return await with_retry(_summarize)
 
 
