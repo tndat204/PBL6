@@ -7,7 +7,7 @@ spring:
   config:
     activate:
       on-profile: dev
-
+    import: file:.env[.properties]
   application:
     name: notification-service
 
@@ -38,7 +38,7 @@ springdoc:
     enabled: true # Tắt UI nếu muốn
 
 brevo:
-  api_key: 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
+  api-key: ${BREVO_API_KEY}
 server:
   port: 8083
 

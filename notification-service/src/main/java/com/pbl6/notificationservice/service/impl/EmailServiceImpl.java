@@ -26,7 +26,7 @@ public class EmailServiceImpl implements EmailService {
     EmailClient emailClient;
 
     @NonFinal
-    @Value("${brevo.api_key}")
+    @Value("${brevo.api-key}")
     protected String apiKey;
 
     @Override
