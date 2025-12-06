@@ -153,47 +153,52 @@ class MatchScore extends Equatable {
 }
 
 class CvMatchResult extends Equatable {
-  final String cvFilename;
+  final String cvUrl; // ⚠️ Đã sửa từ cvFilename -> cvUrl
   final MatchScore matchScore;
   final CvData cvData;
 
   const CvMatchResult({
-    required this.cvFilename,
+    required this.cvUrl,
     required this.matchScore,
     required this.cvData,
   });
 
   factory CvMatchResult.fromJson(Map<String, dynamic> json) {
     return CvMatchResult(
-      cvFilename: json['cv_filename'] ?? '',
+      // ⚠️ Map đúng key từ JSON response: "cv_url"
+      cvUrl: json['cv_url'] ?? '', 
       matchScore: MatchScore.fromJson(json['match_score'] ?? {}),
       cvData: CvData.fromJson(json['cv_data'] ?? {}),
     );
   }
 
   @override
-  List<Object?> get props => [cvFilename, matchScore, cvData];
+  List<Object?> get props => [cvUrl, matchScore, cvData];
 }
-
 class AiMatchResponse extends Equatable {
-  final String jdFilename;
+  final String jdSource; 
+  final String? excelDownloadUrl; 
   final List<CvMatchResult> results;
 
   const AiMatchResponse({
-    required this.jdFilename,
+    required this.jdSource,
+    this.excelDownloadUrl,
     required this.results,
   });
 
   factory AiMatchResponse.fromJson(Map<String, dynamic> json) {
     final List<dynamic> resultsList = json['results'] ?? [];
     return AiMatchResponse(
-      jdFilename: json['jd_filename'] ?? '',
+      
+      jdSource: json['jd_source'] ?? '',
+      
+      excelDownloadUrl: json['excel_download_url'],
       results: resultsList.map((item) => CvMatchResult.fromJson(item)).toList(),
     );
   }
 
   @override
-  List<Object?> get props => [jdFilename, results];
+  List<Object?> get props => [jdSource, excelDownloadUrl, results];
 }
 
 // --- CÁC ENTITY PARAMS KHÁC ---

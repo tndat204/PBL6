@@ -237,7 +237,7 @@ class _MyProfilePageState extends State<MyProfilePage>
                           tabs: const [
                             Tab(text: 'Profile'),
                             Tab(text: 'CV & Tài liệu'),
-                            Tab(text: 'Đánh giá'),
+                            // Tab(text: 'Đánh giá'),
                           ],
                         ),
                       ),

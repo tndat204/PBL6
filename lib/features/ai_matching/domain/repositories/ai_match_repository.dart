@@ -3,8 +3,8 @@ import 'package:pbl6/features/ai_matching/domain/entities/ai_matching_entities.d
 abstract class AiMatchRepository {
   /// So khớp nhiều CV với một JD (Sử dụng /match/multiple)
   Future< AiMatchResponse> matchMultipleCvs({
-    required String jdFilePath,
-    required List<String> cvFilePaths,
+    required String jdUrl,
+    required List<String> cvUrls,
     MatchWeights? weights,
   });
 

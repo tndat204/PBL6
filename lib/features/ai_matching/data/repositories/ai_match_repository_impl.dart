@@ -9,13 +9,13 @@ class AiMatchRepositoryImpl implements AiMatchRepository {
 
   @override
   Future<AiMatchResponse> matchMultipleCvs({
-    required String jdFilePath,
-    required List<String> cvFilePaths,
+    required String jdUrl,
+    required List<String> cvUrls,
     MatchWeights? weights,
   }) {
     return remoteDataSource.matchMultipleCvs(
-      jdFilePath: jdFilePath,
-      cvFilePaths: cvFilePaths,
+      jdUrl: jdUrl,
+      cvUrls: cvUrls,
       weights: weights,
     );
   }

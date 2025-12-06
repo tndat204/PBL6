@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart'; // THÊM
 import 'package:go_router/go_router.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/logout_usecase.dart'; // THÊM
+import 'package:pbl6/features/shared/widgets/notification_badge.dart';
 import 'package:pbl6/routes/route_names.dart'; // THÊM
 import 'package:provider/provider.dart';
 
@@ -165,13 +166,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined, size: 30,color: Colors.grey),
-          onPressed: () {
-            // TODO: Điều hướng đến trang thông báo
-          },
-          tooltip: 'Thông báo',
-        ),
+       const NotificationBadge(),
         // THÊM NÚT LOGOUT MỚI
         IconButton(
           icon: Icon(Icons.logout_outlined, size: 30,color: Colors.grey,),

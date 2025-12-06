@@ -5,7 +5,6 @@ import 'package:pbl6/features/recruiter/company/presentation/pages/my_company_pa
 import 'package:pbl6/features/recruiter/dashboard/presentation/pages/recruiter_dashboard.dart';
 import 'package:pbl6/features/recruiter/job/presentation/pages/recruiter_job_detail_page.dart';
 import 'package:pbl6/features/recruiter/job/presentation/pages/recruiter_job_page.dart';
-// THÊM IMPORT MỚI
 import 'package:pbl6/features/recruiter/job/presentation/pages/upsert_job_page.dart';
 import 'package:pbl6/features/recruiter/recruiter_shell.dart';
 import 'package:pbl6/features/recruiter/review/presentation/pages/recruiter_review_page.dart';
@@ -16,6 +15,7 @@ import 'package:pbl6/features/shared/auth/presentation/pages/signup_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/unauthorized_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/verify_otp_page.dart';
 import 'package:pbl6/features/shared/auth/presentation/pages/welcome_page.dart';
+import 'package:pbl6/features/shared/notification/presentation/pages/notification_page.dart';
 import 'package:pbl6/features/user/application/presentation/pages/my_application_page.dart';
 import 'package:pbl6/features/user/dashboard/presentation/pages/user_dashboard.dart';
 import 'package:pbl6/features/user/jobs/presentation/pages/job_detail_page.dart';
@@ -27,7 +27,7 @@ import '../features/admin/dashboard/presentation/pages/admin_dashboard.dart';
 import '../features/shared/auth/presentation/pages/login_page.dart';
 import '../features/shared/auth/presentation/pages/role_selection_screen.dart';
 import '../features/shared/user/presentation/pages/my_info_page.dart';
-import '../features/user/jobs/presentation/pages/job_page.dart'; // Thêm import này
+import '../features/user/jobs/presentation/pages/job_page.dart';
 import 'route_guard.dart';
 import 'route_names.dart';
 
@@ -39,7 +39,7 @@ CustomTransitionPage slideFromRightTransition(
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
-    transitionDuration: const Duration(milliseconds: 400),
+    transitionDuration: const Duration(milliseconds: 300), // Giảm nhẹ xuống 300ms cho mượt
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final tween = Tween<Offset>(
         begin: const Offset(1, 0),
@@ -47,7 +47,7 @@ CustomTransitionPage slideFromRightTransition(
       ).chain(CurveTween(curve: Curves.easeInOut));
       return SlideTransition(
         position: animation.drive(tween),
-        child: FadeTransition(opacity: animation, child: child),
+        child: child, // Bỏ Fade ở đây để trượt dứt khoát hơn (tuỳ chọn)
       );
     },
   );
@@ -71,11 +71,11 @@ CustomTransitionPage fadeScaleTransition(Widget child, GoRouterState state) {
   );
 }
 
-/// Hiệu ứng fade đơn giản (cho dashboard)
+/// Hiệu ứng fade đơn giản (cho dashboard tabs)
 CustomTransitionPage fadeTransition(Widget child, GoRouterState state) {
   return CustomTransitionPage(
     key: state.pageKey,
-    transitionDuration: const Duration(milliseconds: 300),
+    transitionDuration: const Duration(milliseconds: 200), // Fade nhanh
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return FadeTransition(opacity: animation, child: child);
@@ -165,6 +165,13 @@ final GoRouter router = GoRouter(
           fadeTransition(UnauthorizedPage(), state),
     ),
 
+    // 🟢 Notification (ĐÃ THÊM HIỆU ỨNG TRƯỢT)
+    GoRoute(
+      path: '/notifications',
+      pageBuilder: (context, state) =>
+          slideFromRightTransition(const NotificationPage(), state),
+    ),
+
     GoRoute(
       path: '/dashboard',
       name: 'dashboard_redirect',
@@ -184,118 +191,132 @@ final GoRouter router = GoRouter(
         }
       },
     ),
-    // SỬA: Dùng pageBuilder
+
+    // 🟢 User Job Detail
     GoRoute(
       path: '/user/jobs/:id',
       name: 'job_detail',
       pageBuilder: (context, state) {
         final jobId = state.pathParameters['id']!;
-
-        // 💡 LOGIC LẤY EXTRA
         bool hideButton = false;
         if (state.extra != null && state.extra is Map) {
           hideButton = (state.extra as Map)['hideApplyButton'] ?? false;
         }
-
         return slideFromRightTransition(
-          JobDetailPage(
-            jobId: jobId,
-            hideApplyButton: hideButton, // 💡 Truyền vào đây
-          ),
+          JobDetailPage(jobId: jobId, hideApplyButton: hideButton),
           state,
         );
       },
     ),
-    // SỬA: Dùng pageBuilder
+
+    // 🟢 My Info
     GoRoute(
       path: '/my-info',
       name: 'my_info',
       pageBuilder: (context, state) =>
           slideFromRightTransition(const MyInfoPage(), state),
     ),
+
+    // 🟢 Recruiter Job Detail
     GoRoute(
       path: '/recruiter/jobs/detail/:id',
       name: 'recruiter_job_detail',
       pageBuilder: (context, state) {
         final jobId = state.pathParameters['id']!;
         return slideFromRightTransition(
-          RecruiterJobDetailPage(jobId: jobId), // Trang detail riêng recruiter
+          RecruiterJobDetailPage(jobId: jobId),
           state,
         );
       },
     ),
+
+    // 🟢 User Shell Routes (ĐÃ THÊM HIỆU ỨNG FADE CHO TABS)
     ShellRoute(
       builder: (context, state, child) => UserShell(child: child),
       routes: [
         GoRoute(
           path: '/user/dashboard',
-          builder: (_, __) => const UserDashboard(),
+          pageBuilder: (context, state) =>
+              fadeTransition(const UserDashboard(), state),
         ),
-        GoRoute(path: '/user/jobs', builder: (_, __) => const JobPage()),
+        GoRoute(
+          path: '/user/jobs',
+          pageBuilder: (context, state) =>
+              fadeTransition(const JobPage(), state),
+        ),
         GoRoute(
           path: '/user/applications',
-          builder: (_, __) => const MyApplicationPage(),
+          pageBuilder: (context, state) =>
+              fadeTransition(const MyApplicationPage(), state),
         ),
         GoRoute(
           path: '/user/profile',
-          builder: (_, __) => const MyProfilePage(),
+          pageBuilder: (context, state) =>
+              fadeTransition(const MyProfilePage(), state),
         ),
       ],
     ),
 
+    // 🟢 Recruiter Shell Routes (ĐÃ THÊM HIỆU ỨNG FADE CHO TABS)
     ShellRoute(
       builder: (context, state, child) => RecruiterShell(child: child),
       routes: [
         GoRoute(
           path: '/recruiter/dashboard',
-          builder: (_, __) => const RecruiterDashboardPage(),
+          pageBuilder: (context, state) =>
+              fadeTransition(const RecruiterDashboardPage(), state),
         ),
         GoRoute(
           path: '/recruiter/jobs',
-          builder: (_, __) => const RecruiterJobPage(),
+          pageBuilder: (context, state) =>
+              fadeTransition(const RecruiterJobPage(), state),
         ),
         GoRoute(
           path: '/recruiter/reviews',
-          builder: (_, __) => const RecruiterReviewPage() ,
+          pageBuilder: (context, state) =>
+              fadeTransition(const RecruiterReviewPage(), state),
         ),
         GoRoute(
           path: '/recruiter/profile',
-          builder: (_, __) => const MyCompanyPage(),
+          pageBuilder: (context, state) =>
+              fadeTransition(const MyCompanyPage(), state),
         ),
       ],
     ),
 
-    // ⭐️ THÊM ROUTE MỚI CHO UPSERT JOB (NẰM NGOÀI SHELL) ⭐️
+    // 🟢 Upsert Job (Nằm ngoài shell nên dùng Slide)
     GoRoute(
       path: '/recruiter/jobs/upsert',
       name: 'recruiter_job_upsert',
       pageBuilder: (context, state) {
-        // state.extra sẽ là jobId (String?)
-        // null = Add Mode
-        // non-null = Edit Mode
         final String? jobId = state.extra as String?;
         return slideFromRightTransition(UpsertJobPage(jobId: jobId), state);
       },
     ),
 
+    // 🟢 Admin Shell Routes (ĐÃ THÊM HIỆU ỨNG FADE CHO TABS)
     ShellRoute(
       builder: (context, state, child) => AdminShell(child: child),
       routes: [
         GoRoute(
           path: '/admin/dashboard',
-          builder: (_, __) => const AdminDashboard(),
+          pageBuilder: (context, state) =>
+              fadeTransition(const AdminDashboard(), state),
         ),
         GoRoute(
           path: '/admin/home',
-          builder: (_, __) => const PlaceholderScreen(title: 'Admin Home'),
+          pageBuilder: (context, state) =>
+              fadeTransition(const PlaceholderScreen(title: 'Admin Home'), state),
         ),
         GoRoute(
           path: '/admin/users',
-          builder: (_, __) => const PlaceholderScreen(title: 'Users'),
+          pageBuilder: (context, state) =>
+              fadeTransition(const PlaceholderScreen(title: 'Users'), state),
         ),
         GoRoute(
           path: '/admin/settings',
-          builder: (_, __) => const PlaceholderScreen(title: 'Settings'),
+          pageBuilder: (context, state) =>
+              fadeTransition(const PlaceholderScreen(title: 'Settings'), state),
         ),
       ],
     ),

@@ -19,24 +19,24 @@ class MatchMultipleCvsUseCase {
         );
 
     return repository.matchMultipleCvs(
-      jdFilePath: params.jdFilePath,
-      cvFilePaths: params.cvFilePaths,
+      jdUrl: params.jdUrl,
+      cvUrls: params.cvUrls,
       weights: weights,
     );
   }
 }
 
 class MatchMultipleCvsParams extends Equatable {
-  final String jdFilePath;
-  final List<String> cvFilePaths;
+  final String jdUrl;
+  final List<String> cvUrls;
   final MatchWeights? weights;
 
   const MatchMultipleCvsParams({
-    required this.jdFilePath,
-    required this.cvFilePaths,
+    required this.jdUrl,
+    required this.cvUrls,
     this.weights,
   });
 
   @override
-  List<Object?> get props => [jdFilePath, cvFilePaths, weights];
+  List<Object?> get props => [jdUrl, cvUrls, weights];
 }

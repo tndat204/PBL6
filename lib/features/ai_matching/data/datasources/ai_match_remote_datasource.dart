@@ -5,14 +5,12 @@ import 'package:http_parser/http_parser.dart';
 import 'package:pbl6/features/ai_matching/domain/entities/ai_matching_entities.dart';
 
 abstract class AiMatchRemoteDataSource {
-  // API URL: http://127.0.0.1:8000/match/multiple
   Future<AiMatchResponse> matchMultipleCvs({
-    required String jdFilePath,
-    required List<String> cvFilePaths, // Đường dẫn cục bộ của CVs
+    required String jdUrl,
+    required List<String> cvUrls,
     MatchWeights? weights,
   });
 
-  // API URL: http://127.00.1:8000/match
   Future<CvMatchResult> matchSingleCv({
     required String jdFilePath,
     required String cvFilePath,
@@ -21,19 +19,17 @@ abstract class AiMatchRemoteDataSource {
 }
 
 class AiMatchRemoteDataSourceImpl implements AiMatchRemoteDataSource {
-  // 💡 Địa chỉ IP và Port của dịch vụ AI
-  static const String _aiBaseUrl = "http://127.0.0.1:8000";
+  static const String _aiBaseUrl = "http://10.0.2.2:8000";
 
   final Dio _dio;
 
   AiMatchRemoteDataSourceImpl(this._dio);
 
-  // Helper để tạo FormData cho File và Weights
   Future<FormData> _buildFormData({
     required String jdFilePath,
     required List<String> cvFilePaths,
     MatchWeights? weights,
-    String? cvFilePath, // Chỉ dùng cho single match
+    String? cvFilePath,
   }) async {
     final formData = FormData();
 
@@ -80,48 +76,69 @@ class AiMatchRemoteDataSourceImpl implements AiMatchRemoteDataSource {
       );
     }
 
-  
     formData.fields.add(MapEntry("weights", jsonEncode(weights?.toJson())));
 
     return formData;
   }
 
-  @override
+@override
   Future<AiMatchResponse> matchMultipleCvs({
-    required String jdFilePath,
-    required List<String> cvFilePaths,
+    required String jdUrl,
+    required List<String> cvUrls,
     MatchWeights? weights,
   }) async {
-    if (cvFilePaths.isEmpty) {
-      throw Exception("Vui lòng cung cấp ít nhất một CV để so khớp.");
-    }
+    
+    final formData = FormData();
 
-    final formData = await _buildFormData(
-      jdFilePath: jdFilePath,
-      cvFilePaths: cvFilePaths,
-      weights: weights,
-    );
+    // 1. JD URL
+    formData.fields.add(MapEntry("jd_url", jdUrl));
+
+    // 🔴 SỬA ĐỔI QUAN TRỌNG TẠI ĐÂY:
+    // Thay vì gửi từng dòng, ta gom nó thành chuỗi JSON String: '["url1", "url2", ...]'
+    // Điều này giúp Backend Python json.loads() được ngay.
+    formData.fields.add(MapEntry("cv_urls", jsonEncode(cvUrls))); 
+
+    // 3. Weights
+    // Nếu weights null, ta gửi "{}" (JSON rỗng) để tránh backend parse null bị lỗi
+    if (weights != null) {
+      formData.fields.add(MapEntry("weights", jsonEncode(weights.toJson())));
+    } else {
+      formData.fields.add(const MapEntry("weights", "{}"));
+    }
 
     try {
       final response = await _dio.post(
         '$_aiBaseUrl/match/multiple',
         data: formData,
-        options: Options(contentType: 'multipart/form-data'),
+        options: Options(
+          // Dio tự động set multipart/form-data
+          headers: {
+            "X-API-Key": "8f1c0c4d-0a0c-4e5e-b3b3-f1c8bde4a7d7",
+            "Connection": "keep-alive",
+          },
+          sendTimeout: const Duration(milliseconds: 60000),
+          receiveTimeout: const Duration(milliseconds: 60000),
+        ),
       );
 
-      // Giả định response.data là Map JSON chứa 'jd_filename', 'results', v.v.
       if (response.statusCode == 200 && response.data != null) {
         return AiMatchResponse.fromJson(response.data);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
+          type: DioExceptionType.badResponse,
+          message: "Server returned status: ${response.statusCode}",
         );
       }
-    } on DioException {
-      rethrow;
+    } on DioException catch (e) {
+      // In chi tiết lỗi server trả về để debug
+      if (e.response != null) {
+        print("❌ Server Error Data: ${e.response?.data}");
+      }
+      throw Exception('Lỗi kết nối AI Server: ${e.response?.data ?? e.message}');
     } catch (e) {
-      throw Exception('Lỗi AI Match Multiple: $e');
+      throw Exception('Lỗi không xác định: $e');
     }
   }
 

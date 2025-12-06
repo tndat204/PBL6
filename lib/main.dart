@@ -7,17 +7,23 @@ import 'package:pbl6/features/shared/user/presentation/providers/user_provider.d
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'features/shared/notification/presentation/manager/notification_provider.dart';
 import 'routes/app_router.dart'; // Import router config
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Khởi tạo binding
-  await SharedPreferences.getInstance();     // Khởi tạo SharedPreferences
-   init();                              // Khởi tạo dependency injection (await nếu async)
+  await SharedPreferences.getInstance(); // Khởi tạo SharedPreferences
+  init(); // Khởi tạo dependency injection (await nếu async)
   runApp(
     MultiProvider(
       providers: [
-        Provider<AuthRemoteDataSource>(create: (_) => sl<AuthRemoteDataSource>()),
+        Provider<AuthRemoteDataSource>(
+          create: (_) => sl<AuthRemoteDataSource>(),
+        ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider()..init(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -29,7 +35,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router( // Thay MaterialApp bằng .router
+    return MaterialApp.router(
+      // Thay MaterialApp bằng .router
       debugShowCheckedModeBanner: false,
       title: 'IT Smart Hire',
       theme: AppTheme.lightThemeMode,

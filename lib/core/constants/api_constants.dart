@@ -30,4 +30,6 @@ class ApiConstants {
   static const String applications= '/api/applications';
   //review
   static const String reviews= '/api/reviews';
+  //application
+  static const String notifications= '/api/notifications';
 }

@@ -25,6 +25,8 @@ import 'package:pbl6/features/shared/auth/data/repositories/auth_repository_impl
 import 'package:pbl6/features/shared/auth/data/services/google_sign_in_service.dart';
 import 'package:pbl6/features/shared/auth/domain/repositories/auth_repository.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/forgot_password_usecase.dart';
+import 'package:pbl6/features/shared/auth/domain/usecases/get_auth_token_usecase.dart';
+import 'package:pbl6/features/shared/auth/domain/usecases/get_current_user_id_usecase.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/login_usecase.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/logout_usecase.dart';
 import 'package:pbl6/features/shared/auth/domain/usecases/register_usecase.dart';
@@ -46,6 +48,9 @@ import 'package:pbl6/features/shared/job/data/datasources/job_remote_datasource.
 import 'package:pbl6/features/shared/job/data/repositories/job_repository_impl.dart';
 import 'package:pbl6/features/shared/job/domain/repositories/job_repository.dart';
 import 'package:pbl6/features/shared/job/domain/usecases/get_job_details_usecase.dart';
+import 'package:pbl6/features/shared/notification/data/datasources/notification_remote_datasource.dart';
+import 'package:pbl6/features/shared/notification/domain/usecases/get_notifications_usecase.dart';
+import 'package:pbl6/features/shared/notification/domain/usecases/mark_notification_read_usecase.dart';
 import 'package:pbl6/features/shared/review/data/datasources/review_remote_datasource.dart';
 import 'package:pbl6/features/shared/review/data/repositories/review_repository_impl.dart';
 import 'package:pbl6/features/shared/review/domain/repositories/review_repository.dart';
@@ -88,6 +93,9 @@ import 'package:pbl6/features/user/profile/domain/usecases/get_my_profile_usecas
 import 'package:pbl6/features/user/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:pbl6/features/user/profile/domain/usecases/upload_cv_usecase.dart';
 
+import '../features/shared/notification/data/repositories/notification_repository_impl.dart';
+import '../features/shared/notification/domain/repositories/notification_repository.dart';
+import '../features/shared/notification/domain/usecases/mark_all_notifications_read_usecase.dart';
 import '../features/shared/user/domain/usecases/update_my_info_usecase.dart';
 import '../features/shared/user/domain/usecases/upload_avatar_usecase.dart';
 
@@ -138,7 +146,8 @@ void init() {
   sl.registerSingleton<RegisterUseCase>(RegisterUseCase(sl<AuthRepository>()));
   sl.registerSingleton<GoogleSignInService>(GoogleSignInService());
   sl.registerSingleton<LogoutUseCase>(LogoutUseCase(sl<AuthRepository>()));
-
+  sl.registerSingleton<GetCurrentUserIdUseCase>(GetCurrentUserIdUseCase(sl<AuthRepository>()));
+  sl.registerSingleton<GetAuthTokenUseCase>(GetAuthTokenUseCase(sl<AuthRepository>()));
   // ================= USER =================
   sl.registerLazySingleton<UserRemoteDataSource>(
     () => UserRemoteDataSourceImpl(sl<ApiService>(), sl<DioClient>().instance),
@@ -319,6 +328,22 @@ void init() {
   );
   sl.registerLazySingleton< MatchSingleCvUseCase>(
     () =>  MatchSingleCvUseCase(sl<AiMatchRepository>()),
+  );
+  // ================= NOTIFICATION =================
+  sl.registerLazySingleton<NotificationRemoteDatasource>(
+    () => NotificationRemoteDatasourceImpl(sl<DioClient>().instance),
+  );
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(sl<NotificationRemoteDatasource>()),
+  );
+  sl.registerLazySingleton<MarkAllNotificationsReadUseCase>(
+    () => MarkAllNotificationsReadUseCase(sl<NotificationRepository>()),
+  );
+  sl.registerLazySingleton<GetNotificationsUseCase>(
+    () => GetNotificationsUseCase(sl<NotificationRepository>()),
+  );
+ sl.registerLazySingleton<MarkNotificationReadUseCase>(
+    () =>MarkNotificationReadUseCase(sl<NotificationRepository>()),
   );
 
 }
