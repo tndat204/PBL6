@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pbl6/core/theme/app_pallete.dart'; // THÊM IMPORT
+import 'package:pbl6/core/theme/app_pallete.dart';
+// 2. Import NotificationProvider
+import 'package:pbl6/features/shared/notification/presentation/manager/notification_provider.dart';
 import 'package:pbl6/features/shared/widgets/custom_bottom_nav.dart';
+import 'package:provider/provider.dart'; // 1. Import Provider
 
 class RecruiterShell extends StatefulWidget {
   final Widget child;
@@ -17,12 +20,22 @@ class _RecruiterShellState extends State<RecruiterShell> {
   final List<String> _routes = [
     '/recruiter/dashboard',
     '/recruiter/jobs',
-    // SỬA: Dựa trên router của bạn, route này nên là /projects
     '/recruiter/reviews',
     '/recruiter/profile',
   ];
 
-  // SỬA: Cập nhật hàm build dựa trên UserShell
+  @override
+  void initState() {
+    super.initState();
+    
+    // 3. Kích hoạt kết nối Socket & lấy thông báo cho Recruiter
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NotificationProvider>().init();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +61,6 @@ class _RecruiterShellState extends State<RecruiterShell> {
                     context.go(_routes[index]);
                   }
                 },
-                // SỬA: Thêm label cho các item
                 items: const [
                   BottomNavigationBarItem(
                       icon: Icon(Icons.home_rounded), label: 'Tổng quan'),
@@ -57,10 +69,10 @@ class _RecruiterShellState extends State<RecruiterShell> {
                       label: 'Quản lý Job'),
                   BottomNavigationBarItem(
                       icon: Icon(Icons.assessment_outlined),
-                      label: 'Đánh giá'), // Dựa trên route '/projects'
+                      label: 'Đánh giá'),
                   BottomNavigationBarItem(
                       icon: Icon(Icons.person_outline_rounded),
-                      label: 'Công ty'), // Hoặc 'Hồ sơ'
+                      label: 'Công ty'),
                 ],
               ),
             ),
@@ -68,7 +80,6 @@ class _RecruiterShellState extends State<RecruiterShell> {
         ],
       ),
       extendBody: true, // ✅ Giúp nội dung phía dưới hiển thị mượt khi bar nổi
-      // SỬA: Đổi màu nền để khớp với UserShell
       backgroundColor: AppPallete.backgroundColor,
     );
   }

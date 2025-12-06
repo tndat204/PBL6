@@ -18,10 +18,7 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotificationProvider>().init();
-    });
-  }
+      }
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +209,7 @@ class _NotificationPageState extends State<NotificationPage> {
                       color: isUnread ? Colors.black87 : Colors.grey.shade600,
                       height: 1.4,
                     ),
-                    maxLines: 3,
+                    maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),

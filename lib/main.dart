@@ -22,7 +22,7 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(
-          create: (_) => NotificationProvider()..init(),
+         create: (_) => NotificationProvider(),
         ),
       ],
       child: const MyApp(),

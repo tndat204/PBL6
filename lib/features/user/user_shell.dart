@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
+import 'package:pbl6/features/shared/notification/presentation/manager/notification_provider.dart';
 import 'package:pbl6/features/shared/widgets/custom_bottom_nav.dart';
-
-
+import 'package:provider/provider.dart'; 
 
 class UserShell extends StatefulWidget {
   final Widget child;
@@ -24,6 +24,19 @@ class _UserShellState extends State<UserShell> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    
+    // 3. Kích hoạt logic kết nối Socket & lấy thông báo ngay khi vào Shell
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Dùng context.read để gọi hàm mà không lắng nghe thay đổi UI ở đây
+        context.read<NotificationProvider>().init();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
@@ -37,7 +50,7 @@ class _UserShellState extends State<UserShell> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: 12, // Cách mép dưới một chút để nhìn nổi lên
+            bottom: 12, 
             child: Align(
               alignment: Alignment.bottomCenter,
               child: CustomBottomNav(
@@ -63,9 +76,8 @@ class _UserShellState extends State<UserShell> {
           ),
         ],
       ),
-      extendBody: true, // ✅ Giúp nội dung phía dưới hiển thị mượt khi bar nổi
+      extendBody: true, 
       backgroundColor: AppPallete.backgroundColor,
     );
   }
 }
-
