@@ -20,7 +20,7 @@ public interface AuthService {
 
     public String buildScope(UserResponse user);
     public IntrospectResponse introspect(IntrospectRequest introspectRequest) throws JOSEException, ParseException;
-    public String generateToken(UserResponse user,Long expiration);
+    public String generateToken(UserResponse user,Long expiration,String tokenType);
 
     public SignedJWT verifyToken(String token, boolean isRefreshToken) throws JOSEException, ParseException;
 

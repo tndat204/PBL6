@@ -2,6 +2,7 @@ package com.pbl6.gatewayservice.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.SignedJWT;
 import com.pbl6.gatewayservice.dto.response.APIResponse;
 import com.pbl6.gatewayservice.service.AuthService;
 import lombok.AccessLevel;
@@ -20,6 +21,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.text.ParseException;
 import java.util.List;
 
 @Component
@@ -82,6 +84,13 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String token = authHeader.get(0).replace("Bearer ", "");
         log.info("Token: {}", token);
 
+
+        if (isRefreshToken(token)) {
+            log.warn("Blocked Refresh Token trying to access Resource API: {}", path);
+            return unauthenticated(exchange.getResponse());
+        }
+
+
         return authService.introspect(token)
                 .flatMap(introspectResponse -> {
                     if (introspectResponse.getResult().isValid()) {
@@ -119,5 +128,17 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         response.getHeaders().set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes())));
+    }
+    private boolean isRefreshToken(String token) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+
+            String type = signedJWT.getJWTClaimsSet().getStringClaim("type");
+            return "Refresh".equals(type);
+
+        } catch (ParseException e) {
+            log.error("Không thể parse token để kiểm tra loại: {}", e.getMessage());
+            return true;
+        }
     }
 }

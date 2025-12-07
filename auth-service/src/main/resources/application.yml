@@ -32,7 +32,7 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   expiration: 7200
-  refresh-duration: 86400
+  refresh-duration: 604800
   reset-duration: 3000
 
 feign:

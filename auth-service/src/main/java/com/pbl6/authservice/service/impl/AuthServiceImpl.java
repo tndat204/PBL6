@@ -100,10 +100,11 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthenticationResponse login(LoginRequest request) {
         UserResponse user = userServiceClient.login(request).getResult();
-        String token = generateToken(user, expiration);
-
+        String token = generateToken(user, expiration,"Access");
+        String refreshToken = generateToken(user, refreshDuration,"Refresh");
         return AuthenticationResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .build();
     }
 
@@ -139,19 +140,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String generateToken(UserResponse user, Long expiration) {
+    public String generateToken(UserResponse user, Long expiration,String tokenType) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
-        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+
+        JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
                 .issuer("itjobhunt.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(expiration, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
-                .claim("scope", buildScope(user))
                 .claim("userId", user.getId())
-                .build();
+                .claim("type", tokenType);     // ⚡️ Quan trọng nhất
+
+        if (Objects.equals(tokenType, "Access")) {
+            claimsBuilder.claim("scope", buildScope(user));
+        }
+
+        JWTClaimsSet jwtClaimsSet = claimsBuilder.build();
+
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
+
         try {
             jwsObject.sign(new MACSigner(SIGN_KEY.getBytes()));
             return jwsObject.serialize();
@@ -159,6 +168,7 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Error generating token", e);
         }
     }
+
 
     @Override
     public IntrospectResponse introspect(IntrospectRequest introspectRequest) throws JOSEException, ParseException {
@@ -201,19 +211,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws JOSEException, ParseException {
         var signedJWT = verifyToken(refreshTokenRequest.getToken(), true);
-
-        invalidatedTokenRepository.save(
-                InvalidatedToken.builder()
-                        .id(UUID.fromString(signedJWT.getJWTClaimsSet().getJWTID()))
-                        .expiryTime(signedJWT.getJWTClaimsSet().getExpirationTime())
-                        .build()
-        );
-
-        // Sử dụng Feign lấy user
         UserResponse user = getUserByEmail(signedJWT.getJWTClaimsSet().getSubject());
-
-        String token = generateToken(user, refreshDuration);
-
+        String token = generateToken(user, expiration,"Access");
         return AuthenticationResponse.builder()
                 .token(token)
                 .build();
@@ -273,10 +272,12 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserResponse user = userServiceClient.getUserByEmail(userInfo.getEmail()).getResult();
-        var token = generateToken(user, expiration);
+        var token = generateToken(user, expiration,"Access");
+        var refreshToken = generateToken(user, refreshDuration,"Refresh");
 
         return AuthenticationResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .build();
     }
 
@@ -301,10 +302,11 @@ public class AuthServiceImpl implements AuthService {
                     .build());
         }
         UserResponse user = userServiceClient.getUserByEmail(payload.getEmail()).getResult();
-        var token = generateToken(user, expiration);
-
+        var token = generateToken(user, expiration,"Access");
+        var refreshToken = generateToken(user, refreshDuration,"Refresh");
         return AuthenticationResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .build();
 
     }
