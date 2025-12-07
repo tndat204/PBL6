@@ -32,4 +32,12 @@ class AiMatchRepositoryImpl implements AiMatchRepository {
       weights: weights,
     );
   }
+  @override
+  Future<JdSummaryResponse> summarizeJd({
+    required String jdFilePath,
+  }) {
+    return remoteDataSource.summarizeJd(
+      jdFilePath: jdFilePath,
+    );
+  }
 }

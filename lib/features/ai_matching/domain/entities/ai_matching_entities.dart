@@ -230,3 +230,82 @@ class MatchWeights extends Equatable {
   List<Object?> get props =>
       [technicalSkills, softSkills, experience, education, other];
 }
+class JdSummaryDetails extends Equatable {
+  final String? jobTitle;
+  final String? company;
+  final String? location;
+  final String? employmentType;
+  final String? summary;
+  final List<String> keyResponsibilities;
+  final List<String> keyRequirements;
+  final String? experienceLevel;
+  final String? salaryRange;
+  final List<String> benefits;
+
+  const JdSummaryDetails({
+    this.jobTitle,
+    this.company,
+    this.location,
+    this.employmentType,
+    this.summary,
+    required this.keyResponsibilities,
+    required this.keyRequirements,
+    this.experienceLevel,
+    this.salaryRange,
+    required this.benefits,
+  });
+
+  factory JdSummaryDetails.fromJson(Map<String, dynamic> json) {
+    return JdSummaryDetails(
+      jobTitle: json['jobTitle'],
+      company: json['company'],
+      location: json['location'],
+      employmentType: json['employmentType'],
+      summary: json['summary'],
+      keyResponsibilities: List<String>.from(json['keyResponsibilities'] ?? []),
+      keyRequirements: List<String>.from(json['keyRequirements'] ?? []),
+      experienceLevel: json['experienceLevel'],
+      salaryRange: json['salaryRange'],
+      benefits: List<String>.from(json['benefits'] ?? []),
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        jobTitle,
+        company,
+        location,
+        employmentType,
+        summary,
+        keyResponsibilities,
+        keyRequirements,
+        experienceLevel,
+        salaryRange,
+        benefits,
+      ];
+}
+
+class JdSummaryResponse extends Equatable {
+  final bool success;
+  final String source;
+  final JdSummaryDetails? summary;
+
+  const JdSummaryResponse({
+    required this.success,
+    required this.source,
+    this.summary,
+  });
+
+  factory JdSummaryResponse.fromJson(Map<String, dynamic> json) {
+    return JdSummaryResponse(
+      success: json['success'] ?? false,
+      source: json['source'] ?? '',
+      summary: json['summary'] != null
+          ? JdSummaryDetails.fromJson(json['summary'])
+          : null,
+    );
+  }
+
+  @override
+  List<Object?> get props => [success, source, summary];
+}

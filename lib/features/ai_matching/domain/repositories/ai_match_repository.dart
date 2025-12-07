@@ -14,4 +14,7 @@ abstract class AiMatchRepository {
     required String cvFilePath,
     MatchWeights? weights,
   });
+   Future<JdSummaryResponse> summarizeJd({
+    required String jdFilePath,
+  });
 }

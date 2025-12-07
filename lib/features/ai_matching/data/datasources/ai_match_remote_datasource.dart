@@ -16,6 +16,9 @@ abstract class AiMatchRemoteDataSource {
     required String cvFilePath,
     MatchWeights? weights,
   });
+  Future<JdSummaryResponse> summarizeJd({
+    required String jdFilePath,
+  });
 }
 
 class AiMatchRemoteDataSourceImpl implements AiMatchRemoteDataSource {
@@ -159,22 +162,84 @@ class AiMatchRemoteDataSourceImpl implements AiMatchRemoteDataSource {
       final response = await _dio.post(
         '$_aiBaseUrl/match',
         data: formData,
-        options: Options(contentType: 'multipart/form-data'),
+        options: Options(
+          contentType: 'multipart/form-data',
+          // 🟢 ĐÃ THÊM HEADER VÀO ĐÂY
+          headers: {
+            "X-API-Key": "8f1c0c4d-0a0c-4e5e-b3b3-f1c8bde4a7d7",
+            "Connection": "keep-alive",
+          },
+          sendTimeout: const Duration(milliseconds: 60000),
+          receiveTimeout: const Duration(milliseconds: 60000),
+        ),
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        // API single match trả về object CvMatchResult trực tiếp (không nằm trong list)
         return CvMatchResult.fromJson(response.data);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
+          type: DioExceptionType.badResponse,
         );
       }
     } on DioException {
       rethrow;
     } catch (e) {
       throw Exception('Lỗi AI Match Single: $e');
+    }
+  }
+  @override
+  Future<JdSummaryResponse> summarizeJd({
+    required String jdFilePath,
+  }) async {
+    final formData = FormData();
+
+    // Key trong Swagger là "jd_file"
+    formData.files.add(
+      MapEntry(
+        "jd_file", 
+        await MultipartFile.fromFile(
+          jdFilePath,
+          filename: jdFilePath.split('/').last,
+          contentType: MediaType('application', 'pdf'), // Giả định là PDF
+        ),
+      ),
+    );
+
+    try {
+      final response = await _dio.post(
+        '$_aiBaseUrl/summarize-jd',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          headers: {
+            "X-API-Key": "8f1c0c4d-0a0c-4e5e-b3b3-f1c8bde4a7d7",
+            "Connection": "keep-alive",
+          },
+          // Tăng timeout vì đọc PDF và tóm tắt có thể lâu
+          sendTimeout: const Duration(milliseconds: 60000),
+          receiveTimeout: const Duration(milliseconds: 60000),
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return JdSummaryResponse.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          message: "Server returned status: ${response.statusCode}",
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print("❌ Summarize Error Data: ${e.response?.data}");
+      }
+      throw Exception('Lỗi tóm tắt JD: ${e.response?.data ?? e.message}');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
     }
   }
 }

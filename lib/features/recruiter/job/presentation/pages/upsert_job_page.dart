@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/core/utils/currency_input_formatter.dart';
+// Import UseCase mới
+import 'package:pbl6/features/ai_matching/domain/usecases/summarize_jd_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/create_job_usecase.dart';
 import 'package:pbl6/features/recruiter/job/domain/usecases/update_job_usecase.dart';
 import 'package:pbl6/features/shared/auth/data/datasources/auth_remote_datasource.dart';
@@ -44,10 +46,15 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
   late final AuthRemoteDataSource _authDataSource;
   late final CreateJobUseCase _createJobUseCase;
   late final UpdateJobUseCase _updateJobUseCase;
+  // 🆕 UseCase cho AI Summarize
+  late final SummarizeJdUseCase _summarizeJdUseCase;
 
   // Form State
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
+  // 🆕 State loading riêng cho AI
+  bool _isAiProcessing = false; 
+  
   String? _companyId;
   Company? _myCompany;
   Job? _editingJob;
@@ -60,6 +67,8 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
 
   // Controllers
   final _titleController = TextEditingController();
+  // 🆕 Controller cho Description
+  final _descriptionController = TextEditingController(); 
   final _salaryMinController = TextEditingController();
   final _salaryMaxController = TextEditingController();
   int _expMin = 0;
@@ -70,7 +79,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
   ExperienceLevel? _selectedExpLevel;
   JobType? _selectedJobType;
   
-  // 💡 STATE CHO ĐỊA CHỈ
+  // Địa chỉ
   List<Map<String, dynamic>> _provinces = [];
   List<Map<String, dynamic>> _wards = [];
   String? _selectedProvinceId;
@@ -78,7 +87,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
   String? _selectedWardName;
   final _detailedAddressController = TextEditingController();
 
-  // 💡 STATE CHO FILE JD
+  // File JD
   String? _jdFilePath; 
   String? _jdFileName; 
   bool _isJdFilePicked = false; 
@@ -101,10 +110,13 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     _authDataSource = GetIt.I<AuthRemoteDataSource>();
     _createJobUseCase = GetIt.I<CreateJobUseCase>();
     _updateJobUseCase = GetIt.I<UpdateJobUseCase>();
+    // 🆕 Inject UseCase
+    _summarizeJdUseCase = GetIt.I<SummarizeJdUseCase>();
 
     _loadInitialData();
   }
 
+  // 🆕 Hàm chọn file và gọi AI
   Future<void> _pickJdFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -128,16 +140,83 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       return;
     }
     
+    // Cập nhật UI đã chọn file
     setState(() {
       _jdFilePath = filePath;
       _jdFileName = fileName;
       _isJdFilePicked = true;
+      _isAiProcessing = true; // Bắt đầu loading AI
     });
     
-    MotionToast.info(description: Text('Đã chọn file: $fileName')).show(context);
+    // Gọi AI xử lý
+    await _processJdWithAi(filePath);
   }
 
-  // 💡 SỬA LOGIC ASYNC: TẢI DATA VÀ PREFILL ĐỒNG BỘ
+  // 🆕 Logic gọi API và Format text
+  Future<void> _processJdWithAi(String filePath) async {
+    try {
+      final response = await _summarizeJdUseCase(SummarizeJdParams(jdFilePath: filePath));
+
+      if (response.success && response.summary != null) {
+        final data = response.summary!;
+        
+        // Format dữ liệu thành String đẹp mắt để đổ vào ô Description
+        final StringBuffer sb = StringBuffer();
+
+        if (data.summary != null && data.summary!.isNotEmpty) {
+          sb.writeln("TÓM TẮT (Summary):");
+          sb.writeln(data.summary);
+          sb.writeln("");
+        }
+
+        if (data.keyResponsibilities.isNotEmpty) {
+          sb.writeln("TRÁCH NHIỆM CHÍNH (Responsibility):");
+          for (var item in data.keyResponsibilities) {
+            sb.writeln("- $item");
+          }
+          sb.writeln("");
+        }
+
+        if (data.keyRequirements.isNotEmpty) {
+          sb.writeln("YÊU CẦU CÔNG VIỆC (Requirement):");
+          for (var item in data.keyRequirements) {
+            sb.writeln("- $item");
+          }
+          sb.writeln("");
+        }
+
+        if (data.benefits.isNotEmpty) {
+          sb.writeln("QUYỀN LỢI (Benefit):");
+          for (var item in data.benefits) {
+            sb.writeln("- $item");
+          }
+        }
+
+        setState(() {
+          _descriptionController.text = sb.toString();
+          // Nếu AI trả về Title và người dùng chưa nhập title, điền luôn
+          if (_titleController.text.isEmpty && data.jobTitle != null) {
+            _titleController.text = data.jobTitle!;
+          }
+        });
+
+        if (mounted) {
+           MotionToast.success(description: const Text("AI đã trích xuất nội dung thành công!")).show(context);
+        }
+      } 
+    } catch (e) {
+      if (mounted) {
+         MotionToast.warning(description: Text("AI không thể đọc file này: $e")).show(context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAiProcessing = false; // Tắt loading AI
+        });
+      }
+    }
+  }
+
   Future<void> _loadInitialData() async {
     try {
       _companyId = await _authRepository.getCompanyId();
@@ -158,7 +237,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       
       if (widget.isEditMode) {
         _editingJob = results[4] as Job;
-        // ⭐️ CHỜ PREFILL ADDRESS HOÀN TẤT
         await _prefillForm(); 
       } else {
         _selectedJobType = JobType.FULL_TIME;
@@ -175,12 +253,14 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     }
   }
 
-  // 💡 HÀM NÀY CHẠY ASYNC ĐỂ CHỜ WARDS
   Future<void> _prefillForm() async {
     if (_editingJob == null) return;
     final job = _editingJob!;
 
     _titleController.text = job.title;
+    // 🆕 Prefill Description cũ
+    _descriptionController.text = job.description; 
+    
     _salaryMinController.text = NumberFormat('#,###').format(job.salaryMin);
     _salaryMaxController.text = NumberFormat('#,###').format(job.salaryMax);
     _expMin = job.requiredYearsOfExpMin;
@@ -189,7 +269,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       DateTime(job.expiryDate.year, job.expiryDate.month, job.expiryDate.day),
     );
     
-    // Xử lý file JD cũ
     if (job.jdFile.isNotEmpty) {
         setState(() {
             _jdFileName = job.jdFile.split('/').last; 
@@ -201,17 +280,14 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     _selectedJobType = job.jobType;
     _isActive = job.status == JobStatus.ACTIVE;
 
-    // ⭐️ GỌI ASYNC VÀ CHỜ
     await _prefillAddress(job.location);
 
     _selectedSkills = _allSkills.where((s) => job.skillIds.contains(s.id)).toList();
     _selectedCategories = _categories.where((c) => job.categoryIds.contains(c.id)).toList();
   }
 
-  // 💡 HÀM PREFILL ADDRESS ĐẢM BẢO TẢI WARDS ĐỒNG BỘ
   Future<void> _prefillAddress(String location) async {
     if (location.isEmpty) return;
-
     final parts = location.split(',').map((e) => e.trim()).toList();
     
     String? initialWardName;
@@ -235,18 +311,13 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       if (prov.isNotEmpty) {
         _selectedProvinceId = prov['id'];
         _selectedProvinceName = initialProvinceName;
-        
-        // ⭐️ CHỜ TẢI WARDS TRƯỚC KHI GÁN
         await _fetchWards(initialProvinceName); 
-        
         if (_wards.any((w) => w['name'] == initialWardName)) {
            _selectedWardName = initialWardName;
         }
       }
     }
-    // Không gọi setState ở đây, _loadInitialData sẽ gọi chung khi xong
   }
-
 
   void _onCategoryChanged(List<Category> newSelectedCategories) {
     setState(() {
@@ -270,7 +341,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     });
   }
 
-  // 💡 HÀM TẢI WARDS (BÂY GIỜ LÀ ASYNC KHÔNG SETSTATE)
   Future<void> _fetchWards(String provinceName) async {
     final wards = await _authDataSource.fetchWards(provinceName);
     _wards = wards;
@@ -286,7 +356,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       });
       return;
     }
-
     final province = _provinces.firstWhere((p) => p['id'] == id);
     final provinceName = province['province'];
 
@@ -296,9 +365,8 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
       _selectedWardName = null;
       _wards = [];
     });
-
     await _fetchWards(provinceName); 
-    setState(() {}); // Gọi setState để cập nhật dropdown Wards
+    setState(() {});
   }
 
   void _onWardChanged(String? name) {
@@ -311,10 +379,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     });
   }
 
-  Future<void> _selectDate(
-    BuildContext context,
-    TextEditingController controller,
-  ) async {
+  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: controller.text.isNotEmpty
@@ -344,17 +409,22 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         MotionToast.error(description: Text('Vui lòng tải lên file Mô tả công việc (PDF)')).show(context);
         return;
     }
-
+    
+    // Kiểm tra description
+    if (_descriptionController.text.trim().isEmpty) {
+        MotionToast.error(description: const Text('Mô tả công việc không được để trống')).show(context);
+        return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
-      // 1. Tạo đối tượng Job
       final jobData = Job(
         id: _editingJob?.id ?? '', 
         companyId: _myCompany!.id,
         title: _titleController.text,
-        description: "", // 💡 GỬI DESCRIPTION RỖNG
+        // 🆕 Lấy dữ liệu từ controller đã được AI điền (hoặc user tự điền)
+        description: _descriptionController.text, 
         status: _isActive ? JobStatus.ACTIVE : JobStatus.INACTIVE,
         salaryMin: int.tryParse(_salaryMinController.text.replaceAll(',', '')) ?? 0,
         salaryMax: int.tryParse(_salaryMaxController.text.replaceAll(',', '')) ?? 0,
@@ -375,14 +445,11 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
             ? (() { return DateFormat('dd/MM/yyyy').parseStrict(_expiryDateController.text); })()
             : DateTime.now(),
         postedBy: '', 
-        // 💡 GÁN FILE CŨ CHO ENTITY NẾU KHÔNG TẢI MỚI (để API không xóa)
         jdFile: (widget.isEditMode && _jdFilePath == null) ? _editingJob!.jdFile : '',
       );
       
       final filePathToSend = _jdFilePath;
-      print('🟦 Submitting Job with JD file path: $filePathToSend');
-      print ('🟦 Job Data: ${jobData.toJsonForUpsert()}');
-      // 2. Gọi UseCase (ĐÃ DÙNG PARAMS OBJECT)
+      
       if (widget.isEditMode) {
         await _updateJobUseCase(
           UpdateJobParams(
@@ -425,7 +492,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Nền trắng
+      backgroundColor: Colors.white, 
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
@@ -457,8 +524,101 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       obscureText: false,
                     ),
                     const SizedBox(height: 16),
+                    
+                    // --- SECTION JD FILE & AI ---
+                    const Text('Tải file Mô tả công việc (JD) *', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    const Text(
+                        'Hệ thống sẽ dùng AI để tự động trích xuất nội dung vào phần mô tả bên dưới.', 
+                        style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)
+                    ),
+                    const SizedBox(height: 8),
 
-                    // Danh mục (Multi-select)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _isJdFilePicked ? AppPallete.primaryColor : Colors.grey.shade300,
+                          width: _isJdFilePicked ? 2.0 : 1.0,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _isJdFilePicked ? Icons.description : Icons.upload_file,
+                                color: _isJdFilePicked ? AppPallete.primaryColor : Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _jdFileName ?? (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false) ? 'File cũ: ${(_editingJob?.jdFile.split('/').last ?? 'JD.pdf')}' : 'Chưa chọn file PDF nào'),
+                                  style: TextStyle(
+                                    color: _isJdFilePicked || (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false)) ? Colors.black87 : Colors.grey.shade600,
+                                    fontWeight: _isJdFilePicked || (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false)) ? FontWeight.w600 : FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (_isJdFilePicked)
+                                IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                        _jdFilePath = null;
+                                        _jdFileName = null;
+                                        _isJdFilePicked = false;
+                                        // Không xóa description khi xóa file, để user giữ lại text nếu muốn
+                                    });
+                                  },
+                                ),
+                            ],
+                          ),
+                          
+                          // 🆕 HIỂN THỊ LOADING AI
+                          if (_isAiProcessing)
+                             Padding(
+                               padding: const EdgeInsets.symmetric(vertical: 12.0),
+                               child: Row(
+                                 children: const [
+                                    SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                                    SizedBox(width: 12),
+                                    Text("AI đang đọc file & tạo mô tả...", style: TextStyle(color: AppPallete.primaryColor, fontSize: 13)),
+                                 ],
+                               ),
+                             ),
+
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _pickJdFile, 
+                              icon: const Icon(Icons.folder_open),
+                              label: Text(_isJdFilePicked ? 'Chọn lại file' : 'Chọn file JD (PDF)'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // 🆕 MÔ TẢ CÔNG VIỆC (EDITABLE)
+                    CustomTextField(
+                      controller: _descriptionController,
+                      label: 'Mô tả công việc (AI Generated) *',
+                      icon: Icons.notes,
+                      maxLines: 10, // Cho phép nhiều dòng
+                      validator: (val) => val!.isEmpty ? 'Vui lòng nhập mô tả' : null,
+                      obscureText: false,
+                    ),
+                    const SizedBox(height: 16),
+                    // -----------------------------
+
+                    // Danh mục
                     _buildMultiSelectChipField<Category>(
                       label: 'Danh mục *',
                       icon: Icons.category,
@@ -469,7 +629,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Kỹ năng (Multi-select)
+                    // Kỹ năng
                     _buildMultiSelectChipField<Skill>(
                       label: 'Kỹ năng *',
                       icon: Icons.code,
@@ -480,7 +640,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Công ty (disabled)
+                    // Công ty
                     CustomTextField(
                       controller: TextEditingController(text: _myCompany?.name ?? ''),
                       label: 'Công ty *',
@@ -503,7 +663,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                     ),
 
                     const SizedBox(height: 16),
-                    // Dropdown Phường/Xã
                     CustomDropdownField<String>(
                       label: 'Phường/Xã',
                       icon: Icons.location_city_outlined,
@@ -665,68 +824,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       activeColor: AppPallete.primaryColor,
                       contentPadding: EdgeInsets.zero,
                     ),
-                    const SizedBox(height: 16),
-
-                    // 💡 KHU VỰC TẢI FILE JD (THAY THẾ MÔ TẢ)
-                    const Text('Tải file Mô tả công việc (JD) *', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _isJdFilePicked ? AppPallete.primaryColor : Colors.grey.shade300,
-                          width: _isJdFilePicked ? 2.0 : 1.0,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                _isJdFilePicked ? Icons.description : Icons.upload_file,
-                                color: _isJdFilePicked ? AppPallete.primaryColor : Colors.grey.shade600,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _jdFileName ?? (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false) ? 'File cũ: ${(_editingJob?.jdFile.split('/').last ?? 'JD.pdf')}' : 'Chưa chọn file PDF nào'),
-                                  style: TextStyle(
-                                    color: _isJdFilePicked || (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false)) ? Colors.black87 : Colors.grey.shade600,
-                                    fontWeight: _isJdFilePicked || (widget.isEditMode && (_editingJob?.jdFile.isNotEmpty ?? false)) ? FontWeight.w600 : FontWeight.w500,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (_isJdFilePicked)
-                                IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.red),
-                                  onPressed: () {
-                                    setState(() {
-                                        _jdFilePath = null;
-                                        _jdFileName = null;
-                                        _isJdFilePicked = false;
-                                    });
-                                  },
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // Nút hành động
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: _pickJdFile, 
-                              icon: const Icon(Icons.folder_open),
-                              label: Text(_isJdFilePicked ? 'Chọn lại file' : 'Chọn file JD (PDF)'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 32),
                     
                     // Nút submit
@@ -745,7 +842,7 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     );
   }
 
-  // Widget build multi-select cho Skill và Category
+  // Widget build multi-select (GIỮ NGUYÊN NHƯ CŨ)
   Widget _buildMultiSelectChipField<T>({
     required String label,
     required IconData icon,
@@ -754,36 +851,30 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     required Function(List<T>) onChanged,
     String? Function(List<T>?)? validator,
   }) {
-    // Giả sử T là Skill hoặc Category và có thuộc tính 'name' và 'id'
     String getItemName(T item) {
       if (item is Skill) return item.name;
       if (item is Category) return item.name;
       return item.toString();
     }
 
-    // 💡 Lấy danh sách đề xuất (chỉ áp dụng cho Skill)
     List<T> getRecommendedItems(List<T> items) {
       if (T == Skill) {
         final Set<String> recommendedIds = {};
         for (final category in _selectedCategories) {
           recommendedIds.addAll(category.skills.map((s) => s.id));
         }
-
-        // Lọc ra các skill được đề xuất dựa trên các Category đã chọn
         return items
             .where((item) => recommendedIds.contains((item as Skill).id))
             .cast<T>()
             .toList();
       }
-      return allItems; // Trả về tất cả nếu là Category
+      return allItems;
     }
 
-    // Sử dụng danh sách đề xuất cho Skills, nếu có Category được chọn
     final List<T> displayItems = (T == Skill && _selectedCategories.isNotEmpty)
         ? getRecommendedItems(allItems)
         : [];
 
-    // Lọc các item đã chọn khỏi danh sách đề xuất để tránh trùng lặp
     final List<T> nonSelectedRecommended = displayItems
         .where((item) => !selectedItems.contains(item))
         .toList();
@@ -796,7 +887,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Label và Icon ---
             Row(
               children: [
                 Icon(icon, color: AppPallete.mutedTextColor, size: 22),
@@ -813,7 +903,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
             ),
             const SizedBox(height: 8),
 
-            // --- Các chip đã chọn ---
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -840,7 +929,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                         fontWeight: FontWeight.w600,
                       ),
                       onDeleted: () {
-                        // 💡 LOGIC XÓA
                         final newSelected = List<T>.from(selectedItems);
                         newSelected.remove(item);
                         onChanged(newSelected);
@@ -849,7 +937,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       deleteIconColor: AppPallete.primaryColor,
                     );
                   }),
-                  // --- Nút "Thêm" ---
                   ActionChip(
                     label: const Text('Thêm...'),
                     avatar: const Icon(Icons.add_circle_outline, size: 18),
@@ -871,7 +958,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
               ),
             ),
 
-            // --- SKILL ĐỀ XUẤT (Chỉ hiển thị cho Skills) ---
             if (T == Skill && nonSelectedRecommended.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 10, left: 5),
@@ -896,7 +982,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                           backgroundColor: AppPallete.primaryColor.withOpacity(0.05),
                           labelStyle: const TextStyle(color: AppPallete.primaryColor),
                           onPressed: () {
-                            // Thêm skill đề xuất vào danh sách đã chọn
                             final newSelected = List<T>.from(selectedItems);
                             newSelected.add(item);
                             onChanged(newSelected);
@@ -909,7 +994,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                 ),
               ),
 
-            // --- Hiển thị lỗi ---
             if (formFieldState.hasError)
               Padding(
                 padding: const EdgeInsets.only(left: 12, top: 8),
@@ -928,7 +1012,6 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
     );
   }
 
-  // Dialog chọn multi-select
   Future<void> _showMultiSelectDialog<T>({
     required BuildContext context,
     required String title,

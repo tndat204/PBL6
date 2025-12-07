@@ -93,6 +93,7 @@ import 'package:pbl6/features/user/profile/domain/usecases/get_my_profile_usecas
 import 'package:pbl6/features/user/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:pbl6/features/user/profile/domain/usecases/upload_cv_usecase.dart';
 
+import '../features/ai_matching/domain/usecases/summarize_jd_usecase.dart';
 import '../features/shared/notification/data/repositories/notification_repository_impl.dart';
 import '../features/shared/notification/domain/repositories/notification_repository.dart';
 import '../features/shared/notification/domain/usecases/mark_all_notifications_read_usecase.dart';
@@ -328,6 +329,9 @@ void init() {
   );
   sl.registerLazySingleton< MatchSingleCvUseCase>(
     () =>  MatchSingleCvUseCase(sl<AiMatchRepository>()),
+  );
+  sl.registerLazySingleton< SummarizeJdUseCase>(
+    () =>  SummarizeJdUseCase(sl<AiMatchRepository>()),
   );
   // ================= NOTIFICATION =================
   sl.registerLazySingleton<NotificationRemoteDatasource>(
