@@ -15,7 +15,7 @@ abstract class ProfileRemoteDataSource {
   Future<ProfileApiResponse> createProfile(ProfileRequestModel request);
   // 💡 Bổ sung API cập nhật Profile
   Future<ProfileApiResponse> updateProfile(ProfileRequestModel request);
-
+  Future<ProfileApiResponse> getUserProfile(String userId);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -108,6 +108,21 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         print('🟥 Dio error updating profile: ${e.response?.data}');
       }
       throw Exception('Update profile failed: $e');
+    }
+  }
+  @override
+  Future<ProfileApiResponse> getUserProfile(String userId) async {
+    try {
+      // Gọi API: GET /api/profiles/{userId}
+      final response = await _dio.get("${ApiConstants.profiles}/$userId");
+      
+      // Map response về ProfileApiResponse
+      return ProfileApiResponse.fromJson(response.data);
+    } catch (e) {
+      if (e is DioError) {
+        print('🟥 Dio error getting user profile ($userId): ${e.response?.data}');
+      }
+      throw Exception('Get user profile failed: $e');
     }
   }
 }

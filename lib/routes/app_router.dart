@@ -24,6 +24,9 @@ import 'package:pbl6/features/user/user_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/admin/dashboard/presentation/pages/admin_dashboard.dart';
+import '../features/ai_matching/domain/entities/ai_matching_entities.dart';
+import '../features/recruiter/job/presentation/pages/applicant_profile_page.dart';
+import '../features/shared/application/domain/entities/application.dart';
 import '../features/shared/auth/presentation/pages/login_page.dart';
 import '../features/shared/auth/presentation/pages/role_selection_screen.dart';
 import '../features/shared/user/presentation/pages/my_info_page.dart';
@@ -39,7 +42,9 @@ CustomTransitionPage slideFromRightTransition(
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
-    transitionDuration: const Duration(milliseconds: 300), // Giảm nhẹ xuống 300ms cho mượt
+    transitionDuration: const Duration(
+      milliseconds: 300,
+    ), // Giảm nhẹ xuống 300ms cho mượt
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final tween = Tween<Offset>(
         begin: const Offset(1, 0),
@@ -230,6 +235,23 @@ final GoRouter router = GoRouter(
       },
     ),
 
+    GoRoute(
+      path: '/recruiter/applicant/:userId',
+      name: 'applicant_profile',
+      pageBuilder: (context, state) {
+        final extraData = state.extra as Map<String, dynamic>;
+        final application = extraData['application'] as Application;
+        final matchScore = extraData['matchScore'] as MatchScore?;
+
+        return slideFromRightTransition(
+          ApplicantProfilePage(
+            application: application,
+            matchScore: matchScore,
+          ),
+          state,
+        );
+      },
+    ),
     // 🟢 User Shell Routes (ĐÃ THÊM HIỆU ỨNG FADE CHO TABS)
     ShellRoute(
       builder: (context, state, child) => UserShell(child: child),
@@ -305,8 +327,10 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/admin/home',
-          pageBuilder: (context, state) =>
-              fadeTransition(const PlaceholderScreen(title: 'Admin Home'), state),
+          pageBuilder: (context, state) => fadeTransition(
+            const PlaceholderScreen(title: 'Admin Home'),
+            state,
+          ),
         ),
         GoRoute(
           path: '/admin/users',

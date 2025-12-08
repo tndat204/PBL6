@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:pbl6/core/theme/app_pallete.dart';
 import 'package:pbl6/features/ai_matching/domain/entities/ai_matching_entities.dart'; // Import MatchScore
 import 'package:pbl6/features/shared/application/domain/entities/application.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 
 class ApplicantCard extends StatefulWidget {
   final Application application;
@@ -36,13 +38,11 @@ class _ApplicantCardState extends State<ApplicantCard> {
   }
 
   Color _getScoreColor(double score) {
-    // Thang 100
     if (score >= 75) return Colors.green.shade700;
     if (score >= 50) return Colors.orange.shade700;
     return Colors.red.shade700;
   }
 
-  // --- Helper Colors & Text ---
   Color _getStatusColor(ApplicationStatus status) {
     switch (status) {
       case ApplicationStatus.SUBMITTED: return Colors.blue.shade600;
@@ -75,121 +75,141 @@ class _ApplicantCardState extends State<ApplicantCard> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar + Name
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Colors.blueGrey.shade100,
-                      backgroundImage: applicant.avatarUrl.isNotEmpty
-                          ? NetworkImage(applicant.avatarUrl) as ImageProvider
-                          : null,
-                      child: applicant.avatarUrl.isEmpty
-                          ? const Icon(Icons.person, color: Colors.blueGrey)
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            applicant.fullName,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(applicant.email, style: TextStyle(color: Colors.grey.shade600)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Info Rows
-                _buildInfoRow(Icons.phone_outlined, applicant.phone),
-                _buildInfoRow(Icons.location_on_outlined, applicant.address),
-                
-                if (widget.application.notes.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(
-                      '"${widget.application.notes}"',
-                      style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey.shade700, fontSize: 14),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                const SizedBox(height: 16),
-
-                // Actions
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatusDropdown(currentStatus),
-                    ElevatedButton.icon(
-                      onPressed: widget.application.cvFileUrl.isNotEmpty ? _launchCV : null,
-                      icon: const Icon(Icons.file_download_outlined, size: 18),
-                      label: const Text('CV'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppPallete.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // --- AI Score Badge ---
-          if (totalScore != null)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Tooltip(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(8)),
-                textStyle: const TextStyle(color: Colors.white),
-                message: "Technical: ${widget.matchScore?.technicalSkills.toStringAsFixed(1)}\n"
-                         "Experience: ${widget.matchScore?.experience.toStringAsFixed(1)}\n"
-                         "Education: ${widget.matchScore?.education.toStringAsFixed(1)}\n"
-                         "Soft Skills: ${widget.matchScore?.softSkills.toStringAsFixed(1)}\n"
-                         "Other: ${widget.matchScore?.other.toStringAsFixed(1)}",
-                triggerMode: TooltipTriggerMode.tap,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _getScoreColor(totalScore),
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+      
+      // 💡 Bọc InkWell để bắt sự kiện click vào Card
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+        context.pushNamed(
+            'applicant_profile', 
+            pathParameters: {
+              'userId': widget.application.applicantId,
+            },
+            extra: {
+              'application': widget.application, 
+              'matchScore': widget.matchScore,
+            },
+          );
+        },
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Avatar + Name
+                  Row(
                     children: [
-                      const Icon(Icons.auto_awesome, size: 14, color: Colors.white),
-                      const SizedBox(width: 4),
-                      Text(
-                        "${totalScore.toStringAsFixed(1)}%",
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.blueGrey.shade100,
+                        backgroundImage: applicant.avatarUrl.isNotEmpty
+                            ? NetworkImage(applicant.avatarUrl) as ImageProvider
+                            : null,
+                        child: applicant.avatarUrl.isEmpty
+                            ? const Icon(Icons.person, color: Colors.blueGrey)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              applicant.fullName,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(applicant.email, style: TextStyle(color: Colors.grey.shade600)),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  
+                  // Info Rows
+                  _buildInfoRow(Icons.phone_outlined, applicant.phone),
+                  _buildInfoRow(Icons.location_on_outlined, applicant.address),
+                  
+                  if (widget.application.notes.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        '"${widget.application.notes}"',
+                        style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey.shade700, fontSize: 14),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Dropdown trạng thái (vẫn hoạt động độc lập với InkWell cha)
+                      _buildStatusDropdown(currentStatus),
+                      
+                      // Nút tải CV
+                      ElevatedButton.icon(
+                        onPressed: widget.application.cvFileUrl.isNotEmpty ? _launchCV : null,
+                        icon: const Icon(Icons.file_download_outlined, size: 18),
+                        label: const Text('CV'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppPallete.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-        ],
+
+            // --- AI Score Badge ---
+            if (totalScore != null)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Tooltip(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(8)),
+                  textStyle: const TextStyle(color: Colors.white),
+                  message: "Technical: ${widget.matchScore?.technicalSkills.toStringAsFixed(1)}\n"
+                           "Experience: ${widget.matchScore?.experience.toStringAsFixed(1)}\n"
+                           "Education: ${widget.matchScore?.education.toStringAsFixed(1)}\n"
+                           "Soft Skills: ${widget.matchScore?.softSkills.toStringAsFixed(1)}\n"
+                           "Other: ${widget.matchScore?.other.toStringAsFixed(1)}",
+                  triggerMode: TooltipTriggerMode.tap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _getScoreColor(totalScore),
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(12),
+                        bottomLeft: Radius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.auto_awesome, size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          "${totalScore.toStringAsFixed(1)}%",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -15,4 +15,5 @@ abstract class ProfileRepository {
   Future<Either<Failure, ProfileEntity>> createProfile(ProfileRequestModel request);
   // 💡 Bổ sung
   Future<Either<Failure, ProfileEntity>> updateProfile(ProfileRequestModel request);
+Future<Either<Failure, ProfileEntity>> getUserProfile(String userId);
 }

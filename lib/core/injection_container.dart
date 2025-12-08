@@ -90,6 +90,7 @@ import 'package:pbl6/features/user/profile/domain/repositories/profile_repositor
 import 'package:pbl6/features/user/profile/domain/usecases/create_profile_usecase.dart';
 import 'package:pbl6/features/user/profile/domain/usecases/get_cv_url_usecase.dart';
 import 'package:pbl6/features/user/profile/domain/usecases/get_my_profile_usecase.dart';
+import 'package:pbl6/features/user/profile/domain/usecases/get_user_profile_usecase.dart';
 import 'package:pbl6/features/user/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:pbl6/features/user/profile/domain/usecases/upload_cv_usecase.dart';
 
@@ -262,6 +263,9 @@ void init() {
   );
   sl.registerLazySingleton<GetCVUrlUseCase>(
     () => GetCVUrlUseCase(sl<ProfileRepository>()),
+  );
+   sl.registerLazySingleton<GetUserProfileUseCase>(
+    () => GetUserProfileUseCase(sl<ProfileRepository>()),
   );
   // ======================APPLICATION=================
   sl.registerLazySingleton<ApplicationRemoteDataSource>(

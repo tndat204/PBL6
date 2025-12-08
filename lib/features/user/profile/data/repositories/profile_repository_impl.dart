@@ -108,4 +108,20 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+  @override
+  Future<Either<Failure, ProfileEntity>> getUserProfile(String userId) async {
+    try {
+      final apiResponse = await remoteDataSource.getUserProfile(userId);
+      
+      final resultEither = _handleResponse<ProfileResponse>(apiResponse);
+      
+      return resultEither.fold(
+        (failure) => Left(failure),
+        // Convert từ Model (ProfileResponse) sang Entity (ProfileEntity)
+        (response) => Right(ProfileEntity.fromResponse(response)),
+      );
+    } on Exception catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

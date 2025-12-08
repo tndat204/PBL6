@@ -65,6 +65,7 @@ class _AiFilterBottomSheetState extends State<AiFilterBottomSheet> {
                         labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
                         checkmarkColor: Colors.white,
                         onSelected: (val) => setState(() => _selectedTopK = k),
+                        backgroundColor: Colors.white,
                       );
                     }).toList(),
                   ),
