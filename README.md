@@ -27,7 +27,7 @@ Hệ thống được chia nhỏ thành các services độc lập, giao tiếp 
 * **Inter-service Communication:** OpenFeign (Sync) & Kafka (Async).
 * **Deployment:** Azure Container Apps.
 
-![System Architecture Diagram](https://via.placeholder.com/800x400?text=Place+Your+Architecture+Diagram+Here)
+![System Architecture Diagram](https://drive.google.com/file/d/1PrqdTyicy4RSZvyYCl_w-IjWeCiu9XQa/view?usp=drive_link)
 *(Lưu ý: Bạn hãy thay thế link ảnh trên bằng sơ đồ kiến trúc thực tế của bạn)*
 
 ---
@@ -107,9 +107,15 @@ Hệ thống cung cấp RESTful APIs và WebSocket endpoints được phân chia
     * `/api/notifications/**` (Danh sách thông báo, đánh dấu đã đọc)
     * `ws://{server}/ws` (WebSocket endpoint nhận thông báo đẩy)
 
-### 4. Data & Analysis
-* **Statistic Service:**
-    * `/api/statistic/**` (Thống kê số lượng job, user, traffic cho Admin dashboard)
+### 4. Data Analytics & Insights (Statistic Service)
+* **Base URL:** `/api/statistics`
+* **Features:** Cung cấp số liệu phân tích thị trường lao động (có sử dụng **Redis Caching** để tối ưu tốc độ phản hồi).
+    * `GET /summary`: Tổng quan số liệu toàn hệ thống.
+    * `GET /experience`: Phân bố việc làm theo cấp bậc kinh nghiệm (Junior, Senior, etc.).
+    * `GET /top-skills?limit=10`: Top những kỹ năng được yêu cầu nhiều nhất (Trending Tech Stack).
+    * `GET /salary`: Phân tích dải lương trung bình theo ngành nghề.
+    * `GET /growth?days=7`: Biểu đồ tăng trưởng số lượng Job/User theo thời gian (mặc định 7 ngày).
+    * `GET /locations`: Bản đồ phân bố việc làm theo địa lý.
 
 > **Lưu ý:** Tất cả các API đều đi qua **API Gateway** và yêu cầu Access Token (trừ các public endpoints như Xem Job, Login, Register).
 
