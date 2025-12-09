@@ -27,7 +27,7 @@ Hệ thống được chia nhỏ thành các services độc lập, giao tiếp 
 * **Inter-service Communication:** OpenFeign (Sync) & Kafka (Async).
 * **Deployment:** Azure Container Apps.
 
-![System Architecture Diagram](https://drive.google.com/file/d/1PrqdTyicy4RSZvyYCl_w-IjWeCiu9XQa/view?usp=drive_link)
+![System Architecture Diagram]([https://drive.google.com/file/d/1PrqdTyicy4RSZvyYCl_w-IjWeCiu9XQa/view?usp=drive_link](https://drive.google.com/file/d/1PrqdTyicy4RSZvyYCl_w-IjWeCiu9XQa/view?usp=sharing))
 *(Lưu ý: Bạn hãy thay thế link ảnh trên bằng sơ đồ kiến trúc thực tế của bạn)*
 
 ---
