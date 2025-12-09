@@ -28,7 +28,6 @@ Hệ thống được chia nhỏ thành các services độc lập, giao tiếp 
 * **Deployment:** Azure Container Apps.
 
 ![System Architecture Diagram](./images/architecture.png)
-*(Lưu ý: Bạn hãy thay thế link ảnh trên bằng sơ đồ kiến trúc thực tế của bạn)*
 
 ---
 
