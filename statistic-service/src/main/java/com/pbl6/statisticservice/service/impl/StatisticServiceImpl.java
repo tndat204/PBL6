@@ -115,8 +115,6 @@ public class StatisticServiceImpl implements StatisticService {
         }
         return responseList;
     }
-
-    @PreAuthorize("hasRole('ADMIN')")
     @Cacheable(value = "stat_locations")
     public List<LocationStatResponse> getLocationStats() {
         List<LocationStat> result=locationStatRepository.findAllByOrderByJobCountDesc();
