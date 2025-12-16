@@ -195,6 +195,8 @@ async def analyze_cv(client, cv_text: str) -> Dict[str, Any]:
         res = await client.generate(
             system_prompt="Bạn là một chuyên gia HR. Trích xuất thông tin từ CV dưới đây thành JSON có cấu trúc.",
             user_prompt=prompt,
+            temperature=0.3,
+            max_tokens=1024,
         )
 
         # Parse JSON an toàn
@@ -211,6 +213,8 @@ async def analyze_jd(client, jd_text: str) -> Dict[str, Any]:
         res = await client.generate(
             system_prompt="Bạn là một chuyên gia HR. Trích xuất thông tin từ Job Description dưới đây thành JSON có cấu trúc.",
             user_prompt=prompt,
+            temperature=0.3,
+            max_tokens=1024,
         )
         result = safe_json_parse(res)
         if "error" not in result:
@@ -282,7 +286,8 @@ async def summarize_jd(client, jd_text: str) -> Dict[str, Any]:
         res = await client.generate(
             system_prompt="You are an expert HR assistant specializing in job description analysis. Provide clear, concise summaries in JSON format.",
             user_prompt=prompt,
-            temperature=0.3  # Lower temperature for more consistent, factual output
+            temperature=0.3,  # Lower temperature for more consistent, factual output
+            max_tokens=1024,
         )
         result = safe_json_parse(res)
         return result

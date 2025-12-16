@@ -35,12 +35,11 @@ class OpenRouterClient:
         
         # List of free models to try in order (fallback mechanism)
         self.default_models = [
-            "x-ai/grok-4.1-fast:free",
-            "z-ai/glm-4.5-air:free",
-            "google/gemma-3-27b-it:free",
+            "mistralai/devstral-2512:free",
+            "tngtech/deepseek-r1t2-chimera:free",
+            "mistralai/devstral-2512:free",
             "nvidia/nemotron-nano-12b-v2-vl:free",
-            "meta-llama/llama-3.2-3b-instruct:free",
-            "meta-llama/llama-3.2-1b-instruct:free",
+            "tngtech/tng-r1t-chimera:free",
         ]
     
     async def generate(

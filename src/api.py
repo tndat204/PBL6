@@ -68,6 +68,17 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 # ==========================
 app = FastAPI(title="CV–JD Matching API")
 
+# ==========================
+# CORS MIDDLEWARE
+# ==========================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],  # Cho phép X-API-Key header
+)
+
 # client = load_client()
 
 
@@ -93,6 +104,12 @@ async def extract_and_analyze(file_path: str, file_type: str):
 @app.get("/")
 def root():
     return {"message": "Welcome to CV–JD Matching API 🚀"}
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for Docker healthcheck."""
+    return {"status": "ok"}
 
 
 @app.post("/match")
@@ -305,15 +322,3 @@ async def summarize_job_description(
     except Exception as e:
         print("[Error]", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Server error: {e}")
-
-
-# ==========================
-# CORS MIDDLEWARE
-# ==========================
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],  # In production, specify actual origins
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
