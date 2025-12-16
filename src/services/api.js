@@ -11,10 +11,13 @@ class ApiService {
   }
 
   // Helper method để tạo headers
-  getHeaders(includeAuth = true) {
-    const headers = {
-      "Content-Type": "application/json",
-    };
+  getHeaders(includeAuth = true, isFormData = false) {
+    const headers = {};
+
+    // Don't set Content-Type for FormData, browser will set it with boundary
+    if (!isFormData) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (includeAuth) {
       const token = this.getToken();
@@ -31,7 +34,7 @@ class ApiService {
 
     const url = `${this.baseURL}${endpoint}`;
     const config = {
-      headers: this.getHeaders(options.auth !== false),
+      headers: this.getHeaders(options.auth !== false, options.isFormData),
       ...options,
     };
 
@@ -39,7 +42,25 @@ class ApiService {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get error message from response body
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.log('Error response data:', errorData);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (typeof errorData === 'string') {
+            errorMessage = errorData;
+          }
+        } catch (e) {
+          // If response is not JSON, use default error message
+          console.log('Could not parse error response as JSON');
+        }
+        const error = new Error(errorMessage);
+        error.status = response.status;
+        throw error;
       }
 
       return await response.json();
@@ -56,19 +77,24 @@ class ApiService {
 
   // POST request
   async post(endpoint, data, options = {}) {
+    const isFormData = data instanceof FormData;
 
     return this.request(endpoint, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: isFormData ? data : JSON.stringify(data),
+      isFormData,
       ...options,
     });
   }
 
   // PUT request
   async put(endpoint, data, options = {}) {
+    const isFormData = data instanceof FormData;
+
     return this.request(endpoint, {
       method: "PUT",
-      body: JSON.stringify(data),
+      body: isFormData ? data : JSON.stringify(data),
+      isFormData,
       ...options,
     });
   }

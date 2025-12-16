@@ -44,4 +44,26 @@ export const companyService = {
       throw error;
     }
   },
+
+  // Tạo mới company
+  async createCompany(companyData) {
+    try {
+      const response = await apiService.post("/companies", companyData);
+      return response.result || response;
+    } catch (error) {
+      console.error("Lỗi khi tạo company:", error);
+      throw error;
+    }
+  },
+
+  // Xóa company
+  async deleteCompany(id) {
+    try {
+      const response = await apiService.delete(`/companies/${id}`);
+      return response;
+    } catch (error) {
+      console.error(`Lỗi khi xóa company ${id}:`, error);
+      throw error;
+    }
+  },
 };

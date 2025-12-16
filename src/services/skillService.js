@@ -1,6 +1,17 @@
 import apiService from "./api";
 
 export const skillService = {
+  // Lấy tất cả skills
+  async getAllSkills() {
+    try {
+      const response = await apiService.get("/skills");
+      return response.result || response;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách skills:", error);
+      throw error;
+    }
+  },
+
   // Lấy thông tin skill theo ID
   async getSkillById(id) {
     try {
@@ -32,6 +43,39 @@ export const skillService = {
     } catch (error) {
       console.error("Lỗi khi lấy skills:", error);
       return skillIds; // Fallback trả về IDs
+    }
+  },
+
+  // Tạo skill mới
+  async createSkill(skillData) {
+    try {
+      const response = await apiService.post("/skills", skillData);
+      return response.result || response;
+    } catch (error) {
+      console.error("Lỗi khi tạo skill:", error);
+      throw error;
+    }
+  },
+
+  // Cập nhật skill
+  async updateSkill(id, skillData) {
+    try {
+      const response = await apiService.put(`/skills/${id}`, skillData);
+      return response.result || response;
+    } catch (error) {
+      console.error(`Lỗi khi cập nhật skill ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Xóa skill
+  async deleteSkill(id) {
+    try {
+      const response = await apiService.delete(`/skills/${id}`);
+      return response;
+    } catch (error) {
+      console.error(`Lỗi khi xóa skill ${id}:`, error);
+      throw error;
     }
   },
 };

@@ -7,7 +7,8 @@ import {
     Star,
     Tags,
     LogOut,
-    Bell
+    Bell,
+    Shield
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
@@ -23,6 +24,7 @@ const AdminLayout = () => {
         { name: 'Tin tuyển dụng', icon: <Briefcase size={20} />, path: '/admin/jobs' },
         { name: 'Đánh giá & Review', icon: <Star size={20} />, path: '/admin/reviews' },
         { name: 'Kỹ năng & Danh mục', icon: <Tags size={20} />, path: '/admin/categories' },
+        { name: 'Vai trò & Quyền hạn', icon: <Shield size={20} />, path: '/admin/permissions' },
     ];
 
     const handleLogout = () => {

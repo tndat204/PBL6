@@ -26,6 +26,9 @@ import RecruiterDashboard from "../pages/RecruiterDashboard";
 
 import UserManagement from "../pages/UserManagement";
 import CompanyManagement from "../pages/CompanyManagement";
+import JobManagement from "../pages/JobManagement";
+import SkillCategoryManagement from "../pages/SkillCategoryManagement";
+import PermissionsManagement from "../pages/PermissionsManagement";
 import AdminLayout from "../layouts/AdminLayout";
 export default function AppRoutes() {
   return (
@@ -84,6 +87,9 @@ export default function AppRoutes() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="companies" element={<CompanyManagement />} />
+          <Route path="jobs" element={<JobManagement />} />
+          <Route path="categories" element={<SkillCategoryManagement />} />
+          <Route path="permissions" element={<PermissionsManagement />} />
         </Route>
 
         {/* Multi-role routes */}
