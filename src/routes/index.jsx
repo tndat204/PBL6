@@ -19,6 +19,7 @@ import { ProtectedRoute } from "../components/ProtectedRoute";
 import { USER_ROLES } from "../contexts/AuthContext";
 import Unauthorized from "../pages/Unauthorized";
 import RecruiterDashboard from "../pages/RecruiterDashboard";
+import CVMatching from "../pages/CVMatching";
 
 ///////////////////////////////////////////////// 
 // ADMIN ROUTES
@@ -42,7 +43,11 @@ export default function AppRoutes() {
         <Route path="/register-employer" element={<RegisterEmployer />} />
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<About />} />
-
+        <Route path="/cv-matching" element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+            <CVMatching />
+          </ProtectedRoute>
+        } />
         {/* Public routes */}
         <Route path="/job-details/:id" element={<JobDetails />} />
         <Route path="/company-profile/:id" element={<CompanyProfile />} />
@@ -71,6 +76,7 @@ export default function AppRoutes() {
             <CompanyPosts />
           </ProtectedRoute>
         } />
+
 
         {/* ADMIN only routes */}
         {/* <Route path="/admin" element={
