@@ -1149,8 +1149,11 @@ class _UpsertJobPageState extends State<UpsertJobPage> {
                       children: nonSelectedRecommended.map((item) {
                         return ActionChip(
                           label: Text(getItemName(item)),
-                          backgroundColor: AppPallete.primaryColor.withOpacity(
-                            0.05,
+
+                          backgroundColor: Colors.white,
+
+                          side: BorderSide(
+                            color: AppPallete.primaryColor.withOpacity(0.5),
                           ),
                           labelStyle: const TextStyle(
                             color: AppPallete.primaryColor,

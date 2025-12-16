@@ -75,6 +75,12 @@ import 'package:pbl6/features/shared/skill/domain/usecases/delete_skill_usecase.
 import 'package:pbl6/features/shared/skill/domain/usecases/get_all_skills_usecase.dart';
 import 'package:pbl6/features/shared/skill/domain/usecases/get_skill_detail_usecase.dart';
 import 'package:pbl6/features/shared/skill/domain/usecases/update_skill_usecase.dart';
+import 'package:pbl6/features/shared/statistic/data/datasources/statistic_remote_datasource.dart';
+import 'package:pbl6/features/shared/statistic/data/repositories/statistic_repository_impl.dart';
+import 'package:pbl6/features/shared/statistic/domain/repositories/statistic_repository.dart';
+import 'package:pbl6/features/shared/statistic/domain/usecases/get_location_stats_usecase.dart';
+import 'package:pbl6/features/shared/statistic/domain/usecases/get_salary_stats_usecase.dart';
+import 'package:pbl6/features/shared/statistic/domain/usecases/get_top_skills_usecase.dart';
 // ===== USER =====
 import 'package:pbl6/features/shared/user/data/datasources/user_remote_datasource.dart';
 import 'package:pbl6/features/shared/user/data/repositories/user_repository_impl.dart';
@@ -353,5 +359,20 @@ void init() {
  sl.registerLazySingleton<MarkNotificationReadUseCase>(
     () =>MarkNotificationReadUseCase(sl<NotificationRepository>()),
   );
-
+  // ================= STATISTIC =================
+   sl.registerLazySingleton<StatisticRemoteDataSource>(
+    () => StatisticRemoteDataSourceImpl(sl<DioClient>().instance),
+  );
+  sl.registerLazySingleton<StatisticRepository>(
+    () => StatisticRepositoryImpl(sl<StatisticRemoteDataSource>()),
+  );
+    sl.registerLazySingleton<GetTopSkillsUseCase>(
+    () => GetTopSkillsUseCase(sl<StatisticRepository>()),
+  );
+   sl.registerLazySingleton<GetSalaryStatsUseCase>(
+    () => GetSalaryStatsUseCase(sl<StatisticRepository>()),
+  );
+   sl.registerLazySingleton<GetLocationStatsUseCase>(
+    () => GetLocationStatsUseCase(sl<StatisticRepository>()),
+  );
 }
