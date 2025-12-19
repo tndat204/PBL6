@@ -27,7 +27,9 @@ export const jobService = {
   // Tạo job mới
   async createJob(jobData) {
     try {
+      console.log("Creating job with data:", jobData);
       const response = await apiService.post("/jobs", jobData);
+      
       return response.result || response;
     } catch (error) {
       console.error("Lỗi khi tạo job:", error);

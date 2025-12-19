@@ -241,7 +241,7 @@
 // export default AdminDashboard;
 
 
-import React, { useState } from 'react';
+import React, {  } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -262,9 +262,9 @@ const AdminDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Tổng Ứng Viên" value="1,240" color="blue" icon={<Users />} trend="+12%" />
-          <StatCard title="Nhà Tuyển Dụng" value="85" color="indigo" icon={<Building2 />} trend="+5%" />
-          <StatCard title="Tin Đang Mở" value="342" color="green" icon={<Briefcase />} trend="+8%" />
+          <StatCard title="Tổng Ứng Viên" value="21" color="blue" icon={<Users />} trend="+12%" />
+          <StatCard title="Nhà Tuyển Dụng" value="4" color="indigo" icon={<Building2 />} trend="+5%" />
+          <StatCard title="Tin Đang Mở" value="20" color="green" icon={<Briefcase />} trend="+8%" />
           <StatCard title="Chờ Phê Duyệt" value="12" color="orange" icon={<Bell />} trend="Quan trọng" />
         </div>
 

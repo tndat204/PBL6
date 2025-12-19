@@ -22,9 +22,9 @@ const MainLayout = ({ children, showBanner = true }) => {
           <div className="absolute inset-0 bg-black opacity-50"></div>
           <div className="relative z-10 max-w-7xl mx-auto px-6">
             <h1 className="text-4xl font-bold">
-              Let's get you hired for the job you deserve!
+              Hãy để chúng tôi giúp bạn tìm được công việc xứng đáng!
             </h1>
-            <p className="mt-2 text-lg">Find the job that suits you best</p>
+            <p className="mt-2 text-lg">Tìm công việc phù hợp nhất với bạn</p>
           </div>
         </div>
       )}

@@ -403,7 +403,7 @@ function JobPost() {
     const jdFile = formData.get("jdFile");
 
     const jobData = {
-      companyId: "9185c582-c922-4010-aae1-4fc1d549dc05",
+      companyId: "94eaaa15-5b40-4f7f-bd12-eb2693c7e9be",
       title: formData.get("title") || "",
       description: formData.get("description") || "",
       status: "ACTIVE",
@@ -657,6 +657,7 @@ function JobPost() {
             <option value="SENIOR">Senior</option>
             <option value="PRINCIPAL">Principal</option>
             <option value="MANAGER">Manager</option>
+            <option value="ANY">Any</option>
           </select>
         </div>
 

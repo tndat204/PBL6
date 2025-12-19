@@ -35,7 +35,7 @@ const AdminLayout = () => {
             {/* --- SIDEBAR --- */}
             <aside className={`bg-slate-900 text-white transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} flex flex-col fixed inset-y-0 left-0 z-20`}>
                 <div className="h-16 flex items-center justify-center border-b border-slate-700">
-                    <h1 className={`font-bold text-xl ${!isSidebarOpen && 'hidden'}`}>IT JOBS ADMIN</h1>
+                    <h1 className={`font-bold text-xl ${!isSidebarOpen && 'hidden'}`}>IT Job Hunt</h1>
                     {!isSidebarOpen && <span className="font-bold text-xl">IT</span>}
                 </div>
 

@@ -86,7 +86,7 @@ function Navbar() {
           </a>
         </div>
         <ul className="hidden md:flex space-x-6 font-medium">
-          {["Home", "Jobs", "Contact"].map((item) => (
+          {["Trang chủ", "Việc làm", "Liên hệ"].map((item) => (
             <li key={item}>
               <a
                 href="#"
