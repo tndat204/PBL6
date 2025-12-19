@@ -75,7 +75,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-sea-400 text-white p-4 shadow-lg sticky top-0 z-50">
+    <nav className="bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <a
@@ -90,7 +90,7 @@ function Navbar() {
             <li key={item}>
               <a
                 href="#"
-                className="relative px-3 py-2 transition-all duration-300 hover:text-green-300"
+                className="relative px-3 py-2 transition-all duration-300 hover:text-emerald-400"
               >
                 {item}
               </a>
@@ -118,7 +118,7 @@ function Navbar() {
               <button
                 ref={userToggleRef}
                 onClick={toggleUserMenu}
-                className="flex items-center space-x-2 hover:bg-sea-300 rounded-lg px-3 py-2 transition-colors"
+                className="flex items-center space-x-2 hover:bg-slate-700 rounded-lg px-3 py-2 transition-colors"
               >
                 <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
                   {user.fullName?.charAt(0)?.toUpperCase() ||
@@ -129,9 +129,8 @@ function Navbar() {
                   {user.fullName || user.username || "Người dùng"}
                 </span>
                 <svg
-                  className={`w-4 h-4 transition-transform ${
-                    isUserMenuOpen ? "rotate-180" : ""
-                  }`}
+                  className={`w-4 h-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -175,14 +174,14 @@ function Navbar() {
             <div className="flex items-center space-x-0">
               <a
                 href="/login"
-                className="px-4 rounded-lg hover:text-sea-200 transition"
+                className="px-4 rounded-lg hover:text-emerald-400 transition"
               >
                 Đăng nhập
               </a>
               <p>|</p>
               <a
                 href="/register"
-                className="px-4 rounded-lg hover:text-sea-200 transition"
+                className="px-4 rounded-lg hover:text-emerald-400 transition"
               >
                 Đăng ký
               </a>
@@ -215,7 +214,7 @@ function Navbar() {
         </div>
       </div>
       {isMenuOpen && (
-        <ul className="md:hidden mt-2 space-y-3 bg-green-700 rounded-lg p-4 shadow-lg absolute right-4 top-16">
+        <ul className="md:hidden mt-2 space-y-3 bg-slate-800 rounded-lg p-4 shadow-lg absolute right-4 top-16">
           {["Home", "Jobs", "Pages", "Contact"].map((item) => (
             <li key={item}>
               <a

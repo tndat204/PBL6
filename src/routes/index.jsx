@@ -20,6 +20,7 @@ import { USER_ROLES } from "../contexts/AuthContext";
 import Unauthorized from "../pages/Unauthorized";
 import RecruiterDashboard from "../pages/RecruiterDashboard";
 import CVMatching from "../pages/CVMatching";
+import LandingPage from "../pages/LandingPage";
 
 ///////////////////////////////////////////////// 
 // ADMIN ROUTES
@@ -36,7 +37,8 @@ export default function AppRoutes() {
     <BrowserRouter>
       <Routes>
         {/* Phan chung  */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/jobs" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/register-role" element={<RegisterRoleModal />} />
         <Route path="/register-candidate" element={<RegisterCandidate />} />
