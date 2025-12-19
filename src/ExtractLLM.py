@@ -227,46 +227,50 @@ async def analyze_jd(client, jd_text: str) -> Dict[str, Any]:
 def jd_summary_prompt(job_description: str) -> str:
     """Generate prompt for summarizing job description."""
     return f"""
-You are an expert HR assistant. Analyze the job description below and create a concise, structured summary.
+Bạn là một chuyên gia HR. Hãy phân tích job description dưới đây và tạo bản tóm tắt có cấu trúc.
 
-### STRICT RULES
-1. Extract the most important information from the job description
-2. Be concise but comprehensive
-3. Output must be **valid JSON only**, no markdown fences, no explanation
-4. Use professional language
-5. If information is not available, use null
+### QUY TẮC NGHIÊM NGẶT
+1. **NGÔN NGỮ TRẢ LỜI**: BẮT BUỘC phải trả lời bằng TIẾNG VIỆT
+   - Dù job description được viết bằng tiếng Anh hay tiếng Việt
+   - TẤT CẢ các phần tóm tắt, trách nhiệm, yêu cầu đều phải bằng TIẾNG VIỆT
+2. Trích xuất thông tin quan trọng nhất từ job description
+3. Ngắn gọn nhưng đầy đủ
+4. Output phải là **JSON hợp lệ**, không có markdown fences, không có giải thích thêm
+5. Sử dụng ngôn ngữ chuyên nghiệp
+6. Nếu thông tin không có, sử dụng null
 
-### JSON STRUCTURE
+### CẤU TRÚC JSON
 {{
-  "jobTitle": "string - The job position title",
-  "company": "string - Company name if mentioned, otherwise null",
-  "location": "string - Job location if mentioned, otherwise null",
-  "employmentType": "string - Full-time/Part-time/Contract/etc., otherwise null",
-  "summary": "string - A brief 2-3 sentence overview of the position",
+  "jobTitle": "string - Tên vị trí công việc",
+  "company": "string - Tên công ty nếu có đề cập, nếu không thì null",
+  "location": "string - Địa điểm làm việc nếu có đề cập, nếu không thì null",
+  "employmentType": "string - Toàn thời gian/Bán thời gian/Hợp đồng/etc., nếu không thì null",
+  "summary": "string - Tóm tắt ngắn gọn 2-3 câu về vị trí này (bằng tiếng Việt)",
   "keyResponsibilities": [
-    "string - Main responsibility 1",
-    "string - Main responsibility 2",
-    "string - Main responsibility 3"
+    "string - Trách nhiệm chính 1 (bằng tiếng Việt)",
+    "string - Trách nhiệm chính 2 (bằng tiếng Việt)",
+    "string - Trách nhiệm chính 3 (bằng tiếng Việt)"
   ],
   "keyRequirements": [
-    "string - Essential requirement 1",
-    "string - Essential requirement 2",
-    "string - Essential requirement 3"
+    "string - Yêu cầu thiết yếu 1 (bằng tiếng Việt)",
+    "string - Yêu cầu thiết yếu 2 (bằng tiếng Việt)",
+    "string - Yêu cầu thiết yếu 3 (bằng tiếng Việt)"
   ],
-  "experienceLevel": "string - Entry/Junior/Mid/Senior level, otherwise null",
-  "salaryRange": "string - Salary information if mentioned, otherwise null",
+  "experienceLevel": "string - Mức độ kinh nghiệm: Mới vào nghề/Junior/Middle/Senior, nếu không thì null",
+  "salaryRange": "string - Thông tin lương nếu có đề cập, nếu không thì null",
   "benefits": [
-    "string - Benefit 1",
-    "string - Benefit 2"
+    "string - Quyền lợi 1 (bằng tiếng Việt)",
+    "string - Quyền lợi 2 (bằng tiếng Việt)"
   ]
 }}
 
-Now summarize this job description:
+Bây giờ hãy tóm tắt job description này:
 ---
 {job_description}
 ---
 
-Return ONLY the valid JSON object.
+**LƯU Ý QUAN TRỌNG**: Trả lời bằng TIẾNG VIỆT cho tất cả các phần trong JSON.
+Trả về CHỈ object JSON hợp lệ.
 """
 
 
@@ -293,5 +297,157 @@ async def summarize_jd(client, jd_text: str) -> Dict[str, Any]:
         return result
 
     return await with_retry(_summarize)
+
+
+def cv_review_prompt(cv_text: str) -> str:
+    """Generate prompt for reviewing CV and providing feedback."""
+    return f"""
+Bạn là một chuyên gia tư vấn CV chuyên nghiệp. Hãy phân tích CV dưới đây và đưa ra góp ý chi tiết theo các tiêu chí sau:
+
+### QUY TẮC NGHIÊM NGẶT
+1. **NGÔN NGỮ TRẢ LỜI**: BẮT BUỘC phải trả lời bằng TIẾNG VIỆT
+   - Dù CV được viết bằng tiếng Anh hay tiếng Việt
+   - TẤT CẢ các phản hồi, nhận xét, gợi ý đều phải bằng TIẾNG VIỆT
+2. Đánh giá CV theo từng tiêu chí cụ thể
+3. Đưa ra góp ý mang tính xây dựng, rõ ràng và hữu ích
+4. Chỉ ra điểm mạnh và điểm cần cải thiện
+5. Output phải là **JSON hợp lệ**, không có markdown fences, không có giải thích thêm
+6. Nếu thiếu thông tin, hãy ghi rõ trong phần góp ý
+
+### CÁC TIÊU CHÍ ĐÁNH GIÁ
+
+**1. Thông tin cá nhân:**
+- Có đầy đủ: tên đầy đủ, địa chỉ, email, số điện thoại?
+- Đối với công ty trong nước: có ngày sinh, giới tính, tình trạng hôn nhân không?
+- Thông tin có được trình bày rõ ràng, dễ đọc không?
+
+**2. Mục tiêu công việc:**
+- Có nêu rõ mong muốn nghề nghiệp không?
+- Có chỉ ra tại sao ứng viên phù hợp với vị trí không?
+- Có đề cập đến mong muốn chuyên nghiệp trong quy trình làm việc không?
+- Có chỉ ra vị trí thăng tiến mong muốn (kèm thời gian cụ thể) không?
+- Có nêu kỹ năng sẽ đóng góp cho công ty không?
+- Có đề cập mục tiêu giúp công ty (tăng doanh số, thu hút khách hàng...) không?
+
+**3. Giáo dục:**
+- Có đầy đủ: trường học, chuyên ngành, thời gian tốt nghiệp, bằng cấp không?
+- Có ghi điểm trung bình (nếu từ khá trở lên) không?
+- Thông tin có được sắp xếp hợp lý không?
+
+**4. Kinh nghiệm làm việc:**
+- Có liệt kê kinh nghiệm liên quan đến vị trí ứng tuyển không?
+- Có sắp xếp theo thứ tự thời gian (mới nhất trước) không?
+- Mỗi công việc có bao gồm: khoảng thời gian, tên công ty (in hoa), vị trí không?
+- Có mô tả trách nhiệm và thành tựu đạt được không?
+- Có nhấn mạnh kỹ năng học được từ công việc không?
+
+**5. Kỹ năng:**
+- Có liệt kê kỹ năng liên quan đến công việc ứng tuyển không?
+- Có cụ thể hóa kỹ năng (ví dụ: tốc độ đánh máy 70 từ/phút) không?
+- Có phân loại rõ ràng: kỹ năng kỹ thuật, kỹ năng mềm, ngôn ngữ không?
+
+**6. Hoạt động xã hội:**
+- Có liệt kê hoạt động xã hội/câu lạc bộ tham gia không?
+- Có ghi: thời gian, tên tổ chức, vị trí, mô tả công việc không?
+- Có chỉ ra kỹ năng đạt được liên quan đến công việc ứng tuyển không?
+- Có đề cập đóng góp cho cộng đồng/tổ chức không?
+
+**7. Giấy chứng nhận và giải thưởng:**
+- Có liệt kê chứng chỉ/giải thưởng liên quan không?
+- Có ghi thời gian đạt được không?
+- Có mô tả rõ tên chứng nhận/giải thưởng không?
+
+### CẤU TRÚC JSON OUTPUT
+{{
+  "overall_score": "số điểm tổng thể từ 0-100",
+  "overall_comment": "nhận xét chung về CV",
+  "criteria_reviews": {{
+    "personal_info": {{
+      "score": "điểm từ 0-100",
+      "strengths": ["điểm mạnh 1", "điểm mạnh 2"],
+      "improvements": ["cần cải thiện 1", "cần cải thiện 2"],
+      "suggestions": ["gợi ý cụ thể 1", "gợi ý cụ thể 2"]
+    }},
+    "career_objective": {{
+      "score": "điểm từ 0-100",
+      "strengths": [],
+      "improvements": [],
+      "suggestions": []
+    }},
+    "education": {{
+      "score": "điểm từ 0-100",
+      "strengths": [],
+      "improvements": [],
+      "suggestions": []
+    }},
+    "work_experience": {{
+      "score": "điểm từ 0-100",
+      "strengths": [],
+      "improvements": [],
+      "suggestions": []
+    }},
+    "skills": {{
+      "score": "điểm từ 0-100",
+      "strengths": [],
+      "improvements": [],
+      "suggestions": []
+    }},
+    "social_activities": {{
+      "score": "điểm từ 0-100",
+      "strengths": [],
+      "improvements": [],
+      "suggestions": []
+    }},
+    "certifications": {{
+      "score": "điểm từ 0-100",
+      "strengths": [],
+      "improvements": [],
+      "suggestions": []
+    }}
+  }},
+  "priority_improvements": [
+    "cải thiện ưu tiên 1",
+    "cải thiện ưu tiên 2",
+    "cải thiện ưu tiên 3"
+  ],
+  "final_recommendations": [
+    "khuyến nghị cuối cùng 1",
+    "khuyến nghị cuối cùng 2"
+  ]
+}}
+
+Bây giờ hãy phân tích CV này:
+---
+{cv_text}
+---
+
+**LƯU Ý QUAN TRỌNG**: Trả lời bằng TIẾNG VIỆT cho tất cả các phần trong JSON.
+Trả về CHỈ object JSON hợp lệ.
+"""
+
+
+async def review_cv(client, cv_text: str) -> Dict[str, Any]:
+    """
+    Review a CV and provide detailed feedback based on multiple criteria.
+    
+    Args:
+        client: OpenRouter client instance
+        cv_text: The CV text to review
+        
+    Returns:
+        Dictionary containing detailed review and suggestions for the CV
+    """
+    async def _review():
+        prompt = cv_review_prompt(cv_text)
+        res = await client.generate(
+            system_prompt="Bạn là một chuyên gia tư vấn CV hàng đầu với hơn 15 năm kinh nghiệm. Hãy đưa ra góp ý chi tiết, mang tính xây dựng và thực tế để giúp ứng viên cải thiện CV.",
+            user_prompt=prompt,
+            temperature=0.4,  # Slightly higher for more creative suggestions
+            max_tokens=2048,  # More tokens for detailed feedback
+        )
+        result = safe_json_parse(res)
+        return result
+
+    return await with_retry(_review)
 
 

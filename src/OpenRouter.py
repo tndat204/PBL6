@@ -40,6 +40,7 @@ class OpenRouterClient:
             "mistralai/devstral-2512:free",
             "nvidia/nemotron-nano-12b-v2-vl:free",
             "tngtech/tng-r1t-chimera:free",
+            "kwaipilot/kat-coder-pro:free"
         ]
     
     async def generate(

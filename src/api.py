@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from OpenRouter import client
 from utils import export_results_to_excel
 from ExtractText import extract_text_from_pdf, extract_text_from_jd
-from ExtractLLM import analyze_cv, analyze_jd, summarize_jd
+from ExtractLLM import analyze_cv, analyze_jd, summarize_jd, review_cv
 from Scoring import compute_match_score
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -322,3 +322,83 @@ async def summarize_job_description(
     except Exception as e:
         print("[Error]", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Server error: {e}")
+
+
+@app.post("/review-cv")
+async def review_cv_endpoint(
+    cv_text: Optional[str] = Form(None),
+    cv_file: Optional[UploadFile] = File(None),
+    cv_url: Optional[str] = Form(None),
+    authenticated: bool = Depends(verify_api_key)
+):
+    """
+    Review a CV and provide detailed feedback based on multiple criteria.
+    
+    You can provide the CV in one of three ways:
+    1. cv_text: Direct text input
+    2. cv_file: Upload a PDF file
+    3. cv_url: URL to a PDF file
+    
+    Returns a structured review with:
+    - Overall score and comment
+    - Detailed reviews for 7 criteria:
+      * Personal information
+      * Career objective
+      * Education
+      * Work experience
+      * Skills
+      * Social activities
+      * Certifications
+    - Priority improvements
+    - Final recommendations
+    """
+    try:
+        # Determine the source and extract text
+        if cv_text:
+            text = cv_text
+            source = "text_input"
+        elif cv_file:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                tmp.write(await cv_file.read())
+                tmp_path = tmp.name
+            text = extract_text_from_pdf(open(tmp_path, "rb"))
+            source = cv_file.filename
+        elif cv_url:
+            cv_path = await download_file_from_url(cv_url)
+            text = extract_text_from_pdf(open(cv_path, "rb"))
+            source = cv_url
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="You must provide one of: cv_text, cv_file, or cv_url"
+            )
+        
+        # Validate that we have text
+        if not text or len(text.strip()) < 10:
+            raise HTTPException(
+                status_code=400,
+                detail="CV text is too short or empty"
+            )
+        
+        # Generate review
+        review = await review_cv(client, text)
+        
+        # Check for errors in the result
+        if "error" in review:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to generate review: {review.get('error')}"
+            )
+        
+        return JSONResponse({
+            "success": True,
+            "source": source,
+            "review": review
+        })
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("[Error]", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Server error: {e}")
+
