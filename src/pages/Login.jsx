@@ -25,50 +25,50 @@ export default function Login() {
   };
 
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      const payload = {
-        email: formData.email,
-        password: formData.password,
-      };
-      try {
-        const response = await fetch("http://localhost:8080/api/auth/token", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        // ❌ Nếu đăng nhập thất bại (HTTP status != 2xx)
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Chi tiết lỗi:", errorData);
-          // log ra cái lôi 
-          if (errorData.message) {
-            alert(`Lỗi: ${errorData.message}`);
-          } else {
-            alert(`Đăng nhập thất bại (HTTP ${response.status})`);
-          }
-          return;
-        }
-
-        // Đăng nhập thành công
-        const data = await response.json();
-        console.log("Đăng nhập thành công:", data);
-        if (data.result?.token) {
-          await login(data.result.token);
-        }
-        // // lưu token vào localStorage
-        // if (data.result && data.result.token) {
-        //   localStorage.setItem("token", data.result.token);
-        // }
-        // window.location.href = "/"; // chuyển về trang chủ
-      } catch (error) { 
-        console.error("Lỗi khi gọi API:", error);
-        alert("Không thể kết nối đến server. Vui lòng thử lại sau.");
-      }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const payload = {
+      email: formData.email,
+      password: formData.password,
     };
+    try {
+      const response = await fetch("https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api/auth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      // ❌ Nếu đăng nhập thất bại (HTTP status != 2xx)
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Chi tiết lỗi:", errorData);
+        // log ra cái lôi 
+        if (errorData.message) {
+          alert(`Lỗi: ${errorData.message}`);
+        } else {
+          alert(`Đăng nhập thất bại (HTTP ${response.status})`);
+        }
+        return;
+      }
+
+      // Đăng nhập thành công
+      const data = await response.json();
+      console.log("Đăng nhập thành công:", data);
+      if (data.result?.token) {
+        await login(data.result.token);
+      }
+      // // lưu token vào localStorage
+      // if (data.result && data.result.token) {
+      //   localStorage.setItem("token", data.result.token);
+      // }
+      // window.location.href = "/"; // chuyển về trang chủ
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error);
+      alert("Không thể kết nối đến server. Vui lòng thử lại sau.");
+    }
+  };
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const redirectUri = "http://localhost:3000/authenticate";
   const authUri = "https://accounts.google.com/o/oauth2/auth";
@@ -127,7 +127,7 @@ export default function Login() {
             />
           </div>
 
-          
+
 
           {/* Checkbox */}
           <div className="flex items-center justify-between text-sm">
@@ -140,7 +140,7 @@ export default function Login() {
             </a>
           </div>
 
-         
+
 
           {/* Button */}
           <Button
@@ -149,26 +149,26 @@ export default function Login() {
             Đăng nhập
           </Button>
         </form>
-         {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-grow h-px bg-gray-300"></div>
-            <span className="px-2 text-sm text-gray-500">hoặc</span>
-            <div className="flex-grow h-px bg-gray-300"></div>
-          </div>
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-grow h-px bg-gray-300"></div>
+          <span className="px-2 text-sm text-gray-500">hoặc</span>
+          <div className="flex-grow h-px bg-gray-300"></div>
+        </div>
 
-          {/* Google Button */}
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition"
-            onClick={handleGoogleLogin}
-          >
-            <img
-              src="https://www.svgrepo.com/show/355037/google.svg"
-              alt="Google"
-              className="w-5 h-5"
-            />
-            <span className="text-gray-700 font-medium">Tiếp tục với Google</span>
-          </button>
+        {/* Google Button */}
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition"
+          onClick={handleGoogleLogin}
+        >
+          <img
+            src="https://www.svgrepo.com/show/355037/google.svg"
+            alt="Google"
+            className="w-5 h-5"
+          />
+          <span className="text-gray-700 font-medium">Tiếp tục với Google</span>
+        </button>
 
         {/* Login link */}
         <p className="mt-2 text-sm text-center text-gray-600">

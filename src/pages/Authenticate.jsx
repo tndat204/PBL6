@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import Login from './Login';
 export default function Authenticate() {
-  const { login } = useAuth();  
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function Authenticate() {
       }
 
       try {
-        const res = await fetch(`http://localhost:8080/api/auth/google-web?code=${code}`, {
+        const res = await fetch(`https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api/auth/google-web?code=${code}`, {
           method: "POST",
         });
 
@@ -30,7 +30,7 @@ export default function Authenticate() {
 
         if (data.result?.token) {
           await login(data.result.token);
-          await sleep(400); 
+          await sleep(400);
           navigate("/"); // về trang chính
         } else {
           navigate("/login");

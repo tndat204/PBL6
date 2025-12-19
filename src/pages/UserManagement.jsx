@@ -308,28 +308,7 @@ const UserManagement = () => {
                         {/* Table Header with Filters */}
                         <div className="p-6 border-b border-gray-100">
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <h3 className="font-bold text-gray-800">Danh sách người dùng</h3>
-                                    <button
-                                        onClick={() => {
-                                            setEditingUser(null);
-                                            setShowCreateModal(true);
-                                        }}
-                                        className="
-                                                flex items-center gap-2 px-5 py-2.5 
-                                                bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600
-                                                text-white font-semibold text-sm
-                                                rounded-xl shadow-md 
-                                                hover:shadow-lg hover:scale-[1.03]
-                                                active:scale-95
-                                                transition-all duration-300
-                                            "
-                                    >
-                                        <UserPlus size={18} className="drop-shadow-sm" />
-                                        <span>Tạo người dùng</span>
-                                    </button>
-
-                                </div>
+                                <h3 className="font-bold text-gray-800">Danh sách người dùng</h3>
 
                                 <div className="flex flex-col md:flex-row gap-3">
                                     {/* Search */}
@@ -366,6 +345,18 @@ const UserManagement = () => {
                                         <option value="Active">Hoạt động</option>
                                         <option value="Banned">Bị cấm</option>
                                     </select>
+
+                                    {/* Create New Button */}
+                                    <button
+                                        onClick={() => {
+                                            setEditingUser(null);
+                                            setShowCreateModal(true);
+                                        }}
+                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                    >
+                                        <UserPlus size={18} />
+                                        <span>Thêm mới</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -485,7 +476,7 @@ const StatCard = ({ title, value, color, icon, trend }) => (
         <div className="flex justify-between items-start">
             <div>
                 <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">{title}</p>
-                <h3 className="text-2xl font-bold text-gray-800 mt-2">{value}</h3>
+                <h3 className="text-xl font-bold text-gray-800 mt-2">{value}</h3>
             </div>
             <div className={`p-3 rounded-lg bg-${color}-50 text-${color}-600`}>
                 {icon}
@@ -516,8 +507,8 @@ const RoleCard = ({ title, count, gradient = "blue" }) => {
       text-white transition-all duration-300 
       hover:scale-105 hover:shadow-xl backdrop-blur-sm
     `}>
-            <p className="text-sm font-medium opacity-90 tracking-wide">{title}</p>
-            <h3 className="text-4xl font-extrabold mt-2 drop-shadow">{count}</h3>
+            <p className="text-xs font-medium opacity-90 tracking-wide">{title}</p>
+            <h3 className="text-2xl font-extrabold mt-2 drop-shadow">{count}</h3>
         </div>
     );
 };

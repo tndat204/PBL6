@@ -55,7 +55,7 @@ export default function Register() {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/internal/users", {
+      const response = await fetch("https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api/internal/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

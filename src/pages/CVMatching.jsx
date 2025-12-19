@@ -100,7 +100,7 @@ const CVMatching = () => {
         formData.append('weights', JSON.stringify(weights));
 
         try {
-            const response = await fetch('http://localhost:8000/match/multiple', {
+            const response = await fetch('http://jobhuntai.c5etagb0eja7f7hf.southeastasia.azurecontainer.io:8000/match/multiple', {
                 method: 'POST',
                 headers: {
                     'X-API-Key': import.meta.env.VITE_CV_MATCHING_API_KEY || ''
@@ -283,8 +283,8 @@ const CVMatching = () => {
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-xs font-medium text-gray-700">Tổng:</span>
                                                     <span className={`text-xs font-bold ${Math.abs(Object.values(weights).reduce((sum, val) => sum + val, 0) - 1) < 0.01
-                                                            ? 'text-green-600'
-                                                            : 'text-red-600'
+                                                        ? 'text-green-600'
+                                                        : 'text-red-600'
                                                         }`}>
                                                         {(Object.values(weights).reduce((sum, val) => sum + val, 0) * 100).toFixed(0)}%
                                                     </span>

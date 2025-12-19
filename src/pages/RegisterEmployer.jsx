@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserIcon, EnvelopeIcon, LockClosedIcon, PhoneIcon, HomeIcon, CalendarIcon,IdentificationIcon, BuildingOffice2Icon  } from "@heroicons/react/24/outline";
+import { UserIcon, EnvelopeIcon, LockClosedIcon, PhoneIcon, HomeIcon, CalendarIcon, IdentificationIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline";
 import Button from "../components/Button";
 import { Phone } from "lucide-react";
 
@@ -58,7 +58,7 @@ export default function Register() {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/internal/users", {
+      const response = await fetch("https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api/internal/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,30 +184,30 @@ export default function Register() {
             />
           </div>
 
-            {/* Tax Code */}
-            <div className="relative">
-              <IdentificationIcon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                name="taxCode"
-                placeholder="Mã số thuế"
-                value={formData.taxCode}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
-            {/* Name Company */}
-            <div className="relative">
-                <BuildingOffice2Icon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                name="nameCompany"
-                placeholder="Tên công ty"
-                value={formData.nameCompany}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
+          {/* Tax Code */}
+          <div className="relative">
+            <IdentificationIcon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              name="taxCode"
+              placeholder="Mã số thuế"
+              value={formData.taxCode}
+              onChange={handleChange}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            />
+          </div>
+          {/* Name Company */}
+          <div className="relative">
+            <BuildingOffice2Icon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              name="nameCompany"
+              placeholder="Tên công ty"
+              value={formData.nameCompany}
+              onChange={handleChange}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            />
+          </div>
 
           {/* Birth Date */}
           <div className="relative">

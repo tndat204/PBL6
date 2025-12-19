@@ -1,14 +1,14 @@
-import { authService} from '../services';
+import { authService } from '../services';
 
 export async function handleLoginSuccess(token) {
   try {
-    localStorage.setItem("token", token); 
+    localStorage.setItem("token", token);
     // lấy ra token từ localStorage
 
     // Lấy thông tin người dùng
     const userData = await authService.getCurrentUser();
     localStorage.setItem("user", JSON.stringify(userData));
-    
+
     // Điều hướng về trang chủ
     window.location.href = "/";
   } catch (err) {
@@ -18,23 +18,23 @@ export async function handleLoginSuccess(token) {
 }
 
 //Thêm function đăng xuất
-export async function handleLogout(){
-  try{
+export async function handleLogout() {
+  try {
     // xóa token và user khỏi LocalStorage
     const token = localStorage.getItem("token");
-    await fetch("http://localhost:8080/api/auth/logout", {
+    await fetch("https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api/auth/logout", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
-      },  
+      },
     });
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     //Chuyển hướng về trang chủ
     window.location.href = "/";
   }
-  catch(err){
+  catch (err) {
     console.error("Lỗi khi đăng xuất: ", err);
     alert("Đăng xuất thất bại, vui lòng thử lại!");
   }
