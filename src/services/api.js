@@ -1,4 +1,5 @@
 const BASE_URL = "https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api";
+// const BASE_URL = "http://localhost:8080/api";
 
 class ApiService {
   constructor() {
