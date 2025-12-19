@@ -86,6 +86,7 @@ function Navbar() {
           </a>
         </div>
         <ul className="hidden md:flex space-x-6 font-medium">
+
           <li>
             <a
               href="/"
@@ -118,6 +119,7 @@ function Navbar() {
               Liên Hệ
             </a>
           </li>
+
         </ul>
         <div className="flex items-center space-x-4">
           {/* <div className="flex items-center space-x-2">

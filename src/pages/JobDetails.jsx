@@ -1,4 +1,334 @@
 
+// import { useEffect, useState } from "react";
+// import { useNavigate, useParams } from "react-router-dom";
+// import MainLayout from "../layouts/MainLayout";
+
+// import locationIcon from "../assets/images/location-icon.png";
+// import jobIcon from "../assets/images/job-type-icon.png";
+// import experienceIcon from "../assets/images/experience-icon.png";
+// import salaryIcon from "../assets/images/salary-icon.png";
+
+// import { jobService, companyService, skillService } from "../services";
+// import JobCard from "../components/JobCard";
+
+// const JOB_TYPE_LABELS = {
+//   FULL_TIME: "Toàn thời gian",
+//   PART_TIME: "Bán thời gian",
+//   FREELANCE: "Freelance",
+// };
+
+// function JobDetails() {
+//   const navigate = useNavigate();
+//   const { id } = useParams();
+
+//   const [job, setJob] = useState(null);
+//   const [company, setCompany] = useState(null);
+//   const [skillNames, setSkillNames] = useState([]);
+//   const [relatedJobs, setRelatedJobs] = useState([]);
+
+//   const [loading, setLoading] = useState(true);
+//   const [loadingRelated, setLoadingRelated] = useState(false);
+//   const [error, setError] = useState("");
+
+//   // ===== LẤY JOB THEO ID =====
+//   useEffect(() => {
+//     if (!id) return;
+
+//     const fetchJob = async () => {
+//       try {
+//         setLoading(true);
+//         setError("");
+
+//         // jobService đã trả về result hoặc job trực tiếp
+//         const jobData = await jobService.getJobById(id);
+//         setJob(jobData);
+
+//         // Lấy công ty
+//         if (jobData.companyId) {
+//           try {
+//             const companyRes = await companyService.getCompanyById(jobData.companyId);
+//             const companyData = companyRes.result || companyRes;
+//             setCompany(companyData);
+//           } catch {
+//             setCompany(null);
+//           }
+//         }
+
+//         // Lấy skill theo skillIds
+//         if (jobData.skillIds && jobData.skillIds.length > 0) {
+//           try {
+//             const skillsRes = await skillService.getSkillsByIds(jobData.skillIds);
+//             const skillsData = skillsRes.result || skillsRes || [];
+//             setSkillNames(skillsData); // theo JobCard, đây là mảng tên
+//           } catch {
+//             setSkillNames([]);
+//           }
+//         } else {
+//           setSkillNames([]);
+//         }
+//       } catch (err) {
+//         console.error("Lỗi khi lấy job:", err);
+//         setError("Không thể tải thông tin công việc.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchJob();
+//   }, [id]);
+
+//   // ===== RELATED JOBS THEO CATEGORY – LỌC TỪ getAllJobs() =====
+//   useEffect(() => {
+//     if (!job) return;
+//     if (!job.categoryIds || job.categoryIds.length === 0) {
+//       setRelatedJobs([]);
+//       return;
+//     }
+
+//     const fetchRelatedJobs = async () => {
+//       try {
+//         setLoadingRelated(true);
+
+//         // getAllJobs() đã trả về mảng jobs (result)
+//         const allJobs = await jobService.getAllJobs();
+
+//         const currentCategories = job.categoryIds;
+
+//         const filtered = allJobs
+//           .filter((j) => j.id !== job.id) // loại job hiện tại
+//           .filter(
+//             (j) =>
+//               j.categoryIds &&
+//               j.categoryIds.some((cid) => currentCategories.includes(cid))
+//           )
+//           .slice(0, 4); // lấy tối đa 4 job liên quan
+
+//         setRelatedJobs(filtered);
+//       } catch (err) {
+//         console.error("Lỗi khi lấy việc làm liên quan:", err);
+//         setRelatedJobs([]);
+//       } finally {
+//         setLoadingRelated(false);
+//       }
+//     };
+
+//     fetchRelatedJobs();
+//   }, [job]);
+
+//   // ===== HELPER FORMAT =====
+//   const formatSalary = (min, max) => {
+//     if (!min && !max) return "Thương lượng";
+//     if (min && !max) return `${min.toLocaleString()} ₫`;
+//     if (!min && max) return `${max.toLocaleString()} ₫`;
+//     return `${min.toLocaleString()} - ${max.toLocaleString()} ₫`;
+//   };
+
+//   const formatDate = (value) => {
+//     if (!value) return "Không có";
+//     const d = new Date(value);
+//     if (Number.isNaN(d.getTime())) return value;
+//     return d.toLocaleDateString("vi-VN");
+//   };
+
+//   // ===== UI LOADING / ERROR =====
+//   if (loading) {
+//     return (
+//       <MainLayout showBanner={true}>
+//         <div className="max-w-7xl mx-auto py-10 text-center text-gray-600">
+//           Đang tải thông tin công việc...
+//         </div>
+//       </MainLayout>
+//     );
+//   }
+
+//   if (error || !job) {
+//     return (
+//       <MainLayout showBanner={true}>
+//         <div className="max-w-7xl mx-auto py-10 text-center text-red-500">
+//           {error || "Không tìm thấy công việc."}
+//         </div>
+//       </MainLayout>
+//     );
+//   }
+
+//   // ===== DERIVED DATA =====
+//   const jobTypeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType || "Đang cập nhật";
+//   const salaryLabel = formatSalary(job.salaryMin, job.salaryMax);
+//   const expiryDateLabel = formatDate(job.expiryDate);
+
+//   const companyName = company?.name || "Đang cập nhật";
+//   const companyLocation = company?.location || job.location || "Đang cập nhật";
+//   const companyLogo = company?.logoUrl || "/images/cmc.png";
+//   const companyDescription =
+//     company?.description || "Thông tin công ty đang được cập nhật.";
+
+//   // ===== RENDER =====
+//   return (
+//     <MainLayout showBanner={true}>
+//       <div className="max-w-7xl mx-auto py-10 grid grid-cols-1 md:grid-cols-4 gap-6">
+//         {/* Cột trái: thông tin job + công ty */}
+//         <div className="md:col-span-1 space-y-6">
+//           {/* Thông tin công việc */}
+//           <div className="bg-white rounded-lg shadow p-5">
+//             <h2 className="text-xl font-semibold mb-4">Thông tin công việc</h2>
+//             <ul className="space-y-3">
+//               {/* Địa điểm */}
+//               <li className="flex items-center">
+//                 <img src={locationIcon} className="w-5 h-5 mr-3" />
+//                 <div>
+//                   <span className="block text-gray-500 font-semibold">Địa điểm</span>
+//                   <span className="text-sea-400">
+//                     {job.location || "Đang cập nhật"}
+//                   </span>
+//                 </div>
+//               </li>
+
+//               {/* Hình thức làm việc */}
+//               <li className="flex items-center">
+//                 <img src={jobIcon} className="w-5 h-5 mr-3" />
+//                 <div>
+//                   <span className="block text-gray-500 font-semibold">
+//                     Hình thức làm việc
+//                   </span>
+//                   <span className="text-sea-400">{jobTypeLabel}</span>
+//                 </div>
+//               </li>
+
+//               {/* Kinh nghiệm */}
+//               <li className="flex items-center">
+//                 <img src={experienceIcon} className="w-5 h-5 mr-3" />
+//                 <div>
+//                   <span className="block text-gray-500 font-semibold">Kinh nghiệm</span>
+//                   <span className="text-sea-400">
+//                     {job.experience || "Không yêu cầu"}
+//                   </span>
+//                 </div>
+//               </li>
+
+//               {/* Lương */}
+//               <li className="flex items-center">
+//                 <img src={salaryIcon} className="w-5 h-5 mr-3" />
+//                 <div>
+//                   <span className="block text-gray-500 font-semibold">Mức lương</span>
+//                   <span className="text-sea-400">{salaryLabel}</span>
+//                 </div>
+//               </li>
+
+//               {/* Hạn ứng tuyển */}
+//               <li className="flex items-center">
+//                 <div className="w-5 h-5 mr-3 text-gray-500">🕒</div>
+//                 <div>
+//                   <span className="block text-gray-500 font-semibold">
+//                     Hạn ứng tuyển
+//                   </span>
+//                   <span className="text-sea-400">{expiryDateLabel}</span>
+//                 </div>
+//               </li>
+//             </ul>
+//           </div>
+
+//           {/* Giới thiệu công ty */}
+//           <div className="bg-white rounded-lg shadow p-5">
+//             <h2 className="text-xl font-semibold mb-4">Giới thiệu công ty</h2>
+//             <div className="flex items-center mb-3">
+//               <img
+//                 src={companyLogo}
+//                 alt="Logo công ty"
+//                 className="w-12 h-12 border rounded-full object-cover mr-3"
+//               />
+//               <div>
+//                 <p className="font-semibold">{companyName}</p>
+//                 <p className="text-sm text-sea-400">{companyLocation}</p>
+//               </div>
+//             </div>
+//             <p className="text-sm text-sea-400 mb-3">
+//               {companyDescription}
+//             </p>
+//             {company?.id && (
+//               <button
+//                 onClick={() => navigate(`/company-profile/${company.id}`)}
+//                 className="text-blue-600 text-sm hover:underline"
+//               >
+//                 Xem chi tiết công ty
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Cột phải: mô tả công việc */}
+//         <div className="md:col-span-3 bg-white rounded-lg shadow p-8 pt-4">
+//           <h1 className="text-xl font-semibold mb-4">{job.title}</h1>
+
+//           <p className="text-sm text-gray-600 mb-6 whitespace-pre-line">
+//             {job.description}
+//           </p>
+
+//           {/* Kỹ năng yêu cầu */}
+//           {skillNames.length > 0 && (
+//             <>
+//               <h2 className="text-lg font-semibold mb-3">Kỹ năng yêu cầu</h2>
+//               <div className="flex flex-wrap gap-2 mb-6">
+//                 {skillNames.map((name, idx) => (
+//                   <span
+//                     key={idx}
+//                     className="bg-gray-100 px-3 py-1 rounded-full border text-xs"
+//                   >
+//                     {name}
+//                   </span>
+//                 ))}
+//               </div>
+//             </>
+//           )}
+
+//           <button
+//             onClick={() => navigate(`/apply-job/${job.id}`)}
+//             className="mt-8 bg-sea-400 text-white px-6 py-2 rounded-sm hover:bg-sea-300 transition"
+//           >
+//             Ứng tuyển ngay
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Việc làm liên quan */}
+//       <section className="mt-12 max-w-7xl mx-auto">
+//         <h2 className="text-center text-2xl font-semibold text-gray-800 mb-8">
+//           Việc làm liên quan
+//         </h2>
+
+//         {loadingRelated ? (
+//           <p className="text-center text-sm text-gray-500">
+//             Đang tải việc làm liên quan...
+//           </p>
+//         ) : relatedJobs.length === 0 ? (
+//           <p className="text-center text-sm text-gray-500">
+//             Chưa có việc làm liên quan trong cùng ngành.
+//           </p>
+//         ) : (
+//           <div 
+//             className="
+//               grid 
+//               grid-cols-1 
+//               sm:grid-cols-2 
+//               lg:grid-cols-3 
+//               gap-6
+//             "
+//           >
+//             {relatedJobs.map((rj) => (
+//               <div key={rj.id} className="max-w-[350px]">
+//                 <JobCard job={rj} />
+//               </div>
+//             ))}
+//           </div>
+
+//         )}
+//       </section>
+//     </MainLayout>
+//   );
+// }
+
+// export default JobDetails;
+
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
@@ -8,8 +338,9 @@ import jobIcon from "../assets/images/job-type-icon.png";
 import experienceIcon from "../assets/images/experience-icon.png";
 import salaryIcon from "../assets/images/salary-icon.png";
 
-import { jobService, companyService, skillService } from "../services";
+import { jobService, companyService, skillService, applicationService } from "../services";
 import JobCard from "../components/JobCard";
+import ApplyJobModal from "../components/ApplyJobModal";
 
 const JOB_TYPE_LABELS = {
   FULL_TIME: "Toàn thời gian",
@@ -30,6 +361,9 @@ function JobDetails() {
   const [loadingRelated, setLoadingRelated] = useState(false);
   const [error, setError] = useState("");
 
+  // ✅ NEW: state mở/đóng modal
+  const [isApplyOpen, setIsApplyOpen] = useState(false);
+
   // ===== LẤY JOB THEO ID =====
   useEffect(() => {
     if (!id) return;
@@ -39,7 +373,6 @@ function JobDetails() {
         setLoading(true);
         setError("");
 
-        // jobService đã trả về result hoặc job trực tiếp
         const jobData = await jobService.getJobById(id);
         setJob(jobData);
 
@@ -89,19 +422,17 @@ function JobDetails() {
       try {
         setLoadingRelated(true);
 
-        // getAllJobs() đã trả về mảng jobs (result)
         const allJobs = await jobService.getAllJobs();
-
         const currentCategories = job.categoryIds;
 
         const filtered = allJobs
-          .filter((j) => j.id !== job.id) // loại job hiện tại
+          .filter((j) => j.id !== job.id)
           .filter(
             (j) =>
               j.categoryIds &&
               j.categoryIds.some((cid) => currentCategories.includes(cid))
           )
-          .slice(0, 4); // lấy tối đa 4 job liên quan
+          .slice(0, 4);
 
         setRelatedJobs(filtered);
       } catch (err) {
@@ -118,9 +449,9 @@ function JobDetails() {
   // ===== HELPER FORMAT =====
   const formatSalary = (min, max) => {
     if (!min && !max) return "Thương lượng";
-    if (min && !max) return `${min.toLocaleString()} ₫`;
-    if (!min && max) return `${max.toLocaleString()} ₫`;
-    return `${min.toLocaleString()} - ${max.toLocaleString()} ₫`;
+    if (min && !max) return `${min.toLocaleString()} VND`;
+    if (!min && max) return `${max.toLocaleString()} VND`;
+    return `${min.toLocaleString()} - ${max.toLocaleString()} VND`;
   };
 
   const formatDate = (value) => {
@@ -241,9 +572,7 @@ function JobDetails() {
                 <p className="text-sm text-sea-400">{companyLocation}</p>
               </div>
             </div>
-            <p className="text-sm text-sea-400 mb-3">
-              {companyDescription}
-            </p>
+            <p className="text-sm text-sea-400 mb-3">{companyDescription}</p>
             {company?.id && (
               <button
                 onClick={() => navigate(`/company-profile/${company.id}`)}
@@ -280,8 +609,9 @@ function JobDetails() {
             </>
           )}
 
+          {/* ✅ UPDATED: mở modal thay vì navigate */}
           <button
-            onClick={() => navigate(`/apply-job/${job.id}`)}
+            onClick={() => setIsApplyOpen(true)}
             className="mt-8 bg-sea-400 text-white px-6 py-2 rounded-sm hover:bg-sea-300 transition"
           >
             Ứng tuyển ngay
@@ -304,12 +634,12 @@ function JobDetails() {
             Chưa có việc làm liên quan trong cùng ngành.
           </p>
         ) : (
-          <div 
+          <div
             className="
-              grid 
-              grid-cols-1 
-              sm:grid-cols-2 
-              lg:grid-cols-3 
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              lg:grid-cols-3
               gap-6
             "
           >
@@ -319,9 +649,56 @@ function JobDetails() {
               </div>
             ))}
           </div>
-
         )}
       </section>
+
+      {/* ✅ NEW: Modal ứng tuyển */}
+      
+      {/* <ApplyJobModal
+        open={isApplyOpen}
+        onClose={() => setIsApplyOpen(false)}
+        jobTitle={job.title}
+        
+        // QUAN TRỌNG: Kiểm tra xem job.id hay job._id mới đúng với API của bạn
+        jobId={job.id || job._id} 
+        
+        onSubmit={(payload) => {
+          console.log("👉 Payload gửi đi:", payload); 
+          // Nếu log này vẫn hiện jobId: undefined, hãy kiểm tra lại object 'job' ở trên
+          
+          // TODO: Gọi API ứng tuyển ở đây
+          // applicationService.applyJob(payload)...
+        }}
+      /> */}
+      <ApplyJobModal
+        open={isApplyOpen}
+        onClose={() => setIsApplyOpen(false)}
+        jobTitle={job.title}
+        jobId={job.id || job._id} 
+        onSubmit={async (payload) => {
+          try {
+            console.log("👉 Payload gửi đi:", payload); 
+            // Tạo FormData
+            const formData = new FormData();
+            formData.append("jobId", payload.jobId);
+            formData.append("notes", payload.notes);
+            
+            if (payload.cv) {
+              formData.append("cv", payload.cv);
+            }
+
+            // Gọi API (lúc này api.js đã biết cách xử lý formData)
+            await applicationService.applyJob(formData);
+
+            alert("Ứng tuyển thành công!");
+            setIsApplyOpen(false);
+
+          } catch (error) {
+            console.error("Lỗi khi ứng tuyển:", error);
+            alert(error.message || "Có lỗi xảy ra, vui lòng thử lại.");
+          }
+        }}
+      />
     </MainLayout>
   );
 }

@@ -209,7 +209,10 @@ export default function Register() {
           </div>
 
           {/* Button */}
-          <Button type="submit">Đăng ký</Button>
+          <Button type="submit"
+            className="from-sea-400 to-sea-300 bg-gradient-to-l">
+            Đăng ký
+          </Button>
         </form>
 
         {/* Divider */}

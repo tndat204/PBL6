@@ -1,21 +1,25 @@
+
 const BASE_URL = "https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api";
 // const BASE_URL = "http://localhost:8080/api";
+
 
 class ApiService {
   constructor() {
     this.baseURL = BASE_URL;
   }
 
-  // Helper method để lấy token
   getToken() {
     return localStorage.getItem("token");
   }
 
-  // Helper method để tạo headers
+
+  // Sửa: Thêm tham số isFormData
   getHeaders(includeAuth = true, isFormData = false) {
     const headers = {};
 
-    // Don't set Content-Type for FormData, browser will set it with boundary
+    // Chỉ thêm Content-Type là JSON nếu KHÔNG phải là FormData
+    // Nếu là FormData, để trình duyệt tự xử lý (để nó thêm boundary)
+
     if (!isFormData) {
       headers["Content-Type"] = "application/json";
     }
@@ -30,38 +34,29 @@ class ApiService {
     return headers;
   }
 
-  // Generic method để gọi API
   async request(endpoint, options = {}) {
-
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Lấy flag isFormData từ options truyền vào
+    const { isFormData, ...fetchOptions } = options;
+
     const config = {
-      headers: this.getHeaders(options.auth !== false, options.isFormData),
-      ...options,
+
+      // Truyền flag xuống getHeaders
+      headers: this.getHeaders(options.auth !== false, isFormData),
+      ...fetchOptions,
+
     };
 
     try {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        // Try to get error message from response body
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          console.log('Error response data:', errorData);
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          } else if (typeof errorData === 'string') {
-            errorMessage = errorData;
-          }
-        } catch (e) {
-          // If response is not JSON, use default error message
-          console.log('Could not parse error response as JSON');
-        }
-        const error = new Error(errorMessage);
-        error.status = response.status;
-        throw error;
+
+        // Thử đọc lỗi từ server trả về nếu có
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+
       }
 
       return await response.json();
@@ -71,27 +66,27 @@ class ApiService {
     }
   }
 
-  // GET request
   async get(endpoint, options = {}) {
     return this.request(endpoint, { method: "GET", ...options });
   }
 
-  // POST request
+  // Sửa: Kiểm tra data có phải FormData không
   async post(endpoint, data, options = {}) {
     const isFormData = data instanceof FormData;
 
     return this.request(endpoint, {
       method: "POST",
+
+      // Nếu là FormData thì giữ nguyên, nếu không thì stringify
       body: isFormData ? data : JSON.stringify(data),
-      isFormData,
+      isFormData, // Đánh dấu để request biết đường xử lý header
+
       ...options,
     });
   }
 
-  // PUT request
   async put(endpoint, data, options = {}) {
     const isFormData = data instanceof FormData;
-
     return this.request(endpoint, {
       method: "PUT",
       body: isFormData ? data : JSON.stringify(data),
@@ -100,7 +95,6 @@ class ApiService {
     });
   }
 
-  // DELETE request
   async delete(endpoint, options = {}) {
     return this.request(endpoint, { method: "DELETE", ...options });
   }

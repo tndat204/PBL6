@@ -19,10 +19,18 @@ import { ProtectedRoute } from "../components/ProtectedRoute";
 import { USER_ROLES } from "../contexts/AuthContext";
 import Unauthorized from "../pages/Unauthorized";
 import RecruiterDashboard from "../pages/RecruiterDashboard";
+
 import CVMatching from "../pages/CVMatching";
 import LandingPage from "../pages/LandingPage";
 import Contact from "../pages/Contact";
 import CareerTips from "../pages/CareerTips";
+
+import ProfileTest from "../pages/ProfileTest";
+///////////////////////////////////////////////// 
+// CANDIDATE ROUTES
+///////////////////////////////////////////////////
+// import CandidateDashboard from "../pages/CandidateDashboard";
+
 
 ///////////////////////////////////////////////// 
 // ADMIN ROUTES
@@ -78,7 +86,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         } />
         <Route path="/company-posts" element={
-          <ProtectedRoute allowedRoles={[USER_ROLES.RECRUITER]}>
+          <ProtectedRoute allowedRoles={[USER_ROLES.RECRUITER, USER_ROLES.ADMIN]}>
             <CompanyPosts />
           </ProtectedRoute>
         } />
@@ -116,6 +124,16 @@ export default function AppRoutes() {
 
         {/* Nhap */}
         <Route path="/recruiter-dashboard" element={<RecruiterDashboard />} />
+        {/* -------------------------------------------Test------------ */}
+        {/* Chưa xử lí */}
+        {/* <Route path="/candidate-dashboard" element= {<CandidateDashboard />} />  */}
+
+        <Route path="/profile-test" element={
+          <ProtectedRoute>
+            <ProfileTest />
+          </ProtectedRoute>
+        } />
+
       </Routes>
     </BrowserRouter>
   );

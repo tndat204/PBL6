@@ -5,3 +5,4 @@ export { skillService } from "./skillService";
 export { authService } from "./authService";
 export { default as apiService } from "./api";
 export { default as userService } from "./userService";
+export { default as applicationService } from "./applicationService";

@@ -145,6 +145,7 @@ export default function Login() {
           {/* Button */}
           <Button
             type="submit"
+            className="from-sea-400 to-sea-300 bg-gradient-to-l"
           >
             Đăng nhập
           </Button>
@@ -174,7 +175,7 @@ export default function Login() {
         <p className="mt-2 text-sm text-center text-gray-600">
           Bạn chưa có tài khoản?{" "}
           <a href="/register " className="text-sea-400 font-medium hover:underline">
-            Đăng ký
+            Tạo tài khoản
           </a>
         </p>
       </div>
