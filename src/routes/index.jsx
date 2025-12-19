@@ -21,6 +21,8 @@ import Unauthorized from "../pages/Unauthorized";
 import RecruiterDashboard from "../pages/RecruiterDashboard";
 import CVMatching from "../pages/CVMatching";
 import LandingPage from "../pages/LandingPage";
+import Contact from "../pages/Contact";
+import CareerTips from "../pages/CareerTips";
 
 ///////////////////////////////////////////////// 
 // ADMIN ROUTES
@@ -45,6 +47,8 @@ export default function AppRoutes() {
         <Route path="/register-employer" element={<RegisterEmployer />} />
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/career-tips" element={<CareerTips />} />
         <Route path="/cv-matching" element={
           <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
             <CVMatching />

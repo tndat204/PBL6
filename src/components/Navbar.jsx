@@ -86,16 +86,38 @@ function Navbar() {
           </a>
         </div>
         <ul className="hidden md:flex space-x-6 font-medium">
-          {["Home", "Jobs", "Contact"].map((item) => (
-            <li key={item}>
-              <a
-                href="#"
-                className="relative px-3 py-2 transition-all duration-300 hover:text-emerald-400"
-              >
-                {item}
-              </a>
-            </li>
-          ))}
+          <li>
+            <a
+              href="/"
+              className="relative px-3 py-2 transition-all duration-300 hover:text-emerald-400"
+            >
+              Trang Chủ
+            </a>
+          </li>
+          <li>
+            <a
+              href="/jobs"
+              className="relative px-3 py-2 transition-all duration-300 hover:text-emerald-400"
+            >
+              Việc Làm
+            </a>
+          </li>
+          <li>
+            <a
+              href="/career-tips"
+              className="relative px-3 py-2 transition-all duration-300 hover:text-emerald-400"
+            >
+              Mẹo Nghề Nghiệp
+            </a>
+          </li>
+          <li>
+            <a
+              href="/contact"
+              className="relative px-3 py-2 transition-all duration-300 hover:text-emerald-400"
+            >
+              Liên Hệ
+            </a>
+          </li>
         </ul>
         <div className="flex items-center space-x-4">
           {/* <div className="flex items-center space-x-2">
@@ -215,17 +237,42 @@ function Navbar() {
       </div>
       {isMenuOpen && (
         <ul className="md:hidden mt-2 space-y-3 bg-slate-800 rounded-lg p-4 shadow-lg absolute right-4 top-16">
-          {["Home", "Jobs", "Pages", "Contact"].map((item) => (
-            <li key={item}>
-              <a
-                href="#"
-                className="block px-3 py-2 hover:text-gray-200 transition-colors duration-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item}
-              </a>
-            </li>
-          ))}
+          <li>
+            <a
+              href="/"
+              className="block px-3 py-2 hover:text-gray-200 transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Trang Chủ
+            </a>
+          </li>
+          <li>
+            <a
+              href="/jobs"
+              className="block px-3 py-2 hover:text-gray-200 transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Việc Làm
+            </a>
+          </li>
+          <li>
+            <a
+              href="/career-tips"
+              className="block px-3 py-2 hover:text-gray-200 transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Mẹo Nghề Nghiệp
+            </a>
+          </li>
+          <li>
+            <a
+              href="/contact"
+              className="block px-3 py-2 hover:text-gray-200 transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Liên Hệ
+            </a>
+          </li>
         </ul>
       )}
     </nav>
