@@ -37,12 +37,12 @@ function Footer() {
 
         {/* Quick Links */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+          <h3 className="text-lg font-semibold mb-4">Liên Kết Nhanh</h3>
           <ul className="space-y-2">
-            <li><a href="#" className="text-slate-400 hover:text-white text-sm">Home</a></li>
-            <li><a href="#" className="text-slate-400 hover:text-white text-sm">Jobs</a></li>
-            <li><a href="#" className="text-slate-400 hover:text-white text-sm">Pages</a></li>
-            <li><a href="#" className="text-slate-400 hover:text-white text-sm">Contact</a></li>
+            <li><a href="/" className="text-slate-400 hover:text-white text-sm">Trang Chủ</a></li>
+            <li><a href="/jobs" className="text-slate-400 hover:text-white text-sm">Việc Làm</a></li>
+            <li><a href="/career-tips" className="text-slate-400 hover:text-white text-sm">Mẹo Nghề Nghiệp</a></li>
+            <li><a href="/contact" className="text-slate-400 hover:text-white text-sm">Liên Hệ</a></li>
           </ul>
         </div>
 
