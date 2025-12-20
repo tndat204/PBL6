@@ -22,7 +22,7 @@ const AdminLayout = () => {
         { name: 'Quản lý người dùng', icon: <Users size={20} />, path: '/admin/users' },
         { name: 'Quản lý công ty', icon: <Building2 size={20} />, path: '/admin/companies' },
         { name: 'Tin tuyển dụng', icon: <Briefcase size={20} />, path: '/admin/jobs' },
-        { name: 'Đánh giá & Review', icon: <Star size={20} />, path: '/admin/reviews' },
+        { name: 'Quản lý báo cáo', icon: <Star size={20} />, path: '/admin/reports' },
         { name: 'Kỹ năng & Danh mục', icon: <Tags size={20} />, path: '/admin/categories' },
         { name: 'Vai trò & Quyền hạn', icon: <Shield size={20} />, path: '/admin/permissions' },
     ];

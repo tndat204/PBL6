@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    container_name: pbl6-frontend
+    networks:
+      - pbl6-network
+
+networks:
+  pbl6-network:
+    driver: bridge

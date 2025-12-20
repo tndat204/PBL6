@@ -276,6 +276,9 @@ const SkillCategoryManagement = () => {
                                         <tr>
                                             <th className="px-6 py-4">ID</th>
                                             <th className="px-6 py-4">Tên</th>
+                                            {activeTab === 'categories' && (
+                                                <th className="px-6 py-4">Kỹ năng</th>
+                                            )}
                                             <th className="px-6 py-4">Hành động</th>
                                         </tr>
                                     </thead>
@@ -284,6 +287,8 @@ const SkillCategoryManagement = () => {
                                             <ItemRow
                                                 key={item.id}
                                                 item={item}
+                                                activeTab={activeTab}
+                                                allSkills={skills}
                                                 onEdit={handleEdit}
                                                 onDelete={handleDelete}
                                             />
@@ -382,49 +387,123 @@ const SkillCategoryManagement = () => {
 
 // --- Sub Components ---
 
-const ItemRow = ({ item, onEdit, onDelete }) => (
-    <tr className="hover:bg-gray-50 transition-colors">
-        <td className="px-6 py-4">
-            <span className="text-xs text-gray-500 font-mono">{item.id?.substring(0, 8)}...</span>
-        </td>
-        <td className="px-6 py-4">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                    <Tags className="text-blue-600" size={20} />
+const ItemRow = ({ item, activeTab, allSkills = [], onEdit, onDelete }) => {
+    // Get skills for categories - API returns skills array directly
+    const skills = activeTab === 'categories' && item.skills ? item.skills : [];
+    const displaySkills = skills.slice(0, 3);
+    const hasMoreSkills = skills.length > 3;
+
+    return (
+        <tr className="hover:bg-gray-50 transition-colors">
+            <td className="px-6 py-4">
+                <span className="text-xs text-gray-500 font-mono">{item.id?.substring(0, 8)}...</span>
+            </td>
+            <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                        <Tags className="text-blue-600" size={20} />
+                    </div>
+                    <div>
+                        <p className="font-medium text-gray-800">{item.name}</p>
+                    </div>
                 </div>
-                <div>
-                    <p className="font-medium text-gray-800">{item.name}</p>
+            </td>
+
+            {/* Skills column - only for categories */}
+            {activeTab === 'categories' && (
+                <td className="px-6 py-4">
+                    {skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                            {displaySkills.map((skill, idx) => (
+                                <span
+                                    key={skill.id || idx}
+                                    className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                                >
+                                    {skill.name}
+                                </span>
+                            ))}
+                            {hasMoreSkills && (
+                                <span className="inline-block px-2 py-1 text-gray-500 text-xs">
+                                    +{skills.length - 3} khác
+                                </span>
+                            )}
+                        </div>
+                    ) : (
+                        <span className="text-xs text-gray-400 italic">Chưa có kỹ năng</span>
+                    )}
+                </td>
+            )}
+
+            <td className="px-6 py-4">
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => onEdit(item)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Chỉnh sửa"
+                    >
+                        <Edit size={18} />
+                    </button>
+                    <button
+                        onClick={() => onDelete(item)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Xóa"
+                    >
+                        <Trash2 size={18} />
+                    </button>
                 </div>
-            </div>
-        </td>
-        <td className="px-6 py-4">
-            <div className="flex gap-2">
-                <button
-                    onClick={() => onEdit(item)}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    title="Chỉnh sửa"
-                >
-                    <Edit size={18} />
-                </button>
-                <button
-                    onClick={() => onDelete(item)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Xóa"
-                >
-                    <Trash2 size={18} />
-                </button>
-            </div>
-        </td>
-    </tr>
-);
+            </td>
+        </tr>
+    );
+};
 
 const CreateModal = ({ type, editMode = false, initialData = null, onClose, onSubmit }) => {
     const [formData, setFormData] = useState({
-        name: initialData?.name || ''
+        name: initialData?.name || '',
+        // Extract skillIds from skills array if editing category
+        skillIds: initialData?.skills ? initialData.skills.map(s => s.id) : []
     });
+
+    // Debug logging
+    useEffect(() => {
+        console.log('🔍 CreateModal Debug:', {
+            editMode,
+            type,
+            initialData,
+            extractedSkillIds: initialData?.skills ? initialData.skills.map(s => s.id) : [],
+            formDataSkillIds: formData.skillIds
+        });
+    }, []);
+
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
+
+    // Skills-related state (only for categories)
+    const [allSkills, setAllSkills] = useState([]);
+    const [loadingSkills, setLoadingSkills] = useState(false);
+    const [skillSearchTerm, setSkillSearchTerm] = useState('');
+    const [showSkillDropdown, setShowSkillDropdown] = useState(false);
+
+    // Fetch all skills when modal opens (only for categories)
+    useEffect(() => {
+        if (type === 'categories') {
+            fetchAllSkills();
+        }
+    }, [type]);
+
+    const fetchAllSkills = async () => {
+        setLoadingSkills(true);
+        try {
+            const skills = await skillService.getAllSkills();
+            setAllSkills(Array.isArray(skills) ? skills : []);
+            console.log('✅ Fetched skills:', skills);
+        } catch (error) {
+            console.error('Error fetching skills:', error);
+            setAllSkills([]);
+        } finally {
+            setLoadingSkills(false);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -433,6 +512,46 @@ const CreateModal = ({ type, editMode = false, initialData = null, onClose, onSu
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
+
+    const handleSkillToggle = (skillId) => {
+        setFormData(prev => {
+            const skillIds = prev.skillIds || [];
+            const isSelected = skillIds.includes(skillId);
+            return {
+                ...prev,
+                skillIds: isSelected
+                    ? skillIds.filter(id => id !== skillId)
+                    : [...skillIds, skillId]
+            };
+        });
+    };
+
+    const handleRemoveSkill = (skillId) => {
+        setFormData(prev => ({
+            ...prev,
+            skillIds: (prev.skillIds || []).filter(id => id !== skillId)
+        }));
+    };
+
+    const filteredSkills = allSkills.filter(skill =>
+        skill.name?.toLowerCase().includes(skillSearchTerm.toLowerCase())
+    );
+
+    const selectedSkills = allSkills.filter(skill =>
+        formData.skillIds?.includes(skill.id)
+    );
+
+    // Debug selected skills
+    useEffect(() => {
+        if (type === 'categories' && allSkills.length > 0) {
+            console.log('📊 Selected Skills Debug:', {
+                allSkillsCount: allSkills.length,
+                formDataSkillIds: formData.skillIds,
+                selectedSkillsCount: selectedSkills.length,
+                selectedSkills: selectedSkills.map(s => ({ id: s.id, name: s.name }))
+            });
+        }
+    }, [formData.skillIds, allSkills]);
 
     const validateForm = () => {
         const newErrors = {};
@@ -482,7 +601,7 @@ const CreateModal = ({ type, editMode = false, initialData = null, onClose, onSu
                         </div>
                     )}
 
-                    <div>
+                    <div className="mb-4">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Tên {type === 'skills' ? 'kỹ năng' : 'danh mục'} <span className="text-red-500">*</span>
                         </label>
@@ -496,6 +615,92 @@ const CreateModal = ({ type, editMode = false, initialData = null, onClose, onSu
                         />
                         {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                     </div>
+
+                    {/* Skill Selection - Only for Categories */}
+                    {type === 'categories' && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Kỹ năng liên quan
+                            </label>
+
+                            {/* Search and Dropdown */}
+                            <div className="relative">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Tìm kiếm kỹ năng..."
+                                        value={skillSearchTerm}
+                                        onChange={(e) => setSkillSearchTerm(e.target.value)}
+                                        onFocus={() => setShowSkillDropdown(true)}
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+
+                                {/* Dropdown */}
+                                {showSkillDropdown && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setShowSkillDropdown(false)}
+                                        />
+                                        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                            {loadingSkills ? (
+                                                <div className="p-4 text-center text-gray-500">
+                                                    <Loader2 className="animate-spin inline-block" size={20} />
+                                                    <span className="ml-2">Đang tải...</span>
+                                                </div>
+                                            ) : filteredSkills.length === 0 ? (
+                                                <div className="p-4 text-center text-gray-500">
+                                                    Không tìm thấy kỹ năng
+                                                </div>
+                                            ) : (
+                                                filteredSkills.map((skill) => (
+                                                    <label
+                                                        key={skill.id}
+                                                        className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.skillIds?.includes(skill.id)}
+                                                            onChange={() => handleSkillToggle(skill.id)}
+                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                        />
+                                                        <span className="ml-3 text-sm text-gray-700">{skill.name}</span>
+                                                    </label>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Selected Skills */}
+                            {selectedSkills.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {selectedSkills.map((skill) => (
+                                        <span
+                                            key={skill.id}
+                                            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+                                        >
+                                            {skill.name}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveSkill(skill.id)}
+                                                className="hover:bg-blue-100 rounded-full p-0.5"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            <p className="mt-2 text-xs text-gray-500">
+                                {selectedSkills.length} kỹ năng đã chọn
+                            </p>
+                        </div>
+                    )}
                 </form>
 
                 {/* Footer */}

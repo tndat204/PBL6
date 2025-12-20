@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, UserCheck, Shield, Mail, Briefcase, Calendar, Users } from 'lucide-react';
+import { X, AlertCircle, UserCheck, Shield, Mail, Briefcase, Calendar, Users, Building2, CreditCard } from 'lucide-react';
+import { companyService } from '../services';
+import CompanyAutocomplete from './CompanyAutocomplete';
 
 // Helper for form rows
 const FormRow = ({ icon, label, children, error }) => (
@@ -15,20 +17,43 @@ const FormRow = ({ icon, label, children, error }) => (
 
 const CreateUserModal = ({ onClose, onSubmit, user, isEdit = false }) => {
     const [formData, setFormData] = useState({
+        role: 'USER', // Default role
         username: '',
         password: '',
         email: '',
         phone: '',
         fullName: '',
         address: '',
-        taxCode: '',
-        nameCompany: '',
+        taxCode: '', // For RECRUITER
+        nameCompany: '', // For RECRUITER
         avatarUrl: '',
         birthDate: ''
     });
 
     const [errors, setErrors] = useState({});
     const [serverError, setServerError] = useState(null);
+    const [companies, setCompanies] = useState([]);
+    const [loadingCompanies, setLoadingCompanies] = useState(false);
+
+    // Fetch companies when role is RECRUITER
+    useEffect(() => {
+        if (formData.role === 'RECRUITER' && !isEdit) {
+            fetchCompanies();
+        }
+    }, [formData.role, isEdit]);
+
+    const fetchCompanies = async () => {
+        setLoadingCompanies(true);
+        try {
+            const response = await companyService.getAllCompanies();
+            setCompanies(Array.isArray(response) ? response : []);
+        } catch (error) {
+            console.error('Error fetching companies:', error);
+            setCompanies([]);
+        } finally {
+            setLoadingCompanies(false);
+        }
+    };
 
     useEffect(() => {
         if (isEdit && user) {
@@ -39,6 +64,7 @@ const CreateUserModal = ({ onClose, onSubmit, user, isEdit = false }) => {
             };
 
             setFormData({
+                role: user.role || 'USER', // Set existing role
                 username: user.username || '',
                 password: '', // Password is empty by default in edit mode
                 email: user.email || '',
@@ -102,6 +128,16 @@ const CreateUserModal = ({ onClose, onSubmit, user, isEdit = false }) => {
                     delete submitData.password;
                 }
 
+                // Remove taxCode and nameCompany if role is not RECRUITER
+                // Backend uses these fields to determine if user is RECRUITER
+                if (formData.role !== 'RECRUITER') {
+                    delete submitData.taxCode;
+                    delete submitData.nameCompany;
+                }
+
+                // Remove role field as backend doesn't accept it
+                delete submitData.role;
+
                 await onSubmit(submitData);
             } catch (err) {
                 setServerError(err.message || 'Có lỗi xảy ra');
@@ -150,6 +186,47 @@ const CreateUserModal = ({ onClose, onSubmit, user, isEdit = false }) => {
                             {errors.fullName && <p className="text-red-500 text-sm mt-2">{errors.fullName}</p>}
                         </div>
 
+                        {/* Role Selector - Only in Create Mode */}
+                        {!isEdit && (
+                            <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                                <label className="block text-sm font-semibold text-blue-900 mb-2">
+                                    Vai trò <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2.5 rounded-lg border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                                >
+                                    <option value="USER">Ứng viên (USER)</option>
+                                    <option value="RECRUITER">Nhà tuyển dụng (RECRUITER)</option>
+                                    <option value="ADMIN">Quản trị viên (ADMIN)</option>
+                                </select>
+                                <p className="text-xs text-blue-700 mt-2">
+                                    {formData.role === 'USER' && '💼 Người dùng có thể tìm việc và nộp đơn ứng tuyển'}
+                                    {formData.role === 'RECRUITER' && '🏢 Nhà tuyển dụng có thể đăng tin và quản lý tuyển dụng'}
+                                    {formData.role === 'ADMIN' && '⚙️ Quản trị viên có toàn quyền quản lý hệ thống'}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Show current role in Edit Mode */}
+                        {isEdit && (
+                            <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Vai trò hiện tại
+                                </label>
+                                <div className="px-4 py-2.5 rounded-lg bg-gray-100 text-gray-700 font-medium">
+                                    {formData.role === 'USER' && '💼 Ứng viên (USER)'}
+                                    {formData.role === 'RECRUITER' && '🏢 Nhà tuyển dụng (RECRUITER)'}
+                                    {formData.role === 'ADMIN' && '⚙️ Quản trị viên (ADMIN)'}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Vai trò không thể thay đổi trong chế độ chỉnh sửa
+                                </p>
+                            </div>
+                        )}
+
                         {/* Form Fields */}
                         <div className="space-y-2">
                             {!isEdit && (
@@ -191,27 +268,48 @@ const CreateUserModal = ({ onClose, onSubmit, user, isEdit = false }) => {
                                 </FormRow>
                             )}
 
-                            {!isEdit && (
-                                <FormRow icon={<Briefcase size={20} />} label="Thông tin công việc">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <input
-                                            type="text"
-                                            name="nameCompany"
-                                            value={formData.nameCompany}
-                                            onChange={handleChange}
-                                            className="bg-gray-50 hover:bg-gray-100 focus:bg-white border border-transparent focus:border-blue-500 rounded-lg px-3 py-2 text-gray-700 transition-all outline-none"
-                                            placeholder="Tên công ty"
-                                        />
+                            {/* RECRUITER-specific fields */}
+                            {formData.role === 'RECRUITER' && !isEdit && (
+                                <>
+                                    <FormRow icon={<Building2 size={20} />} label="Tên công ty" error={errors.nameCompany}>
+                                        {loadingCompanies ? (
+                                            <div className="text-sm text-gray-500 py-2">Đang tải danh sách công ty...</div>
+                                        ) : (
+                                            <CompanyAutocomplete
+                                                companies={companies}
+                                                value={formData.nameCompany}
+                                                taxCode={formData.taxCode}
+                                                onChange={(value) => {
+                                                    setFormData(prev => ({ ...prev, nameCompany: value }));
+                                                    if (errors.nameCompany) {
+                                                        setErrors(prev => ({ ...prev, nameCompany: '' }));
+                                                    }
+                                                }}
+                                                onSelect={(company) => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        nameCompany: company.name,
+                                                        taxCode: company.taxCode
+                                                    }));
+                                                    if (errors.nameCompany) setErrors(prev => ({ ...prev, nameCompany: '' }));
+                                                    if (errors.taxCode) setErrors(prev => ({ ...prev, taxCode: '' }));
+                                                }}
+                                                placeholder="Gõ để tìm hoặc tạo mới..."
+                                            />
+                                        )}
+                                    </FormRow>
+
+                                    <FormRow icon={<CreditCard size={20} />} label="Mã số thuế" error={errors.taxCode}>
                                         <input
                                             type="text"
                                             name="taxCode"
                                             value={formData.taxCode}
                                             onChange={handleChange}
-                                            className="bg-gray-50 hover:bg-gray-100 focus:bg-white border border-transparent focus:border-blue-500 rounded-lg px-3 py-2 text-gray-700 transition-all outline-none"
-                                            placeholder="Mã số thuế"
+                                            className="w-full bg-gray-50 hover:bg-gray-100 focus:bg-white border border-transparent focus:border-blue-500 rounded-lg px-3 py-2 text-gray-700 transition-all outline-none"
+                                            placeholder="0123456789"
                                         />
-                                    </div>
-                                </FormRow>
+                                    </FormRow>
+                                </>
                             )}
 
                             <FormRow icon={<Calendar size={20} />} label="Ngày sinh">
