@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserIcon, EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { UserIcon, EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import Button from "../components/Button";
 import { useAuth } from "../hooks/useAuth";
 // import { authService } from "../services"; 
@@ -8,6 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 export default function Login() {
   console.log("GOOGLE CLIENT:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
   const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -118,13 +119,24 @@ export default function Login() {
           <div className="relative">
             <LockClosedIcon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Nhập mật khẩu của bạn"
               value={formData.password}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
+            <button
+              type="button"
+              className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeSlashIcon className="w-5 h-5" />
+              ) : (
+                <EyeIcon className="w-5 h-5" />
+              )}
+            </button>
           </div>
 
 

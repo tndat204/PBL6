@@ -335,9 +335,18 @@ import { useAuth } from "../hooks/useAuth";
 function JobPost() {
   const { company } = useAuth();
   const [category, setCategory] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [availableSkills, setAvailableSkills] = useState([]);
-  const [skills, setSkills] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]); // Array
+  const [availableSkills, setAvailableSkills] = useState([]); // All skills
+  const [skills, setSkills] = useState([]); // Selected skills
+
+  // Location State
+  const [locationParts, setLocationParts] = useState({
+    province: "",
+    ward: "",
+    detail: ""
+  });
+  const [provinces, setProvinces] = useState([]);
+  const [wards, setWards] = useState([]);
 
   // Lấy category
   useEffect(() => {
@@ -353,29 +362,104 @@ function JobPost() {
     fetchCategories();
   }, []);
 
-  // Lấy skill theo category
+  // Lấy tất cả skill
   useEffect(() => {
-    async function fetchSkills() {
-      if (selectedCategory) {
+    async function fetchAllSkills() {
         try {
-          const skillsData = await skillService.getSkillsByCategory(
-            selectedCategory
-          );
+          const skillsData = await skillService.getAllSkills();
           setAvailableSkills(skillsData || []);
         } catch (err) {
           console.error("Lỗi khi lấy danh sách skills:", err);
           setAvailableSkills([]);
         }
-      } else {
-        setAvailableSkills([]);
-      }
-      setSkills([]);
     }
-    fetchSkills();
-  }, [selectedCategory]);
+    fetchAllSkills();
+  }, []);
 
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
+  // Fetch Provinces for location
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await fetch("https://vietnamlabs.com/api/vietnamprovince");
+        const data = await response.json();
+        if (data.success && data.data) {
+          setProvinces(data.data);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy danh sách tỉnh thành:", error);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  // Handle Province Change for location
+  const handleLocationProvinceChange = async (e) => {
+    const provinceName = e.target.value;
+    
+    setLocationParts(prev => ({
+        ...prev,
+        province: provinceName,
+        ward: ""
+    }));
+    setWards([]);
+
+    if (provinceName) {
+        try {
+            const response = await fetch(`https://vietnamlabs.com/api/vietnamprovince?province=${encodeURIComponent(provinceName)}`);
+            const data = await response.json();
+            if (data.success && data.data && data.data.wards) {
+                setWards(data.data.wards);
+            }
+        } catch (error) {
+            console.error("Lỗi lấy danh sách phường xã:", error);
+        }
+    }
+  };
+
+  const handleLocationWardChange = (e) => {
+      const wardName = e.target.value;
+      setLocationParts(prev => ({ ...prev, ward: wardName }));
+  };
+
+  const handleLocationDetailChange = (e) => {
+      setLocationParts(prev => ({ ...prev, detail: e.target.value }));
+  };
+
+  const handleCategoryChange = async (categoryId, isChecked) => {
+    if (isChecked) {
+      // Add category
+      setSelectedCategories((prev) => [...prev, categoryId]);
+
+      // Auto-fetch and add skills for this category
+      try {
+        const categorySkills = await skillService.getSkillsByCategory(categoryId);
+        if (categorySkills && categorySkills.length > 0) {
+            setSkills((prev) => {
+                // Merge and unique
+                const existingIds = new Set(prev.map(s => s.id));
+                const newSkills = categorySkills.filter(s => !existingIds.has(s.id));
+                return [...prev, ...newSkills];
+            });
+        }
+      } catch (error) {
+          console.error("Lỗi khi lấy skill theo category:", error);
+      }
+
+    } else {
+      // Remove category
+      setSelectedCategories((prev) => prev.filter((id) => id !== categoryId));
+      
+      // Remove skills belonging to this category
+      try {
+        const categorySkills = await skillService.getSkillsByCategory(categoryId);
+        if (categorySkills && categorySkills.length > 0) {
+            const idsToRemove = new Set(categorySkills.map(s => s.id));
+            setSkills((prev) => prev.filter(s => !idsToRemove.has(s.id)));
+        }
+      } catch (error) {
+          console.error("Lỗi khi lấy skill để xóa:", error);
+      }
+    }
   };
 
   const handleAddSkill = (e) => {
@@ -406,12 +490,17 @@ function JobPost() {
 
     const jdFile = formData.get("jdFile");
 
+    // Construct full location from parts
+    const fullLocation = locationParts.province && locationParts.ward && locationParts.detail
+      ? `${locationParts.detail}, ${locationParts.ward}, ${locationParts.province}`
+      : "";
+
     const jobData = {
       companyId: company?.id || "",
       title: formData.get("title") || "",
       description: formData.get("description") || "",
       status: "ACTIVE",
-      categoryIds: selectedCategory ? [selectedCategory] : [],
+      categoryIds: selectedCategories, // Send array
       jobType: formData.get("jobType") || "",
       salaryMin: Number(formData.get("salaryMin") || 0),
       salaryMax: Number(formData.get("salaryMax") || 0),
@@ -423,7 +512,7 @@ function JobPost() {
         formData.get("requiredYearsOfExpMax") || 0
       ),
       experienceLevel: formData.get("experienceLevel") || "",
-      location: formData.get("location") || "",
+      location: fullLocation,
       expiryDate: formData.get("expiryDate") || null, // YYYY-MM-DD
     };
 
@@ -438,7 +527,7 @@ function JobPost() {
       return alert("Mô tả công việc không được để trống");
 
     if (!jobData.categoryIds || jobData.categoryIds.length === 0)
-      return alert("Bạn phải chọn ngành nghề");
+      return alert("Bạn phải chọn ít nhất 1 ngành nghề");
 
     if (!jobData.jobType)
       return alert("Bạn phải chọn loại hình công việc");
@@ -464,8 +553,9 @@ function JobPost() {
     if (!jobData.experienceLevel)
       return alert("Bạn phải chọn cấp độ kinh nghiệm");
 
-    if (!jobData.location.trim())
-      return alert("Địa điểm làm việc không được để trống");
+    // Validate location
+    if (!locationParts.province || !locationParts.ward || !locationParts.detail)
+      return alert("Vui lòng điền đầy đủ thông tin địa điểm làm việc!");
 
     if (!jobData.expiryDate)
       return alert("Hạn nộp hồ sơ không được để trống");
@@ -498,9 +588,9 @@ function JobPost() {
 
       alert("Đăng tin tuyển dụng thành công!");
       form.reset();
-      setSelectedCategory("");
+      setSelectedCategories([]);
       setSkills([]);
-      setAvailableSkills([]);
+      // setAvailableSkills([]); // Don't clear available skills
     } catch (err) {
       console.error(err);
       alert("Đăng tin tuyển dụng thất bại!");
@@ -540,23 +630,25 @@ function JobPost() {
         </div>
 
         {/* Category + job type */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-md font-medium mb-1 text-gray-700">
-              Ngành nghề:
+              Ngành nghề (Có thể chọn nhiều):
             </label>
-            <select
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            >
-              <option value="">Chọn ngành nghề</option>
-              {category.map((categoryItem) => (
-                <option key={categoryItem.id} value={categoryItem.id}>
-                  {categoryItem.name}
-                </option>
-              ))}
-            </select>
+            <div className="border border-gray-300 rounded p-3 max-h-40 overflow-y-auto grid grid-cols-2 md:grid-cols-3 gap-2">
+                {category.map((cat) => (
+                    <label key={cat.id} className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            value={cat.id}
+                            checked={selectedCategories.includes(cat.id)}
+                            onChange={(e) => handleCategoryChange(cat.id, e.target.checked)}
+                            className="w-4 h-4 text-sea-600 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{cat.name}</span>
+                    </label>
+                ))}
+            </div>
           </div>
 
           <div>
@@ -652,15 +744,10 @@ function JobPost() {
           <select
             onChange={handleAddSkill}
             defaultValue=""
-            disabled={!selectedCategory || availableSkills.length === 0}
             className="w-full border border-gray-300 rounded px-3 py-2"
           >
             <option value="" disabled>
-              {!selectedCategory
-                ? "Vui lòng chọn ngành nghề trước"
-                : availableSkills.length === 0
-                ? "Không có kỹ năng nào"
-                : "Chọn kỹ năng"}
+              Chọn kỹ năng
             </option>
 
             {availableSkills.map((skill) => (
@@ -695,12 +782,45 @@ function JobPost() {
           <label className="block text-md font-medium mb-1 text-gray-700">
             Địa điểm làm việc:
           </label>
-          <input
-            type="text"
-            name="location"
-            placeholder="Địa điểm (VD: Hà Nội, TP.HCM)"
-            className="w-full border border-gray-300 rounded px-3 py-2"
-          />
+          <div className="space-y-3">
+            <div className="flex gap-2">
+                {/* Province */}
+                <select 
+                    className="w-1/2 border rounded-lg px-2 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                    value={locationParts.province}
+                    onChange={handleLocationProvinceChange}
+                >
+                    <option value="">Tỉnh/Thành</option>
+                    {provinces.map((p, index) => (
+                        <option key={index} value={p.province}>{p.province}</option>
+                    ))}
+                </select>
+
+                {/* Ward */}
+                <select 
+                    className="w-1/2 border rounded-lg px-2 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                    value={locationParts.ward}
+                    onChange={handleLocationWardChange}
+                    disabled={!locationParts.province}
+                >
+                    <option value="">Phường/Xã</option>
+                    {wards.map((ward, index) => (
+                        <option key={index} value={ward.name}>{ward.name}</option>
+                    ))}
+                </select>
+            </div>
+            
+            {/* Detail Address Input */}
+            <div className="relative">
+                <input
+                    type="text"
+                    placeholder="Số nhà, đường"
+                    value={locationParts.detail}
+                    onChange={handleLocationDetailChange}
+                    className="w-full pl-3 pr-2 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                />
+            </div>
+          </div>
         </div>
 
         {/* Expiry Date */}
