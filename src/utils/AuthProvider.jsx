@@ -16,6 +16,19 @@ export function AuthProvider({ children }) {
     }
   });
 
+  // State company
+  const [company, setCompany] = useState(() => {
+    const storedCompany = localStorage.getItem("company");
+    if (!storedCompany) return null;
+    try {
+        return JSON.parse(storedCompany);
+    } catch (error) {
+        console.error("Error parsing company data", error);
+        localStorage.removeItem("company");
+        return null;
+    }
+  });
+
   const login = async (token) => {
     await handleLoginSuccess(token);
     const storedUser = localStorage.getItem("user");
@@ -26,16 +39,28 @@ export function AuthProvider({ children }) {
         console.error("Lỗi khi parse user data", error);
       }
     }
+    // Update company state
+    const storedCompany = localStorage.getItem("company");
+    if (storedCompany) {
+        try {
+            setCompany(JSON.parse(storedCompany));
+        } catch (error) {
+            console.error("Error parsing company data on login", error);
+        }
+    } else {
+        setCompany(null);
+    }
   };
 
   const logout = async () => {
     await handleLogout();
     setUser(null);
+    setCompany(null);
   };
   const role = user?.roles?.[0]?.name || null;
 
   return (
-    <AuthContext.Provider value={{ user, role, login, logout }}>
+    <AuthContext.Provider value={{ user, company, role, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

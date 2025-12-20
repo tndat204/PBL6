@@ -66,4 +66,16 @@ export const companyService = {
       throw error;
     }
   },
+  // Lấy thông tin company của user hiện tại (Recruiter)
+  async getMyCompany() {
+    try {
+      // Endpoint provided by user: /api/companies/me
+      const response = await apiService.get("/companies/me");
+      return response.result || response;
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin company của tôi:", error);
+      // Suppress error if 404 (user might not have created company yet)
+      return null;
+    }
+  },
 };

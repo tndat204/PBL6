@@ -330,7 +330,10 @@ import FormLayout from "../layouts/FormLayout";
 import { useState, useEffect } from "react";
 import { categoryService, skillService, jobService } from "../services";
 
+import { useAuth } from "../hooks/useAuth";
+
 function JobPost() {
+  const { company } = useAuth();
   const [category, setCategory] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [availableSkills, setAvailableSkills] = useState([]);
@@ -395,6 +398,7 @@ function JobPost() {
     setSkills((prev) => prev.filter((s) => s.id !== skillId));
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -403,7 +407,7 @@ function JobPost() {
     const jdFile = formData.get("jdFile");
 
     const jobData = {
-      companyId: "94eaaa15-5b40-4f7f-bd12-eb2693c7e9be",
+      companyId: company?.id || "",
       title: formData.get("title") || "",
       description: formData.get("description") || "",
       status: "ACTIVE",
@@ -424,6 +428,9 @@ function JobPost() {
     };
 
     // ===== VALIDATE =====
+    if (!jobData.companyId) {
+        return alert("Không tìm thấy thông tin công ty. Vui lòng đăng nhập lại!");
+    }
     if (!jobData.title.trim())
       return alert("Tiêu đề công việc không được để trống");
 
@@ -475,44 +482,19 @@ function JobPost() {
 
     // ======================
 
+    // ======================
+
     try {
-      // Tạo FormData để gửi lên backend (multipart/form-data)
-      const payload = new FormData();
-      payload.append("companyId", jobData.companyId);
-      payload.append("title", jobData.title);
-      payload.append("description", jobData.description);
-      payload.append("status", jobData.status);
-      payload.append("jobType", jobData.jobType);
-      payload.append("salaryMin", jobData.salaryMin);
-      payload.append("salaryMax", jobData.salaryMax);
-      payload.append(
-        "requiredYearsOfExpMin",
-        jobData.requiredYearsOfExpMin
-      );
-      payload.append(
-        "requiredYearsOfExpMax",
-        jobData.requiredYearsOfExpMax
-      );
-      payload.append("experienceLevel", jobData.experienceLevel);
-      payload.append("location", jobData.location);
-
-      // nếu backend muốn date-time thì có thể chuyển thành ISO:
-      // payload.append("expiryDate", jobData.expiryDate + "T00:00:00");
-      payload.append("expiryDate", jobData.expiryDate);
-
-      jobData.categoryIds.forEach((id) =>
-        payload.append("categoryIds", id)
-      );
-      jobData.skillIds.forEach((id) =>
-        payload.append("skillIds", id)
-      );
-
+      // Create jobData object to pass to service
+      // Note: service handles FormData construction now
+      
+      // Ensure file is in jobData if selected
       if (jdFile && jdFile.size > 0) {
-        payload.append("jdFile", jdFile);
+        jobData.jdFile = jdFile;
       }
 
       console.log("Gửi đi (jobData):", jobData);
-      await jobService.createJob(payload);
+      await jobService.createJob(jobData);
 
       alert("Đăng tin tuyển dụng thành công!");
       form.reset();
@@ -589,9 +571,10 @@ function JobPost() {
               <option value="" disabled>
                 Chọn loại hình công việc
               </option>
-              <option value="FULLTIME">Toàn thời gian</option>
-              <option value="PART_TIME">Bán thời gian</option>
-              <option value="FREELANCE">Freelance</option>
+              <option value="FULL_TIME">FULL_TIME</option>
+              <option value="PART_TIME">PART_TIME</option>
+              <option value="CONTRACT">CONTRACT</option>
+              <option value="REMOTE">REMOTE</option>
             </select>
           </div>
         </div>

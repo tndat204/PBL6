@@ -1,4 +1,5 @@
-import { authService } from '../services';
+import { authService,companyService } from '../services';
+
 
 export async function handleLoginSuccess(token) {
   try {
@@ -8,6 +9,19 @@ export async function handleLoginSuccess(token) {
     // Lấy thông tin người dùng
     const userData = await authService.getCurrentUser();
     localStorage.setItem("user", JSON.stringify(userData));
+    // 2. Check Role & Get Company Info
+    const userRole = userData.roles?.[0]?.name;
+    console.log("userRole ở trong handleLoginSuccess",userRole);
+    if (userRole === 'RECRUITER') { 
+        try {
+            const companyData = await companyService.getMyCompany();
+            if (companyData) {
+                localStorage.setItem("company", JSON.stringify(companyData));
+            }
+        } catch (companyError) {
+            console.warn("Could not fetch company details", companyError);
+        }
+    }
 
     // Điều hướng về trang chủ
     window.location.href = "/";
@@ -31,6 +45,7 @@ export async function handleLogout() {
     });
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("company");
     //Chuyển hướng về trang chủ
     window.location.href = "/";
   }

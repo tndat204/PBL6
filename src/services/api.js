@@ -1,6 +1,6 @@
 
-const BASE_URL = "https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api";
-// const BASE_URL = "http://localhost:8080/api";
+// const BASE_URL = "https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api";
+const BASE_URL = "http://localhost:8080/api";
 
 
 class ApiService {
@@ -55,7 +55,8 @@ class ApiService {
 
         // Thử đọc lỗi từ server trả về nếu có
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        console.error("Server Error Response:", errorData); // Log full error data
+        throw new Error(errorData.message || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`);
 
       }
 
