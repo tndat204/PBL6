@@ -153,7 +153,7 @@ const UserManagement = () => {
         { name: 'Quản lý người dùng', icon: <Users size={20} />, active: true, path: '/admin/users' },
         { name: 'Quản lý công ty', icon: <Building2 size={20} />, active: false },
         { name: 'Tin tuyển dụng', icon: <Briefcase size={20} />, active: false },
-        { name: 'Đánh giá & Review', icon: <Star size={20} />, active: false },
+        { name: 'Quản lý báo cáo', icon: <Star size={20} />, active: false, path: '/admin/reports' },
         { name: 'Kỹ năng & Danh mục', icon: <Tags size={20} />, active: false },
     ];
 
@@ -523,7 +523,7 @@ const UserRow = ({ user, onView, onBan, onDelete }) => {
         };
         const labels = {
             USER: 'Ứng viên',
-            RECRUITER: 'NTD',
+            RECRUITER: 'Nhà tuyển dụng',
             ADMIN: 'Admin'
         };
         return <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[role]}`}>{labels[role]}</span>;

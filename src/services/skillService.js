@@ -50,6 +50,7 @@ export const skillService = {
   async createSkill(skillData) {
     try {
       const response = await apiService.post("/skills", skillData);
+      console.log("response", response);
       return response.result || response;
     } catch (error) {
       console.error("Lỗi khi tạo skill:", error);
