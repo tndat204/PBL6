@@ -19,6 +19,7 @@ import { ProtectedRoute } from "../components/ProtectedRoute";
 import { USER_ROLES } from "../contexts/AuthContext";
 import Unauthorized from "../pages/Unauthorized";
 import RecruiterDashboard from "../pages/RecruiterDashboard";
+import RecruiterLayout from "../layouts/RecruiterLayout";
 
 import CVMatching from "../pages/CVMatching";
 import LandingPage from "../pages/LandingPage";
@@ -43,6 +44,13 @@ import SkillCategoryManagement from "../pages/SkillCategoryManagement";
 import PermissionsManagement from "../pages/PermissionsManagement";
 import ReportManagement from "../pages/ReportManagement";
 import AdminLayout from "../layouts/AdminLayout";
+
+// Recruiter pages
+import RecruiterJobManagement from "../pages/RecruiterJobManagement";
+import RecruiterApplicationManagement from "../pages/RecruiterApplicationManagement";
+import RecruiterCompanyManagement from "../pages/RecruiterCompanyManagement";
+import RecruiterProfileManagement from "../pages/RecruiterProfileManagement";
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
@@ -124,8 +132,18 @@ export default function AppRoutes() {
         {/* <Route path="/system-error" element={<SystemError />} /> */}
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Nhap */}
-        <Route path="/recruiter-dashboard" element={<RecruiterDashboard />} />
+        {/* RECRUITER routes with Layout */}
+        <Route path="/recruiter" element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.RECRUITER]}>
+            <RecruiterLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<RecruiterDashboard />} />
+          <Route path="jobs" element={<RecruiterJobManagement />} />
+          <Route path="applications" element={<RecruiterApplicationManagement />} />
+          <Route path="company" element={<RecruiterCompanyManagement />} />
+          <Route path="profile" element={<RecruiterProfileManagement />} />
+        </Route>
         {/* -------------------------------------------Test------------ */}
         {/* Chưa xử lí */}
         {/* <Route path="/candidate-dashboard" element= {<CandidateDashboard />} />  */}
