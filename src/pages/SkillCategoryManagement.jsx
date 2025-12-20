@@ -42,22 +42,23 @@ const SkillCategoryManagement = () => {
 
     useEffect(() => {
         fetchData();
-    }, [activeTab]);
+    }, []);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            if (activeTab === 'skills') {
-                const data = await skillService.getAllSkills();
-                const skillList = Array.isArray(data) ? data : (data.result || []);
-                setSkills([...skillList]);
-            } else {
-                const data = await categoryService.getAllCategories();
-                const categoryList = Array.isArray(data) ? data : (data.result || []);
-                setCategories([...categoryList]);
-            }
+            const [skillsData, categoriesData] = await Promise.all([
+                skillService.getAllSkills(),
+                categoryService.getAllCategories()
+            ]);
+
+            const skillList = Array.isArray(skillsData) ? skillsData : (skillsData.result || []);
+            setSkills([...skillList]);
+
+            const categoryList = Array.isArray(categoriesData) ? categoriesData : (categoriesData.result || []);
+            setCategories([...categoryList]);
         } catch (err) {
-            setError(`Không thể tải danh sách ${activeTab === 'skills' ? 'kỹ năng' : 'danh mục'}.`);
+            setError('Không thể tải dữ liệu.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -180,7 +181,7 @@ const SkillCategoryManagement = () => {
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                         >
-                            Kỹ năng
+                            Kỹ năng ({skills.length})
                         </button>
                         <button
                             onClick={() => {
@@ -193,7 +194,7 @@ const SkillCategoryManagement = () => {
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                         >
-                            Danh mục
+                            Danh mục ({categories.length})
                         </button>
                     </div>
                 </div>
@@ -219,21 +220,7 @@ const SkillCategoryManagement = () => {
                 {!loading && !error && (
                     <>
                         {/* Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">
-                                            Tổng số {activeTab === 'skills' ? 'kỹ năng' : 'danh mục'}
-                                        </p>
-                                        <h3 className="text-2xl font-bold text-gray-800 mt-2">{stats.total}</h3>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
-                                        <Tags size={24} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
 
                         {/* Table Container */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
