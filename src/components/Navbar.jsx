@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { USER_ROLES } from "../contexts/AuthContext";
+import { Sparkles } from "lucide-react";
 function Navbar() {
   const { user, logout } = useAuth();
   const role = user?.roles?.[0]?.name || null;
@@ -51,7 +52,7 @@ function Navbar() {
       case USER_ROLES.USER:
         return [
           ...commonItems,
-          { href: "/my-applications", label: "Đơn ứng tuyển" },
+          // { href: "/my-applications", label: "Đơn ứng tuyển" },
         ];
 
       case USER_ROLES.RECRUITER:
@@ -85,7 +86,7 @@ function Navbar() {
             IT Job Hunt
           </a>
         </div>
-        <ul className="hidden md:flex space-x-6 font-medium">
+        <ul className="hidden md:flex space-x-6 font-medium items-center">
 
           <li>
             <a
@@ -120,6 +121,17 @@ function Navbar() {
             </a>
           </li>
 
+          {user && (
+            <li>
+              <a
+                href="/cv-review"
+                className="relative px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-1.5"
+              >
+                <Sparkles size={16} className="animate-pulse" />
+                Review CV (AI)
+              </a>
+            </li>
+          )}
         </ul>
         <div className="flex items-center space-x-4">
           {/* <div className="flex items-center space-x-2">

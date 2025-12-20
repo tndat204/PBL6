@@ -7,3 +7,4 @@ export { default as apiService } from "./api";
 export { default as userService } from "./userService";
 export { default as applicationService } from "./applicationService";
 export { default as statisticsService } from "./statisticsService";
+export { cvService } from "./cvService";
