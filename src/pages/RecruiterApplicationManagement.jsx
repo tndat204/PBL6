@@ -50,13 +50,24 @@ export default function RecruiterApplicationManagement() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      NEW: "bg-blue-100 text-blue-800",
+      SUBMITTED: "bg-blue-100 text-blue-800",
       REVIEWED: "bg-purple-100 text-purple-800",
-      SHORTLISTED: "bg-yellow-100 text-yellow-800",
+      INTERVIEW: "bg-orange-100 text-orange-800",
       HIRED: "bg-green-100 text-green-800",
       REJECTED: "bg-red-100 text-red-800",
     };
     return badges[status] || "bg-gray-100 text-gray-800";
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      SUBMITTED: "Mới nộp",
+      REVIEWED: "Đã xem xét",
+      INTERVIEW: "Đã hẹn phỏng vấn",
+      HIRED: "Đã tuyển",
+      REJECTED: "Từ chối",
+    };
+    return labels[status] || status;
   };
 
   if (loading) {
@@ -88,7 +99,7 @@ export default function RecruiterApplicationManagement() {
             />
           </div>
           <div className="flex gap-2 flex-wrap">
-            {["ALL", "NEW", "REVIEWED", "SHORTLISTED", "HIRED", "REJECTED"].map((status) => (
+            {["ALL", "SUBMITTED", "REVIEWED", "INTERVIEW", "HIRED", "REJECTED"].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
@@ -98,7 +109,7 @@ export default function RecruiterApplicationManagement() {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {status === "ALL" ? "Tất cả" : status}
+                {status === "ALL" ? "Tất cả" : getStatusLabel(status)}
               </button>
             ))}
           </div>
@@ -157,11 +168,11 @@ export default function RecruiterApplicationManagement() {
                       onChange={(e) => handleStatusChange(app.id, e.target.value)}
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(app.status)} border-0 cursor-pointer`}
                     >
-                      <option value="NEW">NEW</option>
-                      <option value="REVIEWED">REVIEWED</option>
-                      <option value="SHORTLISTED">SHORTLISTED</option>
-                      <option value="HIRED">HIRED</option>
-                      <option value="REJECTED">REJECTED</option>
+                      <option value="SUBMITTED">{getStatusLabel("SUBMITTED")}</option>
+                      <option value="REVIEWED">{getStatusLabel("REVIEWED")}</option>
+                      <option value="INTERVIEW">{getStatusLabel("INTERVIEW")}</option>
+                      <option value="HIRED">{getStatusLabel("HIRED")}</option>
+                      <option value="REJECTED">{getStatusLabel("REJECTED")}</option>
                     </select>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
