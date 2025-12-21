@@ -1,5 +1,9 @@
-// import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { jobService, applicationService } from '../services';
+import { useNavigate } from 'react-router-dom';
+import StatCard from '../components/StatCard';
+import ApplicationItem from '../components/ApplicationItem';
 import { 
   Briefcase, 
   Users, 
@@ -11,57 +15,135 @@ import {
 
 const RecruiterDashboard = () => {
   const { user, company } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    activeJobs: 0,
+    totalApplications: 0,
+  });
+  const [recentApplications, setRecentApplications] = useState([]);
 
-  // Sample data - replace with actual API calls
-  const stats = {
-    activeJobs: 4,
-    newApplications: 18,
-    totalViews: 1294,
-    expiringSoon: 2,
+  useEffect(() => {
+    if (company?.id) {
+      fetchStats();
+    }
+  }, [company]);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching stats for company:', company);
+      
+      // Fetch jobs and count active ones
+      const jobsData = await jobService.getJobsByCompany(company.id);
+      console.log("jobsData", jobsData);
+      const jobs = Array.isArray(jobsData) ? jobsData : [];
+      const activeJobsCount = jobs.filter(job => job.status === 'ACTIVE').length;
+      console.log("activeJobsCount", activeJobsCount);
+      
+      // Fetch applications for each job and sum them
+      let totalApplicationsCount = 0;
+      const allApplications = [];
+      
+      // Use Promise.all for parallel fetching
+      const applicationPromises = jobs.map(async (job) => {
+        try {
+          const jobApplications = await applicationService.getApplicationsByJob(job.id);
+          const apps = Array.isArray(jobApplications) ? jobApplications : [];
+          
+          // Add jobTitle to each application
+          const appsWithJobTitle = apps.map(app => ({
+            ...app,
+            jobTitle: job.title
+          }));
+          
+          totalApplicationsCount += apps.length;
+          console.log(`Job ${job.id} (${job.title}): ${apps.length} applications`);
+          
+          return appsWithJobTitle;
+        } catch (error) {
+          console.error(`Error fetching applications for job ${job.id}:`, error);
+          return [];
+        }
+      });
+      
+      const results = await Promise.all(applicationPromises);
+      allApplications.push(...results.flat());
+      
+      // Sort by appliedDate (most recent first)
+      const sortedApplications = allApplications.sort((a, b) => {
+        const dateA = new Date(a.appliedDate || 0);
+        const dateB = new Date(b.appliedDate || 0);
+        return dateB - dateA;
+      });
+      
+      // Get 4 most recent applications
+      const recent = sortedApplications.slice(0, 4);
+      setRecentApplications(recent);
+      
+      console.log("Total applications count:", totalApplicationsCount);
+      console.log("Recent applications:", recent);
+      
+      const newStats = {
+        activeJobs: activeJobsCount,
+        totalApplications: totalApplicationsCount,
+      };
+      
+      console.log("Setting stats to:", newStats);
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* Welcome Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">
           Xin chào, {user?.fullName || 'Recruiter'} 👋
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-slate-600">
           Đây là tổng quan hoạt động tuyển dụng của bạn
         </p>
       </div>
 
-      {/* Quick Stats */}
+      {/* Quick Stats - 4 cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard 
           title="Tin đang tuyển" 
           value={stats.activeJobs} 
-          icon={<Briefcase className="text-blue-600" size={24} />} 
-          subtext={`${stats.expiringSoon} tin sắp hết hạn`}
-          bgColor="bg-blue-50"
+          icon={<Briefcase className="w-6 h-6 text-blue-600" />} 
+          bgLight="bg-blue-50"
         />
         <StatCard 
           title="CV chưa xem" 
-          value={stats.newApplications} 
-          icon={<FileText className="text-purple-600" size={24} />} 
-          subtext="+5 hồ sơ hôm nay"
-          bgColor="bg-purple-50"
+          value={0}
+          icon={<FileText className="w-6 h-6 text-purple-600" />} 
+          bgLight="bg-purple-50"
           highlight
         />
         <StatCard 
           title="Lượt xem hồ sơ" 
-          value={stats.totalViews.toLocaleString()} 
-          icon={<Eye className="text-green-600" size={24} />} 
-          subtext="Tăng 12% tuần qua"
-          bgColor="bg-green-50"
+          value={0}
+          icon={<Eye className="w-6 h-6 text-green-600" />} 
+          bgLight="bg-green-50"
         />
         <StatCard 
           title="Tổng ứng viên" 
-          value="87" 
-          icon={<Users className="text-orange-600" size={24} />} 
-          subtext="Tất cả các vị trí"
-          bgColor="bg-orange-50"
+          value={stats.totalApplications} 
+          icon={<Users className="w-6 h-6 text-orange-600" />} 
+          bgLight="bg-orange-50"
         />
       </div>
 
@@ -70,43 +152,29 @@ const RecruiterDashboard = () => {
         {/* Left Column: Recent Applications */}
         <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Ứng viên mới ứng tuyển</h2>
-            <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+            <h2 className="text-xl font-bold text-slate-900">Ứng viên mới ứng tuyển</h2>
+            <button 
+              onClick={() => navigate('/recruiter/applications')}
+              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+            >
               Xem tất cả →
             </button>
           </div>
           
           <div className="space-y-4">
-            <ApplicationItem 
-              name="Nguyễn Văn A"
-              position="React Developer"
-              time="10 phút trước"
-              status="new"
-            />
-            <ApplicationItem 
-              name="Trần Thị B"
-              position="Java Senior"
-              time="2 giờ trước"
-              status="new"
-            />
-            <ApplicationItem 
-              name="Lê Hoàng C"
-              position="Tester"
-              time="Hôm qua"
-              status="reviewed"
-            />
-            <ApplicationItem 
-              name="Phạm Văn D"
-              position="React Developer"
-              time="Hôm qua"
-              status="reviewed"
-            />
+            {recentApplications.length > 0 ? (
+              recentApplications.map((app) => (
+                <ApplicationItem key={app.id} application={app} />
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-8">Chưa có ứng viên nào</p>
+            )}
           </div>
         </div>
 
         {/* Right Column: Top Performing Jobs */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Tin tuyển dụng hiệu quả</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Tin tuyển dụng hiệu quả</h2>
           
           <div className="space-y-4">
             <JobPerformanceItem 
@@ -157,54 +225,6 @@ const RecruiterDashboard = () => {
   );
 };
 
-// Stat Card Component
-const StatCard = ({ title, value, icon, subtext, bgColor, highlight }) => (
-  <div className={`bg-white rounded-lg shadow-sm p-6 ${highlight ? 'ring-2 ring-emerald-500' : ''}`}>
-    <div className="flex items-center justify-between mb-3">
-      <div className={`${bgColor} p-3 rounded-lg`}>
-        {icon}
-      </div>
-    </div>
-    <div>
-      <p className="text-sm text-gray-600 mb-1">{title}</p>
-      <p className="text-3xl font-bold text-gray-900">{value}</p>
-      <p className="text-xs text-gray-500 mt-2">{subtext}</p>
-    </div>
-  </div>
-);
-
-// Application Item Component
-const ApplicationItem = ({ name, position, time, status }) => {
-  const statusColors = {
-    new: 'bg-blue-100 text-blue-800',
-    reviewed: 'bg-purple-100 text-purple-800',
-  };
-
-  const statusLabels = {
-    new: 'Mới',
-    reviewed: 'Đã xem',
-  };
-
-  return (
-    <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
-          {name[0]}
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-900">{name}</p>
-          <p className="text-xs text-gray-500">{position}</p>
-        </div>
-      </div>
-      <div className="text-right">
-        <span className={`text-xs px-2 py-1 rounded-full ${statusColors[status]}`}>
-          {statusLabels[status]}
-        </span>
-        <p className="text-xs text-gray-400 mt-1">{time}</p>
-      </div>
-    </div>
-  );
-};
 
 // Job Performance Item Component
 const JobPerformanceItem = ({ title, applications, views }) => (

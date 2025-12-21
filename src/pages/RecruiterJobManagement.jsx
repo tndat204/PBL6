@@ -11,6 +11,7 @@ export default function RecruiterJobManagement() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingJobId, setEditingJobId] = useState(null); // Track which job is being edited
 
   useEffect(() => {
     if (company?.id) {
@@ -44,6 +45,26 @@ export default function RecruiterJobManagement() {
     }
   };
 
+  const handleStatusChange = async (jobId, currentJob, newStatus) => {
+    if (currentJob.status === newStatus) {
+      setEditingJobId(null); // Close dropdown if no change
+      return;
+    }
+    
+    try {
+      await jobService.updateJob(jobId, {
+        ...currentJob,
+        status: newStatus
+      });
+      alert("Cập nhật trạng thái thành công!");
+      setEditingJobId(null); // Close dropdown after update
+      fetchJobs();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Không thể cập nhật trạng thái!");
+    }
+  };
+
   const filteredJobs = jobs.filter(job => {
     const matchesFilter = filter === "ALL" || job.status === filter;
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -53,10 +74,19 @@ export default function RecruiterJobManagement() {
   const getStatusBadge = (status) => {
     const badges = {
       ACTIVE: "bg-green-100 text-green-800",
-      INACTIVE: "bg-gray-100 text-gray-800",
+      INACTIVE: "bg-yellow-100 text-yellow-800",
       CLOSED: "bg-red-100 text-red-800",
     };
     return badges[status] || "bg-gray-100 text-gray-800";
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      ACTIVE: "Đang hiển thị",
+      INACTIVE: "Đã ẩn",
+      CLOSED: "Đã đóng",
+    };
+    return labels[status] || status;
   };
 
   if (loading) {
@@ -107,7 +137,7 @@ export default function RecruiterJobManagement() {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {status === "ALL" ? "Tất cả" : status === "ACTIVE" ? "Đang tuyển" : status === "INACTIVE" ? "Tạm dừng" : "Đã đóng"}
+                {status === "ALL" ? "Tất cả" : getStatusLabel(status)}
               </button>
             ))}
           </div>
@@ -156,9 +186,36 @@ export default function RecruiterJobManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(job.status)}`}>
-                      {job.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {editingJobId === job.id ? (
+                        // Dropdown when editing
+                        <select
+                          value={job.status}
+                          onChange={(e) => handleStatusChange(job.id, job, e.target.value)}
+                          onBlur={() => setEditingJobId(null)}
+                          autoFocus
+                          className={`px-2 py-1 text-xs font-semibold rounded border border-gray-300 outline-none cursor-pointer ${getStatusBadge(job.status)}`}
+                        >
+                          <option value="ACTIVE">Đang hiển thị</option>
+                          <option value="INACTIVE">Đã ẩn</option>
+                          <option value="CLOSED">Đã đóng</option>
+                        </select>
+                      ) : (
+                        // Badge when not editing
+                        <>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(job.status)}`}>
+                            {getStatusLabel(job.status)}
+                          </span>
+                          <button
+                            onClick={() => setEditingJobId(job.id)}
+                            className="p-1 text-gray-400 hover:text-blue-600 transition"
+                            title="Chỉnh sửa trạng thái"
+                          >
+                            <Edit size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {job.createdAt ? new Date(job.createdAt).toLocaleDateString("vi-VN") : "N/A"}
@@ -200,3 +257,4 @@ export default function RecruiterJobManagement() {
     </div>
   );
 }
+  

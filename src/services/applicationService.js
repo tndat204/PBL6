@@ -16,24 +16,24 @@ const applicationService = {
   /**
    * Get all applications for jobs posted by a company
    */
-  async getApplicationsByCompany(companyId) {
-    try {
-      const jobsResponse = await api.get(`/jobs/company/${companyId}`);
-      const jobs = jobsResponse.data.result || jobsResponse.data;
+  // async getApplicationsByCompany(companyId) {
+  //   try {
+  //     const jobsResponse = await api.get(`/jobs/company/${companyId}`);
+  //     const jobs = jobsResponse.data.result || jobsResponse.data;
       
-      const applicationPromises = jobs.map(job => 
-        this.getApplicationsByJob(job.id).catch(() => [])
-      );
+  //     const applicationPromises = jobs.map(job => 
+  //       this.getApplicationsByJob(job.id).catch(() => [])
+  //     );
       
-      const applicationsArrays = await Promise.all(applicationPromises);
-      const allApplications = applicationsArrays.flat();
+  //     const applicationsArrays = await Promise.all(applicationPromises);
+  //     const allApplications = applicationsArrays.flat();
       
-      return allApplications;
-    } catch (error) {
-      console.error("Error fetching company applications:", error);
-      throw error;
-    }
-  },
+  //     return allApplications;
+  //   } catch (error) {
+  //     console.error("Error fetching company applications:", error);
+  //     throw error;
+  //   }
+  // },
 
   /**
    * Get applications for a specific job
@@ -41,7 +41,18 @@ const applicationService = {
   async getApplicationsByJob(jobId) {
     try {
       const response = await api.get(`/applications/job/${jobId}`);
-      return response.data.result || response.data;
+      console.log(`RAW Response for job ${jobId}:`, response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', Object.keys(response || {}));
+      
+      // Handle different response structures
+      if (response.result !== undefined) {
+        return response.result;
+      }
+      if (response.data !== undefined) {
+        return response.data.result || response.data;
+      }
+      return response;
     } catch (error) {
       console.error(`Error fetching applications for job ${jobId}:`, error);
       throw error;

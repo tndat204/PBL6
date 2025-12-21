@@ -19,9 +19,9 @@ const RecruiterLayout = () => {
 
     const menuItems = [
         { name: 'Tổng quan', icon: <LayoutDashboard size={20} />, path: '/recruiter' },
-        { name: 'Quản lý tin đăng', icon: <Briefcase size={20} />, path: '/recruiter/jobs' },
-        { name: 'Quản lý hồ sơ ứng tuyển', icon: <FileText size={20} />, path: '/recruiter/applications' },
-        { name: 'Quản lý công ty', icon: <Building2 size={20} />, path: '/recruiter/company' },
+        { name: 'Tin đăng', icon: <Briefcase size={20} />, path: '/recruiter/jobs' },
+        { name: 'Hồ sơ ứng tuyển', icon: <FileText size={20} />, path: '/recruiter/applications' },
+        { name: 'Hồ sơ công ty', icon: <Building2 size={20} />, path: '/recruiter/company' },
         { name: 'Hồ sơ cá nhân', icon: <User size={20} />, path: '/recruiter/profile' },
     ];
 

@@ -600,20 +600,36 @@ function JobPost() {
   return (
     <FormLayout>
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-700">
-        Chi tiết công việc
+        Đăng tin tuyển dụng
       </h1>
       <form className="space-y-4" onSubmit={handleSubmit}>
         {/* Job Title */}
         <div>
           <label className="block text-md font-medium mb-1 text-gray-700">
-            Tiêu đề công việc:
+            Tên tin tuyển dụng:
           </label>
           <input
             type="text"
             name="title"
-            placeholder="Tiêu đề công việc (VD: UI/UX Designer)"
+            placeholder="Tên tin tuyển dụng (VD: UI/UX Designer)"
             className="w-full border border-gray-300 rounded px-3 py-2"
           />
+        </div>
+
+        {/* JD File */}
+        <div>
+          <label className="block text-md font-medium mb-1 text-gray-700">
+            Tải file mô tả công việc (PDF):
+          </label>
+          <input
+            type="file"
+            name="jdFile"
+            accept=".pdf"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Tải lên file mô tả chi tiết công việc (JD).
+          </p>
         </div>
 
         {/* Job Description */}
@@ -633,7 +649,7 @@ function JobPost() {
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-md font-medium mb-1 text-gray-700">
-              Ngành nghề (Có thể chọn nhiều):
+              Danh mục (Có thể chọn nhiều):
             </label>
             <div className="border border-gray-300 rounded p-3 max-h-40 overflow-y-auto grid grid-cols-2 md:grid-cols-3 gap-2">
                 {category.map((cat) => (
@@ -716,7 +732,7 @@ function JobPost() {
         {/* Experience level */}
         <div>
           <label className="block text-md font-medium mb-1 text-gray-700">
-            Cấp độ kinh nghiệm:
+            Trình độ:
           </label>
           <select
             name="experienceLevel"
@@ -724,7 +740,7 @@ function JobPost() {
             defaultValue=""
           >
             <option value="" disabled>
-              Chọn cấp độ kinh nghiệm
+              Chọn trình độ
             </option>
             <option value="INTERN">Intern</option>
             <option value="FRESHER">Fresher</option>
@@ -774,6 +790,19 @@ function JobPost() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Company Name - Display Only */}
+        <div>
+          <label className="block text-md font-medium mb-1 text-gray-700">
+            Công ty <span className="text-red-500">*</span>
+          </label>
+          <div className="flex items-center gap-3 w-full border border-gray-300 rounded px-3 py-2 bg-gray-50">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span className="text-gray-900 font-medium">{company?.name || 'Chưa có thông tin công ty'}</span>
           </div>
         </div>
 
@@ -835,21 +864,6 @@ function JobPost() {
           />
         </div>
 
-        {/* JD File */}
-        <div>
-          <label className="block text-md font-medium mb-1 text-gray-700">
-            JD File (PDF/DOC):
-          </label>
-          <input
-            type="file"
-            name="jdFile"
-            accept=".pdf,.doc,.docx"
-            className="w-full border border-gray-300 rounded px-3 py-2"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Tải lên file mô tả chi tiết công việc (JD).
-          </p>
-        </div>
 
         {/* Submit */}
         <div>

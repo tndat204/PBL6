@@ -157,4 +157,15 @@ export const jobService = {
       throw error;
     }
   },
+
+  // Lấy jobs theo company ID
+  async getJobsByCompany(companyId) {
+    try {
+      const response = await apiService.get(`/jobs?companyId=${companyId}`);
+      return response.result || response;
+    } catch (error) {
+      console.error(`Lỗi khi lấy jobs của company ${companyId}:`, error);
+      throw error;
+    }
+  },
 };
