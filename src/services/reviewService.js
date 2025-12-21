@@ -35,5 +35,39 @@ export const reviewService = {
             console.error("Lỗi khi lấy danh sách báo cáo:", error);
             throw error;
         }
+    },
+
+    // Tạo đánh giá mới
+    async createReview(reviewData) {
+        const formData = new FormData();
+        formData.append('companyId', reviewData.companyId);
+        formData.append('title', reviewData.title);
+        formData.append('comment', reviewData.comment);
+        formData.append('rating', reviewData.rating);
+
+        if (reviewData.images && reviewData.images.length > 0) {
+            reviewData.images.forEach((image) => {
+                formData.append('images', image);
+            });
+        }
+
+        try {
+            const response = await apiService.post("/reviews", formData);
+            return response.result || response;
+        } catch (error) {
+            console.error("Lỗi khi tạo review:", error);
+            throw error;
+        }
+    },
+
+    // Toggle like review
+    async toggleLikeReview(reviewId) {
+        try {
+            const response = await apiService.post(`/reviews/${reviewId}/toggle-like`);
+            return response.result || response;
+        } catch (error) {
+            console.error(`Lỗi khi toggle like review ${reviewId}:`, error);
+            throw error;
+        }
     }
 };

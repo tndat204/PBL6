@@ -13,6 +13,22 @@ export const jobService = {
     }
   },
 
+  // Lấy danh sách jobs theo company
+  async getJobsByCompany(companyId, status = 'ACTIVE') {
+    try {
+      const response = await apiService.get("/jobs", {
+        params: {
+          companyId,
+          status
+        }
+      });
+      return response.result || response;
+    } catch (error) {
+      console.error(`Lỗi khi lấy jobs của company ${companyId}:`, error);
+      throw error;
+    }
+  },
+
   // Lấy job theo ID
   async getJobById(id) {
     try {
@@ -42,10 +58,10 @@ export const jobService = {
 
       // Format expiryDate for LocalDateTime backend
       if (jobData.expiryDate) {
-          const expiryDateFormatted = jobData.expiryDate.includes('T')
-            ? jobData.expiryDate
-            : `${jobData.expiryDate}T23:59:59`;
-          formData.append('expiryDate', expiryDateFormatted);
+        const expiryDateFormatted = jobData.expiryDate.includes('T')
+          ? jobData.expiryDate
+          : `${jobData.expiryDate}T23:59:59`;
+        formData.append('expiryDate', expiryDateFormatted);
       }
 
       // Append optional numeric fields

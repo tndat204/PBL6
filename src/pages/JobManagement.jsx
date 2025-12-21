@@ -41,7 +41,7 @@ const JobManagement = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [selectedJob, setSelectedJob] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [showCreateModal, setShowCreateModal] = useState(false);
+    // const [showCreateModal, setShowCreateModal] = useState(false); // Removed create functionality
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingJob, setEditingJob] = useState(null);
     const [toast, setToast] = useState(null);
@@ -152,26 +152,14 @@ const JobManagement = () => {
         setShowDetailModal(true);
     };
 
-    const handleCreateJob = () => {
-        setShowCreateModal(true);
-    };
+
 
     const handleEditJob = (job) => {
         setEditingJob(job);
         setShowEditModal(true);
     };
 
-    const handleSubmitNewJob = async (jobData) => {
-        try {
-            await jobService.createJob(jobData);
-            setShowCreateModal(false);
-            await fetchJobs(false);
-            showToast('Công việc đã được tạo thành công!', 'success');
-        } catch (error) {
-            console.error('Error creating job:', error);
-            throw error;
-        }
-    };
+
 
     const handleSubmitEditJob = async (jobData) => {
         try {
@@ -295,13 +283,7 @@ const JobManagement = () => {
                                         </select>
 
                                         {/* Create New Button */}
-                                        <button
-                                            onClick={handleCreateJob}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                                        >
-                                            <Plus size={18} />
-                                            <span>Thêm mới</span>
-                                        </button>
+
                                     </div>
                                 </div>
                             </div>
@@ -393,15 +375,7 @@ const JobManagement = () => {
                 )}
 
                 {/* Create Modal */}
-                {showCreateModal && (
-                    <CreateJobModal
-                        companies={companies}
-                        categories={categories}
-                        skills={skills}
-                        onClose={() => setShowCreateModal(false)}
-                        onSubmit={handleSubmitNewJob}
-                    />
-                )}
+
 
                 {/* Edit Modal */}
                 {showEditModal && editingJob && (

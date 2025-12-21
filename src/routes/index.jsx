@@ -43,6 +43,8 @@ import JobManagement from "../pages/JobManagement";
 import SkillCategoryManagement from "../pages/SkillCategoryManagement";
 import PermissionsManagement from "../pages/PermissionsManagement";
 import ReportManagement from "../pages/ReportManagement";
+import CVReview from "../pages/CVReview";
+import CVReviewResult from "../pages/CVReviewResult";
 import AdminLayout from "../layouts/AdminLayout";
 
 // Recruiter pages
@@ -66,6 +68,9 @@ export default function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/career-tips" element={<CareerTips />} />
+        {/* New routes added here */}
+        <Route path="/cv-review" element={<CVReview />} />
+        <Route path="/cv-review/results" element={<CVReviewResult />} />
         <Route path="/cv-matching" element={
           <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
             <CVMatching />
