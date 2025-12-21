@@ -328,7 +328,7 @@
 
 import FormLayout from "../layouts/FormLayout";
 import { useState, useEffect } from "react";
-import { categoryService, skillService, jobService } from "../services";
+import { categoryService, skillService, jobService, aiService } from "../services";
 
 import { useAuth } from "../hooks/useAuth";
 
@@ -351,6 +351,10 @@ function JobPost() {
   // Salary state for formatted display
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
+
+  // AI parsing states
+  const [aiParsing, setAiParsing] = useState(false);
+  const [aiError, setAiError] = useState("");
 
   // Lấy category
   useEffect(() => {
@@ -500,6 +504,28 @@ function JobPost() {
     setSkills((prev) => prev.filter((s) => s.id !== skillId));
   };
 
+  // Handle AI parsing of PDF file
+  const handleAIParse = async (file) => {
+    setAiParsing(true);
+    setAiError("");
+    
+    try {
+      const result = await aiService.parseJobDescription(file);
+      
+      // Auto-fill description field from AI response
+      const descriptionTextarea = document.querySelector('textarea[name="description"]');
+      if (descriptionTextarea && result.summary && result.summary.summary) {
+        descriptionTextarea.value = result.summary.summary;
+      }
+      
+      console.log("AI Parse Success:", result);
+    } catch (error) {
+      console.error("AI Parse Error:", error);
+      setAiError(error.message || "Không thể phân tích file. Vui lòng thử lại.");
+    } finally {
+      setAiParsing(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -643,10 +669,49 @@ function JobPost() {
             type="file"
             name="jdFile"
             accept=".pdf"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              
+              // Validate PDF only
+              if (file.type !== 'application/pdf') {
+                alert('Chỉ chấp nhận file PDF');
+                e.target.value = '';
+                return;
+              }
+              
+              // Validate size (5MB)
+              if (file.size > 5 * 1024 * 1024) {
+                alert('File quá lớn. Tối đa 5MB');
+                e.target.value = '';
+                return;
+              }
+              
+              // Auto-trigger AI parsing
+              handleAIParse(file);
+            }}
+            disabled={aiParsing}
             className="w-full border border-gray-300 rounded px-3 py-2"
           />
+          
+          {aiParsing && (
+            <div className="flex items-center gap-2 text-blue-600 mt-2">
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-sm">Đang phân tích file...</span>
+            </div>
+          )}
+          
+          {aiError && (
+            <div className="mt-2 text-red-600 text-sm">
+              <p>{aiError}</p>
+            </div>
+          )}
+          
           <p className="text-xs text-gray-500 mt-1">
-            Tải lên file mô tả chi tiết công việc (JD).
+            💡 Hệ thống sẽ tự động tạo mô tả công việc từ file PDF
           </p>
         </div>
 
@@ -655,12 +720,15 @@ function JobPost() {
           <label className="block text-md font-medium mb-1 text-gray-700">
             Mô tả công việc:
           </label>
-          <textarea
-            name="description"
-            placeholder="Mô tả chi tiết công việc"
-            rows={3}
-            className="w-full border border-gray-300 rounded px-3 py-2"
-          ></textarea>
+          <div className="relative">
+            <textarea
+              name="description"
+              placeholder={aiParsing ? "Đang chờ AI tạo mô tả..." : "Mô tả chi tiết công việc"}
+              rows={5}
+              disabled={aiParsing}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            ></textarea>
+          </div>
         </div>
 
         {/* Category + job type */}
@@ -739,11 +807,13 @@ function JobPost() {
             <input
               type="number"
               name="requiredYearsOfExpMin"
+              min={0}
               placeholder="Tối thiểu (năm)"
               className="border border-gray-300 rounded px-3 py-2"
             />
             <input
               type="number"
+              min={0}
               name="requiredYearsOfExpMax"
               placeholder="Tối đa (năm)"
               className="border border-gray-300 rounded px-3 py-2"

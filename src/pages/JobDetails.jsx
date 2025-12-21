@@ -15,6 +15,7 @@ import JobCard from "../components/JobCard";
 import ApplyJobModal from "../components/ApplyJobModal";
 import { formatSalaryRange } from "../utils/formatUtils";
 import { FileText, Eye, Download } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 const JOB_TYPE_LABELS = {
   FULL_TIME: "Toàn thời gian",
@@ -28,6 +29,7 @@ function JobDetails() {
 
   const [job, setJob] = useState(null);
   const [company, setCompany] = useState(null);
+  const { user } = useAuth();
   const [skillNames, setSkillNames] = useState([]);
   const [relatedJobs, setRelatedJobs] = useState([]);
 
@@ -382,14 +384,15 @@ function JobDetails() {
             </>
           )}
 
-          {/* ✅ UPDATED: mở modal thay vì navigate */}
+          {/* ✅ UPDATED: Only USER role can apply */}
           <button
             onClick={() => setIsApplyOpen(true)}
-            disabled={isExpired}
-            className={`mt-8 px-6 py-2 rounded-sm transition ${isExpired
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-sea-400 text-white hover:bg-sea-300'
-              }`}
+            disabled={isExpired || !(user && user.roles && user.roles.some(role => role.name === 'USER'))}
+            className={`mt-8 px-6 py-2 rounded-sm transition ${
+              isExpired || !(user && user.roles && user.roles.some(role => role.name === 'USER'))
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-sea-400 text-white hover:bg-sea-300'
+            }`}
           >
             {isExpired ? 'Hết hạn nộp hồ sơ' : 'Ứng tuyển'}
           </button>
