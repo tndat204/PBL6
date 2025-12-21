@@ -9,3 +9,4 @@ export { default as applicationService } from "./applicationService";
 export { default as statisticsService } from "./statisticsService";
 export { cvService } from "./cvService";
 export { reviewService } from "./reviewService";
+export { profileService } from "./profileService";

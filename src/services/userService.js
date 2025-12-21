@@ -46,6 +46,55 @@ class UserService {
             throw error;
         }
     }
+    async updateMe(userData) {
+        try {
+            const response = await apiService.patch(`/users/me`, userData);
+            return response.result || response;
+        } catch (error) {
+            console.error(`Error updating me:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Upload user avatar
+     * PUT /api/users/me/avatar
+     * @param {File} avatarFile - Avatar image file
+     * @returns {Promise<Object>} Updated user data with new avatar URL
+     */
+    async uploadAvatar(avatarFile) {
+        try {
+            const formData = new FormData();
+            formData.append('file', avatarFile);
+
+            // Note: apiService.put handles FormData automatically
+            const response = await apiService.put('/users/me/avatar', formData);
+            return response.result || response;
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Change user password
+     * PUT /api/users/me/password
+     * @param {string} oldPassword - Current password
+     * @param {string} newPassword - New password
+     * @returns {Promise<Object>} Response
+     */
+    async changePassword(oldPassword, newPassword) {
+        try {
+            const response = await apiService.put('/users/me/password', {
+                oldPassword,
+                newPassword
+            });
+            return response.result || response;
+        } catch (error) {
+            console.error('Error changing password:', error);
+            throw error;
+        }
+    }
 
     /**
      * Delete user

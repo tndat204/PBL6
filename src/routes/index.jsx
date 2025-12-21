@@ -26,7 +26,6 @@ import LandingPage from "../pages/LandingPage";
 import Contact from "../pages/Contact";
 import CareerTips from "../pages/CareerTips";
 
-import ProfileTest from "../pages/ProfileTest";
 ///////////////////////////////////////////////// 
 // CANDIDATE ROUTES
 ///////////////////////////////////////////////////
@@ -72,7 +71,7 @@ export default function AppRoutes() {
         <Route path="/cv-review" element={<CVReview />} />
         <Route path="/cv-review/results" element={<CVReviewResult />} />
         <Route path="/cv-matching" element={
-          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN, USER_ROLES.RECRUITER]}>
             <CVMatching />
           </ProtectedRoute>
         } />
@@ -149,15 +148,6 @@ export default function AppRoutes() {
           <Route path="company" element={<RecruiterCompanyManagement />} />
           <Route path="profile" element={<RecruiterProfileManagement />} />
         </Route>
-        {/* -------------------------------------------Test------------ */}
-        {/* Chưa xử lí */}
-        {/* <Route path="/candidate-dashboard" element= {<CandidateDashboard />} />  */}
-
-        <Route path="/profile-test" element={
-          <ProtectedRoute>
-            <ProfileTest />
-          </ProtectedRoute>
-        } />
 
       </Routes>
     </BrowserRouter>

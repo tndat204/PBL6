@@ -348,6 +348,10 @@ function JobPost() {
   const [provinces, setProvinces] = useState([]);
   const [wards, setWards] = useState([]);
 
+  // Salary state for formatted display
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
+
   // Lấy category
   useEffect(() => {
     async function fetchCategories() {
@@ -361,6 +365,20 @@ function JobPost() {
     }
     fetchCategories();
   }, []);
+
+  // Helper: Format number với dấu chấm
+  const formatSalaryInput = (value) => {
+    // Remove all non-digit characters
+    const numericValue = value.replace(/\D/g, '');
+    // Format with thousand separators
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  // Handle salary input change
+  const handleSalaryChange = (e, setter) => {
+    const formatted = formatSalaryInput(e.target.value);
+    setter(formatted);
+  };
 
   // Lấy tất cả skill
   useEffect(() => {
@@ -502,8 +520,8 @@ function JobPost() {
       status: "ACTIVE",
       categoryIds: selectedCategories, // Send array
       jobType: formData.get("jobType") || "",
-      salaryMin: Number(formData.get("salaryMin") || 0),
-      salaryMax: Number(formData.get("salaryMax") || 0),
+      salaryMin: Number((formData.get("salaryMin") || "0").replace(/\./g, "")),
+      salaryMax: Number((formData.get("salaryMax") || "0").replace(/\./g, "")),
       skillIds: skills.map((s) => s.id),
       requiredYearsOfExpMin: Number(
         formData.get("requiredYearsOfExpMin") || 0
@@ -694,14 +712,18 @@ function JobPost() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <input
-              type="number"
+              type="text"
               name="salaryMin"
+              value={salaryMin}
+              onChange={(e) => handleSalaryChange(e, setSalaryMin)}
               placeholder="Lương tối thiểu"
               className="border border-gray-300 rounded px-3 py-2"
             />
             <input
-              type="number"
+              type="text"
               name="salaryMax"
+              value={salaryMax}
+              onChange={(e) => handleSalaryChange(e, setSalaryMax)}
               placeholder="Lương tối đa"
               className="border border-gray-300 rounded px-3 py-2"
             />

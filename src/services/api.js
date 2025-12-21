@@ -96,6 +96,16 @@ class ApiService {
     });
   }
 
+  async patch(endpoint, data, options = {}) {
+    const isFormData = data instanceof FormData;
+    return this.request(endpoint, {
+      method: "PATCH",
+      body: isFormData ? data : JSON.stringify(data),
+      isFormData,
+      ...options,
+    });
+  }
+
   async delete(endpoint, options = {}) {
     return this.request(endpoint, { method: "DELETE", ...options });
   }
