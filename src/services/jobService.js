@@ -13,8 +13,8 @@ export const jobService = {
     }
   },
 
-  // Lấy danh sách jobs theo company
-  async getJobsByCompany(companyId, status = 'ACTIVE') {
+  // Lấy danh sách active jobs theo company
+  async getActiveJobsByCompany(companyId, status = 'ACTIVE') {
     try {
       const response = await apiService.get("/jobs", {
         params: {
