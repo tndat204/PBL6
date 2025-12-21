@@ -70,29 +70,29 @@ const CVReview = () => {
                     <div className="text-left space-y-8">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
                             <Shield size={16} />
-                            <span>AI-Powered CV Analysis</span>
+                            <span>Phân tích CV bằng AI</span>
                         </div>
 
                         <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                            The CV Checker that <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Beats the ATS</span>
+                            Công cụ kiểm tra CV <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">vượt qua ATS</span>
                         </h1>
 
                         <p className="text-xl text-gray-600 leading-relaxed max-w-xl">
-                            A quick and free AI CV checker that runs key checks to make sure your CV is ready to land interviews. Optimize your resume for Applicant Tracking Systems.
+                            Công cụ kiểm tra CV miễn phí và nhanh chóng, thực hiện các kiểm tra quan trọng để đảm bảo CV của bạn sẵn sàng cho các buổi phỏng vấn. Tối ưu hóa hồ sơ của bạn cho Hệ thống Theo dõi Ứng viên (ATS).
                         </p>
 
                         <div className="flex flex-wrap gap-4">
                             <div className="flex items-center gap-2 text-gray-700">
                                 <CheckCircle className="text-green-500" size={20} />
-                                <span>Instant Analysis</span>
+                                <span>Phân tích tức thì</span>
                             </div>
                             <div className="flex items-center gap-2 text-gray-700">
                                 <CheckCircle className="text-green-500" size={20} />
-                                <span>ATS Compatibility</span>
+                                <span>Tương thích ATS</span>
                             </div>
                             <div className="flex items-center gap-2 text-gray-700">
                                 <CheckCircle className="text-green-500" size={20} />
-                                <span>Actionable Feedback</span>
+                                <span>Phản hồi thực tế</span>
                             </div>
                         </div>
                     </div>
@@ -100,8 +100,8 @@ const CVReview = () => {
                     {/* Right Column: Upload Box */}
                     <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 lg:p-10 backdrop-blur-sm bg-white/90">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-gray-900">Upload your CV</h2>
-                            <p className="text-gray-500 mt-2">Drop your CV here or choose a file. PDF only. Max 2MB file size.</p>
+                            <h2 className="text-2xl font-bold text-gray-900">Tải lên CV của bạn</h2>
+                            <p className="text-gray-500 mt-2">Kéo thả CV vào đây hoặc chọn file. Chỉ hỗ trợ PDF. Kích thước tối đa 2MB.</p>
                         </div>
 
                         <div className="space-y-6">
@@ -128,7 +128,7 @@ const CVReview = () => {
                                                 onClick={() => document.getElementById('cv-upload').click()}
                                                 className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
                                             >
-                                                Change File
+                                                Đổi file
                                             </button>
                                         </div>
                                     </div>
@@ -138,7 +138,7 @@ const CVReview = () => {
                                             <Upload className="text-blue-600" size={32} />
                                         </div>
                                         <span className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all hover:shadow-blue-600/30">
-                                            Upload Your CV
+                                            Tải lên CV
                                         </span>
                                     </label>
                                 )}
@@ -160,11 +160,11 @@ const CVReview = () => {
                                     {loading ? (
                                         <>
                                             <Loader2 className="animate-spin" size={24} />
-                                            Analyzing...
+                                            Đang phân tích...
                                         </>
                                     ) : (
                                         <>
-                                            Check my Score
+                                            Kiểm tra điểm số
                                         </>
                                     )}
                                 </button>
@@ -172,7 +172,7 @@ const CVReview = () => {
 
                             <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                                 <Shield size={12} />
-                                <span>Privacy guaranteed. We don't store your CV.</span>
+                                <span>Bảo mật tuyệt đối. Chúng tôi không lưu trữ CV của bạn.</span>
                             </div>
                         </div>
                     </div>
@@ -228,12 +228,12 @@ const CVReview = () => {
                         <div className="space-y-12">
                             <div>
                                 <h2 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
-                                    Our CV Checker evaluates using a <span className="text-blue-600">dual-system</span>
+                                    Công cụ của chúng tôi đánh giá bằng <span className="text-blue-600">hệ thống kép</span>
                                 </h2>
                                 <p className="text-lg text-gray-600 leading-relaxed">
-                                    Most CVs get screened by applicant tracking systems (ATS) before reaching recruiters.
-                                    ATS searches for keywords and adds the CV to a database. The success of your CV
-                                    depends on its optimization for the job, the template used, and included skills and keywords.
+                                    Hầu hết các CV đều được sàng lọc bởi hệ thống theo dõi ứng viên (ATS) trước khi đến tay nhà tuyển dụng.
+                                    ATS tìm kiếm từ khóa và thêm CV vào cơ sở dữ liệu. Sự thành công của CV phụ thuộc vào việc tối ưu hóa
+                                    cho công việc, mẫu CV được sử dụng, cũng như các kỹ năng và từ khóa được đưa vào.
                                 </p>
                             </div>
 
@@ -243,10 +243,10 @@ const CVReview = () => {
                                         1
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-900 mb-3">Content interpretation</h3>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-3">Phân tích nội dung</h3>
                                         <p className="text-gray-600 leading-relaxed">
-                                            Like an ATS, we analyse and attempt to comprehend your CV. The more we understand,
-                                            the better it aligns with a company's ATS.
+                                            Giống như ATS, chúng tôi phân tích và cố gắng hiểu CV của bạn. Chúng tôi càng hiểu rõ,
+                                            CV của bạn càng phù hợp với ATS của công ty.
                                         </p>
                                     </div>
                                 </div>
@@ -256,10 +256,10 @@ const CVReview = () => {
                                         2
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-900 mb-3">What our checker identifies</h3>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-3">Những gì công cụ chúng tôi nhận diện</h3>
                                         <p className="text-gray-600 leading-relaxed">
-                                            Recruiters look for more than just keywords. We assess spelling, grammar,
-                                            and the quality of content to ensure you make the best impression.
+                                            Nhà tuyển dụng tìm kiếm nhiều hơn là chỉ từ khóa. Chúng tôi đánh giá chính tả, ngữ pháp
+                                            và chất lượng nội dung để đảm bảo bạn tạo được ấn tượng tốt nhất.
                                         </p>
                                     </div>
                                 </div>

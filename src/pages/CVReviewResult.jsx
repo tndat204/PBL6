@@ -63,9 +63,9 @@ const CVReviewResult = () => {
                             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
                         >
                             <ArrowLeft size={20} />
-                            Back to Upload
+                            Quay lại trang tải lên
                         </button>
-                        <h1 className="text-2xl font-bold text-gray-900">Analysis Results</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">Kết quả phân tích</h1>
                     </div>
 
                     <div className="space-y-6 animate-fade-in">
@@ -80,12 +80,12 @@ const CVReviewResult = () => {
                                         </span>
                                     </div>
                                     <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-4 py-1.5 rounded-full font-medium shadow-lg">
-                                        Overall Score
+                                        Điểm tổng quan
                                     </div>
                                 </div>
                                 <div className="flex-1 text-center md:text-left space-y-4">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Overall Assessment</h2>
+                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Đánh giá tổng quan</h2>
                                         <p className="text-gray-600 leading-relaxed text-lg">{result.overall_comment}</p>
                                     </div>
                                 </div>
@@ -96,7 +96,7 @@ const CVReviewResult = () => {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
                             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                                 <AlertCircle className="text-orange-500" size={24} />
-                                Priority Improvements
+                                Cải thiện ưu tiên
                             </h3>
                             <div className="grid gap-4">
                                 {result.priority_improvements.map((item, index) => (
@@ -112,7 +112,7 @@ const CVReviewResult = () => {
 
                         {/* Detailed Criteria */}
                         <div className="space-y-6">
-                            <h3 className="text-xl font-bold text-gray-900 px-2">Detailed Breakdown</h3>
+                            <h3 className="text-xl font-bold text-gray-900 px-2">Chi tiết đánh giá</h3>
                             <div className="grid gap-4">
                                 {Object.entries(result.criteria_reviews).map(([key, data]) => (
                                     <div key={key} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
@@ -129,11 +129,11 @@ const CVReviewResult = () => {
                                                     <div className="flex gap-4 text-sm text-gray-500">
                                                         <span className="flex items-center gap-1">
                                                             <CheckCircle size={14} className="text-green-500" />
-                                                            {data.strengths.length} strengths
+                                                            {data.strengths.length} điểm mạnh
                                                         </span>
                                                         <span className="flex items-center gap-1">
                                                             <AlertCircle size={14} className="text-orange-500" />
-                                                            {data.improvements.length} improvements
+                                                            {data.improvements.length} cần cải thiện
                                                         </span>
                                                     </div>
                                                 </div>
@@ -146,7 +146,7 @@ const CVReviewResult = () => {
                                                 <div className="grid md:grid-cols-2 gap-6">
                                                     <div className="bg-green-50/50 p-5 rounded-xl border border-green-100">
                                                         <h5 className="text-sm font-bold text-green-800 mb-3 flex items-center gap-2 uppercase tracking-wide">
-                                                            <CheckCircle size={16} /> Strengths
+                                                            <CheckCircle size={16} /> Điểm mạnh
                                                         </h5>
                                                         <ul className="space-y-2">
                                                             {data.strengths.map((item, idx) => (
@@ -159,7 +159,7 @@ const CVReviewResult = () => {
                                                     </div>
                                                     <div className="bg-red-50/50 p-5 rounded-xl border border-red-100">
                                                         <h5 className="text-sm font-bold text-red-800 mb-3 flex items-center gap-2 uppercase tracking-wide">
-                                                            <AlertCircle size={16} /> Improvements Needed
+                                                            <AlertCircle size={16} /> Cần cải thiện
                                                         </h5>
                                                         <ul className="space-y-2">
                                                             {data.improvements.map((item, idx) => (
@@ -174,7 +174,7 @@ const CVReviewResult = () => {
 
                                                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                                                     <h5 className="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2 uppercase tracking-wide">
-                                                        <Star size={16} /> AI Suggestions
+                                                        <Star size={16} /> Gợi ý từ AI
                                                     </h5>
                                                     <ul className="space-y-2">
                                                         {data.suggestions.map((item, idx) => (
@@ -196,7 +196,7 @@ const CVReviewResult = () => {
                         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-8 text-white">
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
                                 <Star className="text-yellow-400" size={24} />
-                                Final Recommendations
+                                Khuyến nghị cuối cùng
                             </h3>
                             <ul className="space-y-4">
                                 {result.final_recommendations.map((item, index) => (
