@@ -1,5 +1,7 @@
-import React, { useMemo } from 'react';
-import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from '@react-google-maps/api';
+import React, { useMemo, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const containerStyle = {
     width: '100%',
@@ -27,23 +29,43 @@ const CITY_COORDINATES = {
     'Can Tho': { lat: 10.0452, lng: 105.7469 },
     'Hải Phòng': { lat: 20.8449, lng: 106.6881 },
     'Hai Phong': { lat: 20.8449, lng: 106.6881 },
-    // Add more as needed or use a geocoding service in the future
+    // Add more as needed
+};
+
+// Create custom icon with job count
+const createCustomIcon = (jobCount) => {
+    return L.divIcon({
+        className: 'custom-marker',
+        html: `
+            <div style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+                border: 3px solid white;
+            ">
+                ${jobCount}
+            </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+        popupAnchor: [0, -20]
+    });
 };
 
 const JobLocationMap = ({ data }) => {
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
-    });
-
-    const [selectedLocation, setSelectedLocation] = React.useState(null);
-
     const markers = useMemo(() => {
         if (!data || !Array.isArray(data)) return [];
 
         return data.map(item => {
-            // Normalize location string to match keys if possible, or simple lookup
-            // This is a basic implementation. Ideally, backend should return lat/lng or we use Geocoding API.
+            // Normalize location string to match keys if possible
             const coords = CITY_COORDINATES[item.location] ||
                 Object.entries(CITY_COORDINATES).find(([key]) => item.location.includes(key))?.[1];
 
@@ -57,73 +79,51 @@ const JobLocationMap = ({ data }) => {
         }).filter(Boolean);
     }, [data]);
 
-    const onLoad = React.useCallback(function callback(map) {
-        // const bounds = new window.google.maps.LatLngBounds(center);
-        // map.fitBounds(bounds);
-        // setMap(map)
-    }, [])
-
-    const onUnmount = React.useCallback(function callback(map) {
-        // setMap(null)
-    }, [])
-
-    if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+    if (!data || data.length === 0) {
         return (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center text-red-600">
-                <p className="font-semibold">Google Maps API Key is missing.</p>
-                <p className="text-sm mt-1">Please add VITE_GOOGLE_MAPS_API_KEY to your .env file.</p>
-            </div>
-        );
-    }
-
-    if (!isLoaded) {
-        return (
-            <div className="w-full h-[500px] bg-gray-100 rounded-xl flex items-center justify-center animate-pulse">
-                <p className="text-gray-500">Loading Map...</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center text-blue-600">
+                <p className="font-semibold">Chưa có dữ liệu địa điểm</p>
+                <p className="text-sm mt-1">Dữ liệu sẽ hiển thị khi có việc làm được đăng tuyển.</p>
             </div>
         );
     }
 
     return (
-        <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={center}
-            zoom={6}
-            onLoad={onLoad}
-            onUnmount={onUnmount}
-            options={{
-                streetViewControl: false,
-                mapTypeControl: false,
-            }}
-        >
-            {markers.map((marker, index) => (
-                <Marker
-                    key={index}
-                    position={{ lat: marker.lat, lng: marker.lng }}
-                    onClick={() => setSelectedLocation(marker)}
-                    label={{
-                        text: marker.jobCount.toString(),
-                        color: "white",
-                        fontWeight: "bold",
-                        fontSize: "14px"
-                    }}
+        <div style={containerStyle} className="rounded-xl overflow-hidden shadow-sm">
+            <MapContainer
+                center={[center.lat, center.lng]}
+                zoom={6}
+                style={{ width: '100%', height: '100%' }}
+                scrollWheelZoom={true}
+                zoomControl={true}
+            >
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-            ))}
 
-            {selectedLocation && (
-                <InfoWindow
-                    position={{ lat: selectedLocation.lat, lng: selectedLocation.lng }}
-                    onCloseClick={() => setSelectedLocation(null)}
-                >
-                    <div className="p-2">
-                        <h3 className="font-bold text-gray-900">{selectedLocation.location}</h3>
-                        <p className="text-sm text-gray-600">
-                            <span className="font-semibold text-blue-600">{selectedLocation.jobCount}</span> việc làm đang tuyển
-                        </p>
-                    </div>
-                </InfoWindow>
-            )}
-        </GoogleMap>
+                {markers.map((marker, index) => (
+                    <Marker
+                        key={index}
+                        position={[marker.lat, marker.lng]}
+                        icon={createCustomIcon(marker.jobCount)}
+                    >
+                        <Popup>
+                            <div className="p-2">
+                                <h3 className="font-bold text-gray-900 text-base mb-1">
+                                    {marker.location}
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    <span className="font-semibold text-emerald-600">
+                                        {marker.jobCount}
+                                    </span> việc làm đang tuyển
+                                </p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+            </MapContainer>
+        </div>
     );
 };
 

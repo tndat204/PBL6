@@ -1,4 +1,4 @@
-import { authService,companyService } from '../services';
+import { authService, companyService } from '../services';
 
 
 export async function handleLoginSuccess(token) {
@@ -11,16 +11,16 @@ export async function handleLoginSuccess(token) {
     localStorage.setItem("user", JSON.stringify(userData));
     // 2. Check Role & Get Company Info
     const userRole = userData.roles?.[0]?.name;
-    console.log("userRole ở trong handleLoginSuccess",userRole);
-    if (userRole === 'RECRUITER') { 
-        try {
-            const companyData = await companyService.getMyCompany();
-            if (companyData) {
-                localStorage.setItem("company", JSON.stringify(companyData));
-            }
-        } catch (companyError) {
-            console.warn("Could not fetch company details", companyError);
+    console.log("userRole ở trong handleLoginSuccess", userRole);
+    if (userRole === 'RECRUITER') {
+      try {
+        const companyData = await companyService.getMyCompany();
+        if (companyData) {
+          localStorage.setItem("company", JSON.stringify(companyData));
         }
+      } catch (companyError) {
+        console.warn("Could not fetch company details", companyError);
+      }
     }
 
     // Điều hướng về trang chủ

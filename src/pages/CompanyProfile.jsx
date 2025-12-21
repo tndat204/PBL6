@@ -40,9 +40,13 @@ function CompanyProfile() {
       // Fetch jobs
       const jobsData = await jobService.getActiveJobsByCompany(id);
       if (jobsData && jobsData.content) {
-        setJobs(jobsData.content);
+        // Filter to ensure only jobs from this company are shown
+        const filteredJobs = jobsData.content.filter(job => job.companyId === id);
+        setJobs(filteredJobs);
       } else if (Array.isArray(jobsData)) {
-        setJobs(jobsData);
+        // Filter to ensure only jobs from this company are shown
+        const filteredJobs = jobsData.filter(job => job.companyId === id);
+        setJobs(filteredJobs);
       }
 
       // Fetch reviews

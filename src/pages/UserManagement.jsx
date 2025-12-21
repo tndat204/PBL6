@@ -539,9 +539,17 @@ const UserRow = ({ user, onView, onBan, onDelete }) => {
         <tr className="hover:bg-gray-50 transition-colors">
             <td className="px-6 py-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
-                        {user.avatar}
-                    </div>
+                    {user.avatarUrl ? (
+                        <img
+                            src={user.avatarUrl}
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
+                            {user.avatar}
+                        </div>
+                    )}
                     <div>
                         <p className="font-medium text-gray-800">{user.name}</p>
                         <p className="text-xs text-gray-500">{user.location}</p>
@@ -604,9 +612,17 @@ const UserDetailModal = ({ user, onClose, onEdit }) => (
 
                 {/* Profile Header */}
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-3xl shadow-xl border-4 border-white mb-4">
-                        {user.avatar}
-                    </div>
+                    {user.avatarUrl ? (
+                        <img
+                            src={user.avatarUrl}
+                            alt={user.name}
+                            className="w-24 h-24 rounded-full object-cover shadow-xl border-4 border-white mb-4"
+                        />
+                    ) : (
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-3xl shadow-xl border-4 border-white mb-4">
+                            {user.avatar}
+                        </div>
+                    )}
                     <h4 className="text-2xl font-bold text-gray-900 text-center">{user.name}</h4>
                     <p className="text-gray-500 text-sm mb-4">{user.email}</p>
 

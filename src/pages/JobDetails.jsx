@@ -14,7 +14,7 @@ import { jobService, companyService, skillService, applicationService } from "..
 import JobCard from "../components/JobCard";
 import ApplyJobModal from "../components/ApplyJobModal";
 import { formatSalaryRange } from "../utils/formatUtils";
-import { FileText, Eye, Download } from "lucide-react";
+import { FileText, Eye, Download, Building2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 const JOB_TYPE_LABELS = {
@@ -198,7 +198,7 @@ function JobDetails() {
 
   const companyName = company?.name || "Đang cập nhật";
   const companyLocation = company?.location || job.location || "Đang cập nhật";
-  const companyLogo = company?.logoUrl || "/images/cmc.png";
+  const companyLogo = company?.logoUrl || "/images/default-company-logo.png";
   const companyDescription =
     company?.description || "Thông tin công ty đang được cập nhật.";
 
@@ -293,11 +293,17 @@ function JobDetails() {
           <div className="bg-white rounded-lg shadow p-5">
             <h2 className="text-xl font-semibold mb-4">Giới thiệu công ty</h2>
             <div className="flex items-center mb-3">
-              <img
-                src={companyLogo}
-                alt="Logo công ty"
-                className="w-12 h-12 border rounded-full object-cover mr-3"
-              />
+              {company?.logoUrl ? (
+                <img
+                  src={company.logoUrl}
+                  alt="Logo công ty"
+                  className="w-12 h-12 border rounded-full object-cover mr-3"
+                />
+              ) : (
+                <div className="w-12 h-12 border rounded-full bg-emerald-50 flex items-center justify-center mr-3">
+                  <Building2 className="w-6 h-6 text-emerald-600" />
+                </div>
+              )}
               <div>
                 <p className="font-semibold">{companyName}</p>
                 <p className="text-sm text-sea-400">{companyLocation}</p>
@@ -333,22 +339,20 @@ function JobDetails() {
                 {/* <FileText className="text-gray-700" size={20} /> */}
                 Tài liệu mô tả công việc
               </h2>
-              <div className="group flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all gap-4">
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-gray-600 shrink-0">
-                    <FileText size={28} />
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="font-medium text-gray-900 truncate" title={job.jdUrl.split('/').pop()}>
-                      {job.jdUrl.split('/').pop() || 'job-description.pdf'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5">PDF Document</p>
-                  </div>
+              <div className="group flex items-start gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all">
+                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-gray-600 shrink-0">
+                  <FileText size={28} />
                 </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate" title={job.jdUrl.split('/').pop()}>
+                    {job.jdUrl.split('/').pop() || 'job-description.pdf'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">PDF Document</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => window.open(job.jdUrl, '_blank')}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm w-full sm:w-auto"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm whitespace-nowrap"
                   >
                     <Eye size={16} />
                     Xem trước
@@ -357,7 +361,7 @@ function JobDetails() {
                     href={job.jdUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm w-full sm:w-auto"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm whitespace-nowrap"
                   >
                     <Download size={16} />
                     Tải xuống
@@ -388,11 +392,10 @@ function JobDetails() {
           <button
             onClick={() => setIsApplyOpen(true)}
             disabled={isExpired || !(user && user.roles && user.roles.some(role => role.name === 'USER'))}
-            className={`mt-8 px-6 py-2 rounded-sm transition ${
-              isExpired || !(user && user.roles && user.roles.some(role => role.name === 'USER'))
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-sea-400 text-white hover:bg-sea-300'
-            }`}
+            className={`mt-8 px-6 py-2 rounded-sm transition ${isExpired || !(user && user.roles && user.roles.some(role => role.name === 'USER'))
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-sea-400 text-white hover:bg-sea-300'
+              }`}
           >
             {isExpired ? 'Hết hạn nộp hồ sơ' : 'Ứng tuyển'}
           </button>
