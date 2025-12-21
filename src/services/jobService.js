@@ -1,5 +1,5 @@
 import apiService from "./api";
-import { skillService } from "./skillService";
+
 
 export const jobService = {
   // Lấy danh sách jobs
