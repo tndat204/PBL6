@@ -52,7 +52,7 @@ function Navbar() {
       case USER_ROLES.USER:
         return [
           ...commonItems,
-          // { href: "/my-applications", label: "Đơn ứng tuyển" },
+          { href: "/my-applications", label: "Đã apply" },
         ];
 
       case USER_ROLES.RECRUITER:
@@ -192,8 +192,8 @@ function Navbar() {
                       key={index}
                       href={item.href}
                       className={`block px-4 py-2 text-sm transition-colors ${item.highlight
-                          ? 'bg-blue-50 text-blue-600 font-medium hover:bg-blue-100'
-                          : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-blue-50 text-blue-600 font-medium hover:bg-blue-100'
+                        : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       onClick={() => setIsUserMenuOpen(false)}
                     >

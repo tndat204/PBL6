@@ -45,6 +45,7 @@ import ReportManagement from "../pages/ReportManagement";
 import CVReview from "../pages/CVReview";
 import CVReviewResult from "../pages/CVReviewResult";
 import AdminLayout from "../layouts/AdminLayout";
+import MyApplications from "../pages/MyApplications";
 
 // Recruiter pages
 import RecruiterJobManagement from "../pages/RecruiterJobManagement";
@@ -89,6 +90,11 @@ export default function AppRoutes() {
         <Route path="/apply-job/:id" element={
           <ProtectedRoute allowedRoles={[USER_ROLES.USER]}>
             <ApplyJob />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-applications" element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.USER]}>
+            <MyApplications />
           </ProtectedRoute>
         } />
 
