@@ -47,6 +47,7 @@ function CompanyProfile() {
 
       // Fetch reviews
       const reviewsData = await reviewService.getCompanyReviews(id);
+      console.log('company review:', reviewsData);
       if (reviewsData && reviewsData.content) {
         setReviews(reviewsData.content);
 

@@ -69,5 +69,38 @@ export const reviewService = {
             console.error(`Lỗi khi toggle like review ${reviewId}:`, error);
             throw error;
         }
+    },
+
+    // Lấy danh sách lý do báo cáo
+    async getReportReasons() {
+        try {
+            const response = await apiService.get("/reviews/report-reasons");
+            return response.result || response;
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách lý do báo cáo:", error);
+            throw error;
+        }
+    },
+
+    // Báo cáo review
+    async reportReview(reviewId, reportData) {
+        try {
+            const response = await apiService.post(`/reviews/reports/${reviewId}`, reportData);
+            return response.result || response;
+        } catch (error) {
+            console.error(`Lỗi khi báo cáo review ${reviewId}:`, error);
+            throw error;
+        }
+    },
+
+    // Xử lý báo cáo (thay đổi trạng thái)
+    async processReport(reportId, status) {
+        try {
+            const response = await apiService.put(`/reviews/reports/${reportId}/process`, { status });
+            return response.result || response;
+        } catch (error) {
+            console.error(`Lỗi khi xử lý báo cáo ${reportId}:`, error);
+            throw error;
+        }
     }
 };

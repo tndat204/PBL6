@@ -8,9 +8,11 @@ const JobCard = ({ job }) => {
   const [companyName, setCompanyName] = useState("");
   const [companyLogo, setCompanyLogo] = useState("");
   const [skillNames, setSkillNames] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
+      setIsLoading(true);
       try {
         // Fetch company details
         if (job.companyId) {
@@ -40,11 +42,48 @@ const JobCard = ({ job }) => {
         console.error("Lỗi khi tải thông tin job:", error);
         setCompanyName("Lỗi tải dữ liệu");
         setSkillNames([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchJobDetails();
   }, [job]);
+
+  // Show skeleton loader while fetching data
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-5 h-full">
+        <div className="animate-pulse">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex gap-4 flex-1">
+              <div className="w-14 h-14 bg-gray-200 rounded-xl"></div>
+              <div className="flex-1">
+                <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <div className="h-7 bg-gray-200 rounded w-24"></div>
+              <div className="h-7 bg-gray-200 rounded w-32"></div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+              <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+              <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+            </div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="h-10 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="group bg-white rounded-xl border border-gray-200 p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-full relative">

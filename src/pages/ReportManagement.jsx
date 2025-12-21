@@ -11,6 +11,8 @@ const ReportManagement = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [statusFilter, setStatusFilter] = useState('');
     const [toast, setToast] = useState(null);
+    const [confirmDialog, setConfirmDialog] = useState(null);
+    const [processingReportId, setProcessingReportId] = useState(null);
 
     useEffect(() => {
         fetchReports();
@@ -37,6 +39,34 @@ const ReportManagement = () => {
     const showToast = (message, type) => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 3000);
+    };
+
+    const handleProcessReport = async (reportId, newStatus) => {
+        setConfirmDialog(null);
+        setProcessingReportId(reportId);
+        try {
+            await reviewService.processReport(reportId, newStatus);
+            showToast(`Đã ${newStatus === 'APPROVED' ? 'chấp nhận' : newStatus === 'REJECTED' ? 'từ chối' : 'đặt lại'} báo cáo thành công`, 'success');
+            await fetchReports();
+        } catch (err) {
+            console.error('Error processing report:', err);
+            showToast('Không thể xử lý báo cáo. Vui lòng thử lại.', 'error');
+        } finally {
+            setProcessingReportId(null);
+        }
+    };
+
+    const openConfirmDialog = (reportId, newStatus) => {
+        const messages = {
+            APPROVED: 'Bạn có chắc chắn muốn chấp nhận báo cáo này? Đánh giá liên quan sẽ bị ẩn/xóa.',
+            REJECTED: 'Bạn có chắc chắn muốn từ chối báo cáo này? Đánh giá sẽ vẫn hiển thị.',
+            PENDING: 'Bạn có chắc chắn muốn đặt lại trạng thái báo cáo về "Chờ xử lý"?'
+        };
+        setConfirmDialog({
+            reportId,
+            newStatus,
+            message: messages[newStatus]
+        });
     };
 
     const getStatusBadge = (status) => {
@@ -159,9 +189,40 @@ const ReportManagement = () => {
                                             {getStatusBadge(report.status)}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-                                                <Eye size={18} />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                {report.status === 'PENDING' ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => openConfirmDialog(report.id, 'APPROVED')}
+                                                            disabled={processingReportId === report.id}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            title="Chấp nhận báo cáo"
+                                                        >
+                                                            <CheckCircle size={16} />
+                                                            <span>Duyệt</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openConfirmDialog(report.id, 'REJECTED')}
+                                                            disabled={processingReportId === report.id}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            title="Từ chối báo cáo"
+                                                        >
+                                                            <XCircle size={16} />
+                                                            <span>Từ chối</span>
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => openConfirmDialog(report.id, 'PENDING')}
+                                                        disabled={processingReportId === report.id}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        title="Đặt lại về chờ xử lý"
+                                                    >
+                                                        <Clock size={16} />
+                                                        <span>Đặt lại</span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -193,6 +254,37 @@ const ReportManagement = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Dialog */}
+            {confirmDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-start gap-4 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle size={24} className="text-yellow-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">Xác nhận hành động</h3>
+                                <p className="text-gray-600 text-sm">{confirmDialog.message}</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setConfirmDialog(null)}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={() => handleProcessReport(confirmDialog.reportId, confirmDialog.newStatus)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                            >
+                                Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

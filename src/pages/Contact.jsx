@@ -233,15 +233,7 @@ export default function Contact() {
                     </div>
                 </div>
 
-                {/* Map Section */}
-                <div className="mt-16">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">Vị Trí Của Chúng Tôi</h2>
-                    <div className="bg-slate-200 rounded-xl overflow-hidden h-96 flex items-center justify-center">
-                        <p className="text-slate-600">
-                            [Google Maps sẽ được tích hợp tại đây]
-                        </p>
-                    </div>
-                </div>
+
             </div>
         </MainLayout>
     );
