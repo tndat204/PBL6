@@ -296,8 +296,6 @@ const JobManagement = () => {
                                             <th className="px-6 py-4">Công việc</th>
                                             <th className="px-6 py-4">Công ty</th>
                                             <th className="px-6 py-4">Mức lương</th>
-                                            <th className="px-6 py-4">Hạn nộp</th>
-                                            <th className="px-6 py-4">Trạng thái</th>
                                             <th className="px-6 py-4">Hành động</th>
                                         </tr>
                                     </thead>
@@ -455,18 +453,6 @@ const JobRow = ({ job, companyName, categoryName, onView, onEdit, onDelete, form
                 <DollarSign size={14} className="text-green-500" />
                 <span className="text-xs">{formatSalary(job.minSalary, job.maxSalary)}</span>
             </div>
-        </td>
-        <td className="px-6 py-4 text-gray-600">
-            <div className="flex items-center gap-1">
-                <Calendar size={14} className="text-orange-500" />
-                <span className="text-xs">{formatDate(job.deadline)}</span>
-            </div>
-        </td>
-        <td className="px-6 py-4">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${job.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                }`}>
-                {job.active ? 'Hoạt động' : 'Không hoạt động'}
-            </span>
         </td>
         <td className="px-6 py-4">
             <div className="flex gap-2">

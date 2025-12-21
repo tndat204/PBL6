@@ -79,7 +79,7 @@ const CVReviewResult = () => {
                                             {result.overall_score}
                                         </span>
                                     </div>
-                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-4 py-1.5 rounded-full font-medium shadow-lg">
+                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-4 py-1.5 rounded-full font-medium shadow-lg whitespace-nowrap">
                                         Điểm tổng quan
                                     </div>
                                 </div>

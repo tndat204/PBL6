@@ -104,4 +104,26 @@ export const companyService = {
       throw error;
     }
   },
+
+  // Lấy danh sách users thuộc company
+  async getCompanyUsers(companyId) {
+    try {
+      const response = await apiService.get(`/companies/${companyId}/users`);
+      return response.result || response;
+    } catch (error) {
+      console.error(`Lỗi khi lấy danh sách users của company ${companyId}:`, error);
+      throw error;
+    }
+  },
+
+  // Toggle trạng thái user trong company
+  async toggleUserStatus(companyId, userId) {
+    try {
+      const response = await apiService.patch(`/companies/${companyId}/users/${userId}/status`);
+      return response.result || response;
+    } catch (error) {
+      console.error(`Lỗi khi toggle status user ${userId} trong company ${companyId}:`, error);
+      throw error;
+    }
+  },
 };

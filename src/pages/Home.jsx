@@ -7,37 +7,132 @@ import { jobService } from "../services";
 
 function Home() {
   const [jobs, setJobs] = useState([]);
+  const [filteredJobs, setFilteredJobs] = useState([]);
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    keyword: '',
+    location: '',
+    jobType: '',
+    company: '',
+    category: '',
+    workTypes: [],
+    salaryRange: ''
+  });
 
   useEffect(() => {
     async function fetchJobs() {
       try {
         const data = await jobService.getAllJobs();
-        setJobs(data.result || data); // tuỳ theo cấu trúc trả về của API
+        const jobsData = data.result || data;
+        setJobs(jobsData);
+        setFilteredJobs(jobsData); // Initially show all jobs
       } catch (err) {
         console.error("Lỗi khi lấy danh sách job:", err);
-        setJobs([]); // Đặt mảng rỗng nếu có lỗi
+        setJobs([]);
+        setFilteredJobs([]);
       }
     }
     fetchJobs();
   }, []);
-  console.log(jobs);
+
+  // Filter jobs whenever filters change
+  useEffect(() => {
+    let filtered = [...jobs];
+
+    // Filter by keyword (title or description)
+    if (filters.keyword) {
+      filtered = filtered.filter(job =>
+        job.title?.toLowerCase().includes(filters.keyword.toLowerCase()) ||
+        job.description?.toLowerCase().includes(filters.keyword.toLowerCase())
+      );
+    }
+
+    // Filter by location
+    if (filters.location) {
+      filtered = filtered.filter(job =>
+        job.location?.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    // Filter by job type
+    if (filters.jobType) {
+      filtered = filtered.filter(job =>
+        job.jobType?.toLowerCase() === filters.jobType.toLowerCase()
+      );
+    }
+
+    // Filter by company
+    if (filters.company) {
+      filtered = filtered.filter(job =>
+        job.companyName?.toLowerCase().includes(filters.company.toLowerCase())
+      );
+    }
+
+    // Filter by category
+    if (filters.category) {
+      filtered = filtered.filter(job =>
+        job.category?.toLowerCase().includes(filters.category.toLowerCase())
+      );
+    }
+
+    // Filter by work types (checkboxes)
+    if (filters.workTypes.length > 0) {
+      filtered = filtered.filter(job =>
+        filters.workTypes.some(type =>
+          job.jobType?.toLowerCase().includes(type.toLowerCase())
+        )
+      );
+    }
+
+    // Filter by salary range
+    if (filters.salaryRange) {
+      filtered = filtered.filter(job => {
+        const salary = parseInt(job.salary) || 0;
+        switch (filters.salaryRange) {
+          case '10-15':
+            return salary >= 10000000 && salary <= 15000000;
+          case '15-25':
+            return salary >= 15000000 && salary <= 25000000;
+          case '25+':
+            return salary > 25000000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredJobs(filtered);
+  }, [filters, jobs]);
+
+  const handleSearch = (searchFilters) => {
+    setFilters(prev => ({ ...prev, ...searchFilters }));
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
   return (
     <MainLayout showBanner={true}>
       {/* SearchBar floating */}
       <div className="relative -mt-24 z-20">
-        <SearchBar />
+        <SearchBar onSearch={handleSearch} />
       </div>
 
       {/* Main content: 12 column grid */}
       <div className="grid grid-cols-12 gap-6 mt-10">
         {/* Left Filter */}
         <aside className="col-span-12 lg:col-span-3 lg:sticky lg:top-24 h-max">
-          <JobFilters />
+          <JobFilters onFilterChange={handleFilterChange} />
         </aside>
 
         {/* Center Job Listings */}
         <main className="col-span-12 lg:col-span-6">
-          <JobList jobs={jobs} columns={1} />
+          <div className="mb-4 text-gray-600">
+            Tìm thấy <span className="font-semibold text-gray-900">{filteredJobs.length}</span> công việc
+          </div>
+          <JobList jobs={filteredJobs} columns={1} />
         </main>
 
         {/* Right Advertisement Section */}
@@ -125,93 +220,3 @@ function Home() {
 }
 
 export default Home;
-// const jobs = [
-//   {
-//     id: 1,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-//   {
-//     id: 2,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-//   {
-//     id: 3,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-//   {
-//     id: 4,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-//   {
-//     id: 5,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-//   {
-//     id: 6,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-//   {
-//     id: 7,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-//   {
-//     id: 8,
-//     title: "UI - UX Designer",
-//     company: "CMC Global",
-//     type: "Fulltime",
-//     hourly: "2000",
-//     location: "",
-//     tags: ["HTML", "CSS", "Bootstrap"],
-//     daysAgo: "",
-//     description: "Looking for an Web Designer for our company.",
-//   },
-// ];

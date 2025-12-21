@@ -20,7 +20,9 @@ import {
     MessageSquare,
     Star,
     Edit,
-    Upload
+    Upload,
+    Users,
+    AlertTriangle
 } from 'lucide-react';
 import { companyService } from '../services/companyService';
 import { reviewService } from '../services/reviewService';
@@ -61,6 +63,10 @@ const CompanyManagement = () => {
     });
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedCompanyForEdit, setSelectedCompanyForEdit] = useState(null);
+    const [showUsersModal, setShowUsersModal] = useState(false);
+    const [selectedCompanyForUsers, setSelectedCompanyForUsers] = useState(null);
+    const [companyUsers, setCompanyUsers] = useState([]);
+    const [usersLoading, setUsersLoading] = useState(false);
 
     useEffect(() => {
         fetchCompanies();
@@ -304,6 +310,21 @@ const CompanyManagement = () => {
         }
     };
 
+    const handleViewUsers = async (company) => {
+        setSelectedCompanyForUsers(company);
+        setShowUsersModal(true);
+        setUsersLoading(true);
+        try {
+            const data = await companyService.getCompanyUsers(company.id);
+            setCompanyUsers(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Error fetching company users:', error);
+            showToast('Không thể tải danh sách người dùng', 'error');
+        } finally {
+            setUsersLoading(false);
+        }
+    };
+
     return (
         <div className="h-full flex flex-col">
             <div className="flex-1 overflow-y-auto">
@@ -396,6 +417,7 @@ const CompanyManagement = () => {
                                                 company={company}
                                                 onView={handleViewCompany}
                                                 onViewReviews={handleViewReviews}
+                                                onViewUsers={handleViewUsers}
                                                 onToggleStatus={handleToggleStatus}
                                                 onDelete={handleDeleteCompany}
                                                 onEdit={handleEditCompany}
@@ -493,6 +515,20 @@ const CompanyManagement = () => {
                     />
                 )}
 
+                {/* Users Modal */}
+                {showUsersModal && selectedCompanyForUsers && (
+                    <CompanyUsersModal
+                        company={selectedCompanyForUsers}
+                        users={companyUsers}
+                        loading={usersLoading}
+                        onClose={() => {
+                            setShowUsersModal(false);
+                            setSelectedCompanyForUsers(null);
+                            setCompanyUsers([]);
+                        }}
+                    />
+                )}
+
                 {/* Confirm Modal */}
                 <ConfirmModal
                     isOpen={confirmModal.isOpen}
@@ -531,7 +567,7 @@ const StatCard = ({ title, value, color, icon }) => (
     </div>
 );
 
-const CompanyRow = ({ company, onView, onToggleStatus, onDelete, onViewReviews, onEdit }) => (
+const CompanyRow = ({ company, onView, onToggleStatus, onDelete, onViewReviews, onViewUsers, onEdit }) => (
     <tr className="hover:bg-gray-50 transition-colors">
         <td className="px-6 py-4">
             <div className="flex items-center gap-3">
@@ -591,6 +627,13 @@ const CompanyRow = ({ company, onView, onToggleStatus, onDelete, onViewReviews, 
                     title="Xem đánh giá"
                 >
                     <MessageSquare size={18} />
+                </button>
+                <button
+                    onClick={() => onViewUsers(company)}
+                    className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
+                    title="Xem người dùng"
+                >
+                    <Users size={18} />
                 </button>
                 <button
                     onClick={() => onToggleStatus(company)}
@@ -1366,6 +1409,234 @@ const EditCompanyModal = ({ company, onClose, onSubmit }) => {
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+};
+
+const CompanyUsersModal = ({ company, users, loading, onClose }) => {
+    const [confirmDialog, setConfirmDialog] = useState(null);
+    const [processingUserId, setProcessingUserId] = useState(null);
+    const [localUsers, setLocalUsers] = useState(users);
+    const [toast, setToast] = useState(null);
+
+    useEffect(() => {
+        setLocalUsers(users);
+    }, [users]);
+
+    const showToast = (message, type = 'info') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    const handleToggleStatus = (user) => {
+        const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+        setConfirmDialog({
+            userId: user.userId,
+            userName: user.userInfo?.fullName || 'N/A',
+            currentStatus: user.status,
+            newStatus: newStatus,
+            message: user.status === 'ACTIVE'
+                ? `Bạn có chắc chắn muốn vô hiệu hóa người dùng "${user.userInfo?.fullName}"?`
+                : `Bạn có chắc chắn muốn kích hoạt người dùng "${user.userInfo?.fullName}"?`
+        });
+    };
+
+    const handleConfirmToggle = async () => {
+        if (!confirmDialog) return;
+
+        setProcessingUserId(confirmDialog.userId);
+        setConfirmDialog(null);
+
+        try {
+            await companyService.toggleUserStatus(company.id, confirmDialog.userId);
+
+            // Update local state
+            setLocalUsers(prevUsers =>
+                prevUsers.map(user =>
+                    user.userId === confirmDialog.userId
+                        ? { ...user, status: confirmDialog.newStatus }
+                        : user
+                )
+            );
+
+            showToast(
+                `Đã ${confirmDialog.newStatus === 'ACTIVE' ? 'kích hoạt' : 'vô hiệu hóa'} người dùng thành công`,
+                'success'
+            );
+        } catch (error) {
+            console.error('Error toggling user status:', error);
+            showToast('Không thể thay đổi trạng thái người dùng. Vui lòng thử lại.', 'error');
+        } finally {
+            setProcessingUserId(null);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden transform transition-all animate-scale-in relative flex flex-col">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-8 py-6 relative">
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-all"
+                    >
+                        <X size={20} />
+                    </button>
+                    <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <Users size={28} />
+                        Người dùng của {company.name}
+                    </h3>
+                    <p className="text-cyan-100 text-sm mt-1">Danh sách người dùng thuộc công ty</p>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-8">
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <Loader2 className="animate-spin text-cyan-600 mb-4" size={48} />
+                            <p className="text-gray-600">Đang tải danh sách người dùng...</p>
+                        </div>
+                    ) : localUsers.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <Users className="text-gray-400" size={32} />
+                            </div>
+                            <p className="text-gray-600 font-medium">Không có người dùng nào</p>
+                            <p className="text-gray-400 text-sm mt-1">Công ty này chưa có người dùng nào</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
+                                    <tr>
+                                        <th className="px-6 py-4">Người dùng</th>
+                                        <th className="px-6 py-4">Liên hệ</th>
+                                        <th className="px-6 py-4">Vai trò</th>
+                                        <th className="px-6 py-4">Trạng thái</th>
+                                        <th className="px-6 py-4">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                                    {localUsers.map((user) => (
+                                        <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center overflow-hidden shrink-0">
+                                                        {user.userInfo?.avatarUrl ? (
+                                                            <img
+                                                                src={user.userInfo.avatarUrl}
+                                                                alt={user.userInfo.fullName}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-white font-bold text-sm">
+                                                                {user.userInfo?.fullName?.charAt(0).toUpperCase() || 'U'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-800">
+                                                            {user.userInfo?.fullName || 'N/A'}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {user.userInfo?.address || 'Chưa cập nhật địa chỉ'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600">
+                                                <div className="flex flex-col text-xs">
+                                                    <span className="flex items-center gap-1">
+                                                        <Mail size={12} /> {user.userInfo?.email || 'N/A'}
+                                                    </span>
+                                                    <span className="flex items-center gap-1 mt-1">
+                                                        <Phone size={12} /> {user.userInfo?.phone || 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                                    {user.role || 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${user.status === 'ACTIVE'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                    {user.status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => handleToggleStatus(user)}
+                                                    disabled={processingUserId === user.userId}
+                                                    className={`p-2 ${user.status === 'ACTIVE'
+                                                        ? 'text-orange-600 hover:bg-orange-50'
+                                                        : 'text-green-600 hover:bg-green-50'
+                                                        } rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                    title={user.status === 'ACTIVE' ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                                                >
+                                                    {user.status === 'ACTIVE' ? <Ban size={18} /> : <CheckCircle size={18} />}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                {!loading && localUsers.length > 0 && (
+                    <div className="px-8 py-4 border-t border-gray-100 bg-gray-50">
+                        <p className="text-sm text-gray-600">
+                            Tổng số: <span className="font-semibold text-gray-800">{localUsers.length}</span> người dùng
+                        </p>
+                    </div>
+                )}
+
+                {/* Confirmation Dialog */}
+                {confirmDialog && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                        <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 m-4">
+                            <div className="flex items-start gap-4 mb-4">
+                                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                                    <AlertTriangle size={24} className="text-yellow-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Xác nhận thay đổi</h3>
+                                    <p className="text-gray-600 text-sm">{confirmDialog.message}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => setConfirmDialog(null)}
+                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={handleConfirmToggle}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                                >
+                                    Xác nhận
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Toast */}
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
             </div>
         </div>
     );

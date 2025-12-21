@@ -173,7 +173,8 @@ class UserService {
             phone: backendUser.phone || 'N/A',
             address: backendUser.address || 'N/A',
             location: backendUser.address || 'Chưa cập nhật',
-            avatar: backendUser.avatarUrl || avatarLetter,
+            avatar: avatarLetter, // Always store the initial letter
+            avatarUrl: backendUser.avatarUrl || null, // Store the actual avatar URL separately
             role: backendUser.roles?.[0]?.name || 'USER',
             status: backendUser.isEnabled ? 'Active' : 'Banned',
             // Additional fields that might be useful

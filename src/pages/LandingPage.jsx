@@ -32,14 +32,13 @@ export default function LandingPage() {
     };
 
     const popularSearches = [
-        "Marketing Kỹ Thuật Số",
-        "Thiết Kế UI/UX",
-        "Marketing Liên Kết",
-        "Thiết Kế Trải Nghiệm",
-        "Y Tế",
-        "Nghệ Thuật",
-        "Kinh Doanh & Tài Chính",
-        "Công Nghệ Thông Tin",
+        "Java developer",
+        "Python developer",
+        "Backend developer",
+        "Frontend developer",
+        "Fullstack developer",
+        "Game developer",
+        "Mobile developer",
     ];
 
     const trustedCompanies = [
@@ -404,16 +403,61 @@ export default function LandingPage() {
                         Kết nối với các chuyên gia ngành và nhận hướng dẫn nghề nghiệp cá nhân hóa
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-                        {[1, 2, 3, 4].map((advisor) => (
-                            <div key={advisor} className="bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
-                                <div className="w-20 h-20 bg-gradient-to-br from-slate-300 to-slate-400 rounded-full mx-auto mb-4"></div>
-                                <h4 className="font-semibold mb-1">Nguyễn Văn A</h4>
-                                <p className="text-sm text-slate-500 mb-2">Tư Vấn Việc Làm</p>
-                                <div className="flex items-center justify-center text-yellow-500 text-sm">
-                                    ★★★★★
-                                </div>
+                        {/* Advisor 1 */}
+                        <div className="bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
+                            <img
+                                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop"
+                                alt="Trần Minh Tuấn"
+                                className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                            />
+                            <h4 className="font-semibold mb-1">Trần Minh Tuấn</h4>
+                            <p className="text-sm text-slate-500 mb-2">Chuyên Gia IT</p>
+                            <div className="flex items-center justify-center text-yellow-500 text-sm">
+                                ★★★★★
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Advisor 2 */}
+                        <div className="bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
+                            <img
+                                src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop"
+                                alt="Nguyễn Thu Hà"
+                                className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                            />
+                            <h4 className="font-semibold mb-1">Nguyễn Thu Hà</h4>
+                            <p className="text-sm text-slate-500 mb-2">Tư Vấn Marketing</p>
+                            <div className="flex items-center justify-center text-yellow-500 text-sm">
+                                ★★★★★
+                            </div>
+                        </div>
+
+                        {/* Advisor 3 */}
+                        <div className="bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
+                            <img
+                                src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&h=200&fit=crop"
+                                alt="Lê Hoàng Nam"
+                                className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                            />
+                            <h4 className="font-semibold mb-1">Lê Hoàng Nam</h4>
+                            <p className="text-sm text-slate-500 mb-2">Tư Vấn Tài Chính</p>
+                            <div className="flex items-center justify-center text-yellow-500 text-sm">
+                                ★★★★★
+                            </div>
+                        </div>
+
+                        {/* Advisor 4 */}
+                        <div className="bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
+                            <img
+                                src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop"
+                                alt="Phạm Thùy Linh"
+                                className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                            />
+                            <h4 className="font-semibold mb-1">Phạm Thùy Linh</h4>
+                            <p className="text-sm text-slate-500 mb-2">Tư Vấn Nhân Sự</p>
+                            <div className="flex items-center justify-center text-yellow-500 text-sm">
+                                ★★★★★
+                            </div>
+                        </div>
                     </div>
                     <div className="text-center">
                         <button className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition shadow-lg">
@@ -428,48 +472,63 @@ export default function LandingPage() {
                 <div className="container mx-auto px-6">
                     <h2 className="text-3xl font-bold mb-10">Mẹo Nghề Nghiệp Mới Nhất</h2>
                     <div className="grid md:grid-cols-3 gap-8">
+                        {/* Tip 1 - Resume Writing */}
                         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
-                            <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600"></div>
+                            <img
+                                src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&h=300&fit=crop"
+                                alt="Resume Writing"
+                                className="h-48 w-full object-cover"
+                            />
                             <div className="p-6">
                                 <h3 className="font-semibold text-lg mb-2">
-                                    10 Mẹo Tuyệt Vời Để Tìm Việc Bạn Muốn
+                                    10 Mẹo Viết CV Ấn Tượng Thu Hút Nhà Tuyển Dụng
                                 </h3>
                                 <p className="text-slate-600 text-sm mb-4">
-                                    Khám phá các chiến lược đã được chứng minh để tìm và có được công việc mơ ước.
+                                    Tìm hiểu cách tạo CV nổi bật với format chuyên nghiệp, từ ngữ mạnh mẽ và cách trình bày thành tích đo lường được.
                                 </p>
-                                <button className="text-slate-900 hover:text-emerald-600 font-medium text-sm">
+                                <a href="/career-tips" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
                                     Đọc Thêm →
-                                </button>
+                                </a>
                             </div>
                         </div>
 
+                        {/* Tip 2 - Career Building */}
                         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
-                            <div className="h-48 bg-gradient-to-br from-emerald-400 to-emerald-600"></div>
+                            <img
+                                src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=300&fit=crop"
+                                alt="Career Building"
+                                className="h-48 w-full object-cover"
+                            />
                             <div className="p-6">
                                 <h3 className="font-semibold text-lg mb-2">
-                                    Cách Xây Dựng Sự Nghiệp Mơ Ước Thành Công
+                                    Lộ Trình Phát Triển Sự Nghiệp IT Từ Junior Đến Senior
                                 </h3>
                                 <p className="text-slate-600 text-sm mb-4">
-                                    Học các bước thiết yếu để tạo ra con đường sự nghiệp thành công và trọn vẹn.
+                                    Khám phá các bước cụ thể để thăng tiến trong ngành IT, từ kỹ năng cần học đến cách xây dựng portfolio ấn tượng.
                                 </p>
-                                <button className="text-slate-900 hover:text-emerald-600 font-medium text-sm">
+                                <a href="/career-tips" className="text-emerald-600 hover:text-emerald-700 font-medium text-sm">
                                     Đọc Thêm →
-                                </button>
+                                </a>
                             </div>
                         </div>
 
+                        {/* Tip 3 - Interview Skills */}
                         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
-                            <div className="h-48 bg-gradient-to-br from-purple-400 to-purple-600"></div>
+                            <img
+                                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=300&fit=crop"
+                                alt="Interview Skills"
+                                className="h-48 w-full object-cover"
+                            />
                             <div className="p-6">
                                 <h3 className="font-semibold text-lg mb-2">
-                                    Mẹo Phỏng Vấn Thiết Yếu Cho Người Tìm Việc
+                                    Chinh Phục Phỏng Vấn: Câu Hỏi Thường Gặp & Cách Trả Lời
                                 </h3>
                                 <p className="text-slate-600 text-sm mb-4">
-                                    Nắm vững nghệ thuật phỏng vấn với những mẹo và kỹ thuật chuyên gia.
+                                    Chuẩn bị tốt nhất cho buổi phỏng vấn với danh sách câu hỏi phổ biến và chiến lược trả lời thông minh, tự tin.
                                 </p>
-                                <button className="text-slate-900 hover:text-emerald-600 font-medium text-sm">
+                                <a href="/career-tips" className="text-purple-600 hover:text-purple-700 font-medium text-sm">
                                     Đọc Thêm →
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
