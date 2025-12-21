@@ -60,7 +60,8 @@ function Navbar() {
           ...commonItems,
           { href: "/post-job", label: "Đăng tin tuyển dụng" },
           { href: "/company-posts", label: "Quản lý tin đăng" },
-          { href: "/applications", label: "Đơn ứng tuyển" },
+          { href: "/recruiter", label: "Trang quản lý" },
+          { href: "/cv-matching", label: "Trợ lý HR", highlight: true },
         ];
 
       case USER_ROLES.ADMIN:
@@ -190,7 +191,10 @@ function Navbar() {
                     <a
                       key={index}
                       href={item.href}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className={`block px-4 py-2 text-sm transition-colors ${item.highlight
+                          ? 'bg-blue-50 text-blue-600 font-medium hover:bg-blue-100'
+                          : 'text-gray-700 hover:bg-gray-100'
+                        }`}
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       {item.label}

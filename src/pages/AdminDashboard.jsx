@@ -8,6 +8,7 @@ import {
   ChartBarIcon,
   CurrencyDollarIcon,
   AcademicCapIcon,
+  MapIcon,
 } from "@heroicons/react/24/outline";
 import { statisticsService } from "../services";
 import {
@@ -25,6 +26,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import JobLocationMap from "../components/JobLocationMap";
 
 export default function AdminDashboard() {
   const [summary, setSummary] = useState(null);
@@ -32,6 +34,7 @@ export default function AdminDashboard() {
   const [salaryStats, setSalaryStats] = useState([]);
   const [growthStats, setGrowthStats] = useState([]);
   const [experienceStats, setExperienceStats] = useState([]);
+  const [locationStats, setLocationStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,12 +44,13 @@ export default function AdminDashboard() {
   const fetchAllStats = async () => {
     try {
       setLoading(true);
-      const [summaryData, skillsData, salaryData, growthData, experienceData] = await Promise.all([
+      const [summaryData, skillsData, salaryData, growthData, experienceData, locationData] = await Promise.all([
         statisticsService.getSummary(),
         statisticsService.getTopSkills(),
         statisticsService.getSalaryStats(),
         statisticsService.getGrowthStats(),
         statisticsService.getExperienceStats(),
+        statisticsService.getLocationStats(),
       ]);
 
       console.log("Summary:", summaryData);
@@ -54,6 +58,7 @@ export default function AdminDashboard() {
       console.log("Salary:", salaryData);
       console.log("Growth:", growthData);
       console.log("Experience:", experienceData);
+      console.log("Location:", locationData);
 
       // API trả về { code, message, result }, cần lấy result
       setSummary(summaryData?.result || summaryData);
@@ -61,6 +66,7 @@ export default function AdminDashboard() {
       setSalaryStats(Array.isArray(salaryData?.result) ? salaryData.result : Array.isArray(salaryData) ? salaryData : []);
       setGrowthStats(Array.isArray(growthData?.result) ? growthData.result : Array.isArray(growthData) ? growthData : []);
       setExperienceStats(Array.isArray(experienceData?.result) ? experienceData.result : Array.isArray(experienceData) ? experienceData : []);
+      setLocationStats(Array.isArray(locationData?.result) ? locationData.result : Array.isArray(locationData) ? locationData : []);
     } catch (error) {
       console.error("Lỗi khi tải thống kê:", error);
     } finally {
@@ -185,6 +191,15 @@ export default function AdminDashboard() {
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Job Location Map - Full Width on Mobile, Half on Desktop */}
+          <div className="bg-white rounded-xl shadow-sm p-6 lg:col-span-2">
+            <div className="flex items-center mb-6">
+              <MapIcon className="w-6 h-6 text-emerald-600 mr-2" />
+              <h2 className="text-xl font-bold text-slate-900">Bản Đồ Việc Làm</h2>
+            </div>
+            <JobLocationMap data={locationStats} />
+          </div>
+
           {/* Top Skills Bar Chart */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center mb-6">

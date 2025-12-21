@@ -72,7 +72,7 @@ export default function AppRoutes() {
         <Route path="/cv-review" element={<CVReview />} />
         <Route path="/cv-review/results" element={<CVReviewResult />} />
         <Route path="/cv-matching" element={
-          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN, USER_ROLES.RECRUITER]}>
             <CVMatching />
           </ProtectedRoute>
         } />

@@ -38,7 +38,7 @@ function CompanyProfile() {
       setCompany(companyData);
 
       // Fetch jobs
-      const jobsData = await jobService.getJobsByCompany(id);
+      const jobsData = await jobService.getActiveJobsByCompany(id);
       if (jobsData && jobsData.content) {
         setJobs(jobsData.content);
       } else if (Array.isArray(jobsData)) {
