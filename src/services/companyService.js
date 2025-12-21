@@ -78,4 +78,30 @@ export const companyService = {
       return null;
     }
   },
+
+  // Cập nhật thông tin company
+  async updateCompany(id, companyData) {
+    try {
+      const response = await apiService.put(`/companies/${id}`, companyData);
+      return response.result || response;
+    } catch (error) {
+      console.error(`Lỗi khi cập nhật company ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Upload logo company
+  async uploadLogo(id, file) {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Note: apiService.post handles FormData automatically
+      const response = await apiService.post(`/companies/${id}/logo`, formData);
+      return response.result || response;
+    } catch (error) {
+      console.error(`Lỗi khi upload logo company ${id}:`, error);
+      throw error;
+    }
+  },
 };

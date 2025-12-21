@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { cvService } from '../services';
 import Toast from '../components/Toast';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const CVReview = () => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
-    const [expandedCriteria, setExpandedCriteria] = useState({});
+    const navigate = useNavigate();
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -18,9 +20,12 @@ const CVReview = () => {
                 showToast('Vui lòng chỉ tải lên file PDF.', 'error');
                 return;
             }
+            if (selectedFile.size > 2 * 1024 * 1024) {
+                showToast('File quá lớn. Vui lòng chọn file dưới 2MB.', 'error');
+                return;
+            }
             setFile(selectedFile);
             setError(null);
-            setResult(null);
         }
     };
 
@@ -32,8 +37,8 @@ const CVReview = () => {
         try {
             const data = await cvService.reviewCV(file);
             if (data.success) {
-                setResult(data.review);
                 showToast('Đánh giá CV thành công!', 'success');
+                navigate('/cv-review/results', { state: { result: data.review } });
             } else {
                 setError('Không thể đánh giá CV. Vui lòng thử lại.');
             }
@@ -50,231 +55,220 @@ const CVReview = () => {
         setTimeout(() => setToast(null), 3000);
     };
 
-    const toggleCriteria = (key) => {
-        setExpandedCriteria(prev => ({
-            ...prev,
-            [key]: !prev[key]
-        }));
-    };
-
-    const getScoreColor = (score) => {
-        if (score >= 80) return 'text-green-600';
-        if (score >= 60) return 'text-blue-600';
-        if (score >= 40) return 'text-yellow-600';
-        return 'text-red-600';
-    };
-
-    const getScoreBg = (score) => {
-        if (score >= 80) return 'bg-green-100';
-        if (score >= 60) return 'bg-blue-100';
-        if (score >= 40) return 'bg-yellow-100';
-        return 'bg-red-100';
-    };
-
-    const criteriaLabels = {
-        personal_info: 'Thông tin cá nhân',
-        career_objective: 'Mục tiêu nghề nghiệp',
-        education: 'Học vấn',
-        work_experience: 'Kinh nghiệm làm việc',
-        skills: 'Kỹ năng',
-        social_activities: 'Hoạt động xã hội',
-        certifications: 'Chứng chỉ'
-    };
-
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 relative overflow-hidden flex flex-col">
+            <Navbar />
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-10">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Đánh giá CV bằng AI</h1>
-                    <p className="text-gray-600">Tải lên CV của bạn để nhận phân tích chi tiết và gợi ý cải thiện từ AI</p>
-                </div>
+            {/* Background Decorations */}
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-100/50 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-100/50 rounded-full blur-3xl pointer-events-none" />
 
-                {/* Upload Section */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-10 hover:border-blue-500 transition-colors bg-gray-50/50">
-                        <input
-                            type="file"
-                            id="cv-upload"
-                            className="hidden"
-                            accept=".pdf"
-                            onChange={handleFileChange}
-                        />
-
-                        {file ? (
-                            <div className="flex flex-col items-center">
-                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                                    <FileText className="text-red-600" size={32} />
-                                </div>
-                                <p className="text-lg font-medium text-gray-900 mb-1">{file.name}</p>
-                                <p className="text-sm text-gray-500 mb-6">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => document.getElementById('cv-upload').click()}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    >
-                                        Chọn file khác
-                                    </button>
-                                    <button
-                                        onClick={handleUpload}
-                                        disabled={loading}
-                                        className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <Loader2 className="animate-spin" size={18} />
-                                                Đang phân tích...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <CheckCircle size={18} />
-                                                Phân tích ngay
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <label htmlFor="cv-upload" className="flex flex-col items-center cursor-pointer">
-                                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                                    <Upload className="text-blue-600" size={32} />
-                                </div>
-                                <p className="text-lg font-medium text-gray-900 mb-1">Kéo thả hoặc chọn file PDF</p>
-                                <p className="text-sm text-gray-500">Hỗ trợ định dạng .pdf (Tối đa 5MB)</p>
-                            </label>
-                        )}
-                    </div>
-                    {error && (
-                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 text-red-700">
-                            <AlertCircle size={20} />
-                            <p>{error}</p>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative z-10 flex-grow">
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    {/* Left Column: Content */}
+                    <div className="text-left space-y-8">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
+                            <Shield size={16} />
+                            <span>AI-Powered CV Analysis</span>
                         </div>
-                    )}
-                </div>
 
-                {/* Results Section */}
-                {result && (
-                    <div className="space-y-6 animate-fade-in">
-                        {/* Overall Score Card */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                            <div className="flex flex-col md:flex-row items-center gap-8">
-                                <div className="relative shrink-0">
-                                    <div className="w-32 h-32 rounded-full border-8 border-gray-100 flex items-center justify-center">
-                                        <span className={`text-4xl font-bold ${getScoreColor(result.overall_score)}`}>
-                                            {result.overall_score}
+                        <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                            The CV Checker that <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Beats the ATS</span>
+                        </h1>
+
+                        <p className="text-xl text-gray-600 leading-relaxed max-w-xl">
+                            A quick and free AI CV checker that runs key checks to make sure your CV is ready to land interviews. Optimize your resume for Applicant Tracking Systems.
+                        </p>
+
+                        <div className="flex flex-wrap gap-4">
+                            <div className="flex items-center gap-2 text-gray-700">
+                                <CheckCircle className="text-green-500" size={20} />
+                                <span>Instant Analysis</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-gray-700">
+                                <CheckCircle className="text-green-500" size={20} />
+                                <span>ATS Compatibility</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-gray-700">
+                                <CheckCircle className="text-green-500" size={20} />
+                                <span>Actionable Feedback</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Upload Box */}
+                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 lg:p-10 backdrop-blur-sm bg-white/90">
+                        <div className="text-center mb-8">
+                            <h2 className="text-2xl font-bold text-gray-900">Upload your CV</h2>
+                            <p className="text-gray-500 mt-2">Drop your CV here or choose a file. PDF only. Max 2MB file size.</p>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className={`border-2 border-dashed rounded-2xl p-8 transition-all duration-200 ${file ? 'border-blue-500 bg-blue-50/50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                                }`}>
+                                <input
+                                    type="file"
+                                    id="cv-upload"
+                                    className="hidden"
+                                    accept=".pdf"
+                                    onChange={handleFileChange}
+                                />
+
+                                {file ? (
+                                    <div className="flex flex-col items-center animate-fade-in">
+                                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 text-red-500">
+                                            <FileText size={32} />
+                                        </div>
+                                        <p className="font-semibold text-gray-900 mb-1">{file.name}</p>
+                                        <p className="text-sm text-gray-500 mb-6">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+
+                                        <div className="flex gap-3 w-full">
+                                            <button
+                                                onClick={() => document.getElementById('cv-upload').click()}
+                                                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                                            >
+                                                Change File
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <label htmlFor="cv-upload" className="flex flex-col items-center cursor-pointer">
+                                        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
+                                            <Upload className="text-blue-600" size={32} />
+                                        </div>
+                                        <span className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all hover:shadow-blue-600/30">
+                                            Upload Your CV
                                         </span>
-                                    </div>
-                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1 rounded-full font-medium">
-                                        Điểm tổng
-                                    </div>
+                                    </label>
+                                )}
+                            </div>
+
+                            {error && (
+                                <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm">
+                                    <AlertCircle size={18} />
+                                    <p>{error}</p>
                                 </div>
-                                <div className="flex-1 text-center md:text-left">
-                                    <h2 className="text-xl font-bold text-gray-900 mb-2">Nhận xét tổng quan</h2>
-                                    <p className="text-gray-600 leading-relaxed">{result.overall_comment}</p>
+                            )}
+
+                            {file && (
+                                <button
+                                    onClick={handleUpload}
+                                    disabled={loading}
+                                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="animate-spin" size={24} />
+                                            Analyzing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Check my Score
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                                <Shield size={12} />
+                                <span>Privacy guaranteed. We don't store your CV.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Dual-System Evaluation Section */}
+            <div className="bg-white py-24 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                        {/* Left Column: Visual */}
+                        <div className="relative">
+                            <div className="absolute -inset-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50"></div>
+                            <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700">
+                                {/* Abstract representation of the "Resume Grader" */}
+                                <div className="flex flex-col items-center space-y-6">
+                                    <div className="w-full bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/10">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="h-2 bg-white/20 rounded w-3/4"></div>
+                                            <div className="h-2 bg-white/20 rounded w-1/2"></div>
+                                            <div className="h-2 bg-white/20 rounded w-full"></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative">
+                                        <div className="w-32 h-32 rounded-full border-4 border-blue-500 flex items-center justify-center relative z-10 bg-slate-800">
+                                            <Loader2 className="text-blue-400 animate-spin-slow" size={48} />
+                                        </div>
+                                        <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full"></div>
+                                    </div>
+
+                                    <div className="w-full bg-white rounded-xl p-4 shadow-lg transform translate-y-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                                <CheckCircle size={20} />
+                                            </div>
+                                            <div>
+                                                <div className="h-2 bg-gray-200 rounded w-24 mb-1"></div>
+                                                <div className="h-2 bg-gray-100 rounded w-16"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Priority Improvements */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <AlertCircle className="text-orange-500" size={20} />
-                                Cần cải thiện ưu tiên
-                            </h3>
-                            <ul className="space-y-3">
-                                {result.priority_improvements.map((item, index) => (
-                                    <li key={index} className="flex items-start gap-3 bg-orange-50 p-3 rounded-lg text-gray-700 text-sm">
-                                        <span className="font-bold text-orange-600 mt-0.5">{index + 1}.</span>
-                                        {item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        {/* Right Column: Content */}
+                        <div className="space-y-12">
+                            <div>
+                                <h2 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+                                    Our CV Checker evaluates using a <span className="text-blue-600">dual-system</span>
+                                </h2>
+                                <p className="text-lg text-gray-600 leading-relaxed">
+                                    Most CVs get screened by applicant tracking systems (ATS) before reaching recruiters.
+                                    ATS searches for keywords and adds the CV to a database. The success of your CV
+                                    depends on its optimization for the job, the template used, and included skills and keywords.
+                                </p>
+                            </div>
 
-                        {/* Detailed Criteria */}
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold text-gray-900 px-2">Chi tiết đánh giá</h3>
-                            {Object.entries(result.criteria_reviews).map(([key, data]) => (
-                                <div key={key} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                    <button
-                                        onClick={() => toggleCriteria(key)}
-                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-lg ${getScoreBg(data.score)} flex items-center justify-center font-bold ${getScoreColor(data.score)}`}>
-                                                {data.score}
-                                            </div>
-                                            <div className="text-left">
-                                                <h4 className="font-bold text-gray-900">{criteriaLabels[key] || key}</h4>
-                                                <p className="text-sm text-gray-500">
-                                                    {data.strengths.length} điểm mạnh • {data.improvements.length} điểm cần cải thiện
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {expandedCriteria[key] ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
-                                    </button>
-
-                                    {expandedCriteria[key] && (
-                                        <div className="px-6 pb-6 pt-2 border-t border-gray-100 space-y-4">
-                                            <div>
-                                                <h5 className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
-                                                    <CheckCircle size={16} /> Điểm mạnh
-                                                </h5>
-                                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-1">
-                                                    {data.strengths.map((item, idx) => (
-                                                        <li key={idx}>{item}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                            <div>
-                                                <h5 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-2">
-                                                    <AlertCircle size={16} /> Cần cải thiện
-                                                </h5>
-                                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-1">
-                                                    {data.improvements.map((item, idx) => (
-                                                        <li key={idx}>{item}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                            <div className="bg-blue-50 p-4 rounded-lg">
-                                                <h5 className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-2">
-                                                    <Star size={16} /> Gợi ý từ AI
-                                                </h5>
-                                                <ul className="space-y-2 text-sm text-gray-700">
-                                                    {data.suggestions.map((item, idx) => (
-                                                        <li key={idx} className="flex gap-2">
-                                                            <span className="text-blue-400">•</span>
-                                                            {item}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    )}
+                            <div className="space-y-10">
+                                <div className="flex gap-6">
+                                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xl">
+                                        1
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-3">Content interpretation</h3>
+                                        <p className="text-gray-600 leading-relaxed">
+                                            Like an ATS, we analyse and attempt to comprehend your CV. The more we understand,
+                                            the better it aligns with a company's ATS.
+                                        </p>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
 
-                        {/* Final Recommendations */}
-                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-8 text-white">
-                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <Star className="text-yellow-400" size={20} />
-                                Lời khuyên cuối cùng
-                            </h3>
-                            <ul className="space-y-3">
-                                {result.final_recommendations.map((item, index) => (
-                                    <li key={index} className="flex items-start gap-3 text-gray-300 text-sm">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-2 shrink-0"></span>
-                                        {item}
-                                    </li>
-                                ))}
-                            </ul>
+                                <div className="flex gap-6">
+                                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xl">
+                                        2
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-3">What our checker identifies</h3>
+                                        <p className="text-gray-600 leading-relaxed">
+                                            Recruiters look for more than just keywords. We assess spelling, grammar,
+                                            and the quality of content to ensure you make the best impression.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                )}
+                </div>
             </div>
+            <Footer />
         </div>
     );
 };

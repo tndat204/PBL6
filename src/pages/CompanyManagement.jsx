@@ -18,7 +18,9 @@ import {
     Trash2,
     Ban,
     MessageSquare,
-    Star
+    Star,
+    Edit,
+    Upload
 } from 'lucide-react';
 import { companyService } from '../services/companyService';
 import { reviewService } from '../services/reviewService';
@@ -57,6 +59,8 @@ const CompanyManagement = () => {
         totalElements: 0,
         size: 10
     });
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedCompanyForEdit, setSelectedCompanyForEdit] = useState(null);
 
     useEffect(() => {
         fetchCompanies();
@@ -264,6 +268,42 @@ const CompanyManagement = () => {
         }
     };
 
+    const handleEditCompany = async (company) => {
+        try {
+            setLoading(true);
+            const fullCompany = await companyService.getCompanyById(company.id);
+            setSelectedCompanyForEdit(fullCompany);
+            setShowEditModal(true);
+        } catch (error) {
+            console.error('Error fetching company details:', error);
+            showToast('Không thể lấy thông tin chi tiết công ty', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmitEditCompany = async (id, data, logoFile) => {
+        try {
+            // 1. Update company info
+            await companyService.updateCompany(id, data);
+
+            // 2. Upload logo if exists
+            if (logoFile) {
+                await companyService.uploadLogo(id, logoFile);
+            }
+
+            setShowEditModal(false);
+            setSelectedCompanyForEdit(null);
+            showToast('Cập nhật công ty thành công!', 'success');
+
+            // Refresh list
+            await fetchCompanies(false);
+        } catch (error) {
+            console.error('Error updating company:', error);
+            throw error;
+        }
+    };
+
     return (
         <div className="h-full flex flex-col">
             <div className="flex-1 overflow-y-auto">
@@ -358,6 +398,7 @@ const CompanyManagement = () => {
                                                 onViewReviews={handleViewReviews}
                                                 onToggleStatus={handleToggleStatus}
                                                 onDelete={handleDeleteCompany}
+                                                onEdit={handleEditCompany}
                                             />
                                         ))}
                                     </tbody>
@@ -440,6 +481,18 @@ const CompanyManagement = () => {
                     />
                 )}
 
+                {/* Edit Modal */}
+                {showEditModal && selectedCompanyForEdit && (
+                    <EditCompanyModal
+                        company={selectedCompanyForEdit}
+                        onClose={() => {
+                            setShowEditModal(false);
+                            setSelectedCompanyForEdit(null);
+                        }}
+                        onSubmit={handleSubmitEditCompany}
+                    />
+                )}
+
                 {/* Confirm Modal */}
                 <ConfirmModal
                     isOpen={confirmModal.isOpen}
@@ -478,7 +531,7 @@ const StatCard = ({ title, value, color, icon }) => (
     </div>
 );
 
-const CompanyRow = ({ company, onView, onToggleStatus, onDelete, onViewReviews }) => (
+const CompanyRow = ({ company, onView, onToggleStatus, onDelete, onViewReviews, onEdit }) => (
     <tr className="hover:bg-gray-50 transition-colors">
         <td className="px-6 py-4">
             <div className="flex items-center gap-3">
@@ -524,6 +577,13 @@ const CompanyRow = ({ company, onView, onToggleStatus, onDelete, onViewReviews }
                     title="Xem chi tiết"
                 >
                     <Eye size={18} />
+                </button>
+                <button
+                    onClick={() => onEdit(company)}
+                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    title="Chỉnh sửa"
+                >
+                    <Edit size={18} />
                 </button>
                 <button
                     onClick={() => onViewReviews(company)}
@@ -1027,8 +1087,8 @@ const ReviewsModal = ({ company, reviews, loading, pagination, onClose, onPageCh
                                                 👍 {review.likeCount} lượt thích
                                             </span>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${review.status === 'ACTIVE'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-700'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-gray-100 text-gray-700'
                                                 }`}>
                                                 {review.status === 'ACTIVE' ? 'Đang hiển thị' : review.status}
                                             </span>
@@ -1064,6 +1124,248 @@ const ReviewsModal = ({ company, reviews, loading, pagination, onClose, onPageCh
                         </div>
                     </div>
                 )}
+            </div>
+        </div>
+    );
+};
+
+const EditCompanyModal = ({ company, onClose, onSubmit }) => {
+    const [formData, setFormData] = useState({
+        name: company.name || '',
+        ownerID: company.ownerID || company.owner?.id || '',
+        taxCode: company.taxCode || '',
+        address: company.address || '',
+        phone: company.phone || '',
+        email: company.email || '',
+        description: company.description || ''
+    });
+    const [logoFile, setLogoFile] = useState(null);
+    const [previewLogo, setPreviewLogo] = useState(company.logoUrl);
+    const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setLogoFile(file);
+            setPreviewLogo(URL.createObjectURL(file));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        if (!formData.name.trim()) newErrors.name = 'Tên công ty là bắt buộc';
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email là bắt buộc';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Email không hợp lệ';
+        }
+        if (!formData.phone.trim()) {
+            newErrors.phone = 'Số điện thoại là bắt buộc';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitError('');
+
+        if (!validateForm()) return;
+
+        setSubmitting(true);
+        try {
+            await onSubmit(company.id, formData, logoFile);
+        } catch (error) {
+            setSubmitError(error.message || 'Có lỗi xảy ra khi cập nhật công ty');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all animate-scale-in relative max-h-[90vh] flex flex-col">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 relative">
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-all"
+                    >
+                        <X size={20} />
+                    </button>
+                    <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <Edit size={28} />
+                        Chỉnh sửa công ty
+                    </h3>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6">
+                    {submitError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                            {submitError}
+                        </div>
+                    )}
+
+                    <div className="space-y-6">
+                        {/* Logo Upload */}
+                        <div className="flex flex-col items-center">
+                            <div className="w-32 h-32 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative group cursor-pointer hover:border-indigo-500 transition-colors">
+                                {previewLogo ? (
+                                    <img src={previewLogo} alt="Preview" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="text-center p-4">
+                                        <Upload className="mx-auto text-gray-400 mb-2" size={24} />
+                                        <span className="text-xs text-gray-500">Tải ảnh lên</span>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Edit className="text-white" size={24} />
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-500 mt-2">Nhấn để thay đổi logo</p>
+                        </div>
+
+                        {/* Company Name */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Tên công ty <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                className={`w-full px-4 py-2.5 rounded-lg border ${errors.name ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                                placeholder="Nhập tên công ty"
+                            />
+                            {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+                        </div>
+
+                        {/* Tax Code */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Mã số thuế
+                            </label>
+                            <input
+                                type="text"
+                                name="taxCode"
+                                value={formData.taxCode}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Nhập mã số thuế"
+                            />
+                        </div>
+
+                        {/* Address */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Địa chỉ
+                            </label>
+                            <input
+                                type="text"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Nhập địa chỉ công ty"
+                            />
+                        </div>
+
+                        {/* Phone & Email */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Số điện thoại <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleInputChange}
+                                    className={`w-full px-4 py-2.5 rounded-lg border ${errors.phone ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                                    placeholder="Nhập số điện thoại"
+                                />
+                                {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Email <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    className={`w-full px-4 py-2.5 rounded-lg border ${errors.email ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                                    placeholder="Nhập email công ty"
+                                />
+                                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Mô tả
+                            </label>
+                            <textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleInputChange}
+                                rows="4"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                                placeholder="Nhập mô tả về công ty..."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                            disabled={submitting}
+                        >
+                            Hủy bỏ
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                            disabled={submitting}
+                        >
+                            {submitting ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={20} />
+                                    Đang lưu...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle size={20} />
+                                    Lưu thay đổi
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

@@ -33,7 +33,7 @@ export default function Login() {
       password: formData.password,
     };
     try {
-      const response = await fetch("http://localhost:8080/api/auth/token", {
+      const response = await fetch("https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api/auth/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

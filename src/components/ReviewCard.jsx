@@ -1,112 +1,115 @@
 import React, { useState } from "react";
-import { Star, Clock, Reply } from "lucide-react";
+import { Star, Clock, ThumbsUp, MoreVertical } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
+import { reviewService } from "../services";
 
-function ReviewCard({ name, rating, content, dateTime }) {
-  const [isReplying, setIsReplying] = useState(false);
-  const [replyText, setReplyText] = useState("");
-  const [replies, setReplies] = useState([]);
+function ReviewCard({
+  reviewId,
+  reviewerInfo,
+  rating,
+  comment,
+  createdAt,
+  likeCount: initialLikeCount,
+  liked: initialLiked,
+  imageUrls
+}) {
+  const [liked, setLiked] = useState(initialLiked);
+  const [likeCount, setLikeCount] = useState(initialLikeCount);
 
-  const handleReplySubmit = () => {
-    if (replyText.trim() === "") return;
-    const newReply = {
-      id: replies.length + 1,
-      text: replyText,
-      dateTime: new Date().toLocaleString(),
-    };
-    setReplies([...replies, newReply]);
-    setReplyText("");
-    setIsReplying(false);
+  const handleLike = async () => {
+    try {
+      if (liked) {
+        setLikeCount(likeCount - 1);
+      } else {
+        setLikeCount(likeCount + 1);
+      }
+      setLiked(!liked);
+
+      await reviewService.toggleLikeReview(reviewId);
+    } catch (error) {
+      console.error("Failed to toggle like:", error);
+      // Revert state on error
+      setLiked(liked);
+      setLikeCount(likeCount);
+    }
   };
 
+  const formattedDate = createdAt
+    ? formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: vi })
+    : "";
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between h-full relative">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        {/* Avatar */}
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500 text-sm font-semibold">
-            {name.charAt(0).toUpperCase()}
-          </span>
-        </div>
-
-        <div className="flex flex-col flex-1">
-          {/* Tên và sao */}
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-800">{name}</h3>
-            <div className="flex items-center text-yellow-400">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={14}
-                  fill={i < rating ? "currentColor" : "none"}
-                  stroke="currentColor"
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Nội dung */}
-          <p className="text-gray-700 mt-2 text-sm leading-relaxed">
-            {content}
-          </p>
-
-          {/* Footer */}
-          <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Clock size={12} />
-              <span>{dateTime}</span>
-            </div>
-            <button
-              onClick={() => setIsReplying(!isReplying)}
-              className="flex items-center gap-1 text-gray-600 hover:text-blue-500 transition text-sm font-medium"
-            >
-              <Reply size={14} />
-              <span>Phản hồi</span>
-            </button>
-          </div>
-
-          {/* Form phản hồi */}
-          {isReplying && (
-            <div className="mt-3 border-t border-gray-200 pt-3">
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Viết phản hồi của bạn..."
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-sea-100"
-                rows="2"
+    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-3">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+            {reviewerInfo?.reviewerAvatar ? (
+              <img
+                src={reviewerInfo.reviewerAvatar}
+                alt={reviewerInfo.reviewerName}
+                className="w-full h-full object-cover"
               />
-              <div className="flex justify-end gap-2 mt-2">
-                <button
-                  onClick={() => setIsReplying(false)}
-                  className="text-gray-500 text-sm hover:underline"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleReplySubmit}
-                  className="bg-sea-400 text-white px-3 py-1 rounded-sm text-sm hover:bg-sea-300"
-                >
-                  Gửi
-                </button>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-lg">
+                {reviewerInfo?.reviewerName?.charAt(0).toUpperCase() || "U"}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Danh sách phản hồi */}
-          {replies.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {replies.map((r) => (
-                <div
-                  key={r.id}
-                  className="ml-8 bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm"
-                >
-                  <p className="text-gray-700">{r.text}</p>
-                  <span className="text-xs text-gray-400">{r.dateTime}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div>
+            <h4 className="font-semibold text-gray-900 text-sm">
+              {reviewerInfo?.reviewerName || "Người dùng ẩn danh"}
+            </h4>
+            <span className="text-xs text-gray-500">{formattedDate}</span>
+          </div>
         </div>
+
+        <button className="text-gray-400 hover:text-gray-600">
+          <MoreVertical size={16} />
+        </button>
+      </div>
+
+      <div className="flex items-center mb-3">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            size={16}
+            className={`${i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-200"
+              }`}
+          />
+        ))}
+      </div>
+
+      <p className="text-gray-700 text-sm leading-relaxed mb-4">
+        {comment}
+      </p>
+
+      {imageUrls && imageUrls.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {imageUrls.map((url, index) => (
+            <div key={index} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-100 cursor-pointer hover:opacity-90 transition-opacity">
+              <img
+                src={url}
+                alt={`Review image ${index + 1}`}
+                className="w-full h-full object-cover"
+                onClick={() => window.open(url, '_blank')}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center gap-4 pt-3 border-t border-gray-50">
+        <button
+          onClick={handleLike}
+          className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${liked ? "text-blue-600" : "text-gray-500 hover:text-gray-700"
+            }`}
+        >
+          <ThumbsUp size={16} className={liked ? "fill-current" : ""} />
+          <span>{likeCount}</span>
+        </button>
       </div>
     </div>
   );

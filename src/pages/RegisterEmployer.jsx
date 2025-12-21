@@ -46,36 +46,36 @@ export default function Register() {
   // Handle Province Change
   const handleProvinceChange = async (e) => {
     const provinceName = e.target.value;
-    
+
     setAddressParts(prev => ({
-        ...prev,
-        province: provinceName,
-        ward: ""
+      ...prev,
+      province: provinceName,
+      ward: ""
     }));
     setWards([]);
 
     if (provinceName) {
-        try {
-            const response = await fetch(`https://vietnamlabs.com/api/vietnamprovince?province=${encodeURIComponent(provinceName)}`);
-            const data = await response.json();
-            if (data.success && data.data && data.data.wards) {
-                setWards(data.data.wards);
-            }
-        } catch (error) {
-            console.error("Lỗi lấy danh sách phường xã:", error);
+      try {
+        const response = await fetch(`https://vietnamlabs.com/api/vietnamprovince?province=${encodeURIComponent(provinceName)}`);
+        const data = await response.json();
+        if (data.success && data.data && data.data.wards) {
+          setWards(data.data.wards);
         }
+      } catch (error) {
+        console.error("Lỗi lấy danh sách phường xã:", error);
+      }
     }
   };
 
   // Handle Ward Change
   const handleWardChange = (e) => {
-      const wardName = e.target.value;
-      setAddressParts(prev => ({ ...prev, ward: wardName }));
+    const wardName = e.target.value;
+    setAddressParts(prev => ({ ...prev, ward: wardName }));
   };
 
   // Handle Detail Address Change
   const handleDetailAddressChange = (e) => {
-      setAddressParts(prev => ({ ...prev, detail: e.target.value }));
+    setAddressParts(prev => ({ ...prev, detail: e.target.value }));
   };
 
 
@@ -107,8 +107,8 @@ export default function Register() {
 
     // Validation địa chỉ
     if (!addressParts.province || !addressParts.ward || !addressParts.detail) {
-        alert("Vui lòng điền đầy đủ thông tin địa chỉ!");
-        return;
+      alert("Vui lòng điền đầy đủ thông tin địa chỉ!");
+      return;
     }
 
     const fullAddress = `${addressParts.detail}, ${addressParts.ward}, ${addressParts.province}`;
@@ -128,7 +128,7 @@ export default function Register() {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/internal/users", {
+      const response = await fetch("https://gateway-service.jollybeach-1fb67642.southeastasia.azurecontainerapps.io/api/internal/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -231,41 +231,41 @@ export default function Register() {
           {/* Address Fields */}
           <div className="space-y-3">
             <div className="flex gap-2">
-                {/* Province */}
-                <select 
-                    className="w-1/2 border rounded-lg px-2 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                    value={addressParts.province}
-                    onChange={handleProvinceChange}
-                >
-                    <option value="">Tỉnh/Thành</option>
-                    {provinces.map((p, index) => (
-                        <option key={index} value={p.province}>{p.province}</option>
-                    ))}
-                </select>
+              {/* Province */}
+              <select
+                className="w-1/2 border rounded-lg px-2 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                value={addressParts.province}
+                onChange={handleProvinceChange}
+              >
+                <option value="">Tỉnh/Thành</option>
+                {provinces.map((p, index) => (
+                  <option key={index} value={p.province}>{p.province}</option>
+                ))}
+              </select>
 
-                {/* Ward */}
-                <select 
-                    className="w-1/2 border rounded-lg px-2 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                    value={addressParts.ward}
-                    onChange={handleWardChange}
-                    disabled={!addressParts.province}
-                >
-                    <option value="">Phường/Xã</option>
-                    {wards.map((ward, index) => (
-                        <option key={index} value={ward.name}>{ward.name}</option>
-                    ))}
-                </select>
+              {/* Ward */}
+              <select
+                className="w-1/2 border rounded-lg px-2 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                value={addressParts.ward}
+                onChange={handleWardChange}
+                disabled={!addressParts.province}
+              >
+                <option value="">Phường/Xã</option>
+                {wards.map((ward, index) => (
+                  <option key={index} value={ward.name}>{ward.name}</option>
+                ))}
+              </select>
             </div>
-            
+
             {/* Detail Address Input */}
             <div className="relative">
-                <input
-                    type="text"
-                    placeholder="Số nhà, đường"
-                    value={addressParts.detail}
-                    onChange={handleDetailAddressChange}
-                    className="w-full pl-3 pr-2 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
-                />
+              <input
+                type="text"
+                placeholder="Số nhà, đường"
+                value={addressParts.detail}
+                onChange={handleDetailAddressChange}
+                className="w-full pl-3 pr-2 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+              />
             </div>
           </div>
 
