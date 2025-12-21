@@ -20,14 +20,14 @@ const applicationService = {
   //   try {
   //     const jobsResponse = await api.get(`/jobs/company/${companyId}`);
   //     const jobs = jobsResponse.data.result || jobsResponse.data;
-      
+
   //     const applicationPromises = jobs.map(job => 
   //       this.getApplicationsByJob(job.id).catch(() => [])
   //     );
-      
+
   //     const applicationsArrays = await Promise.all(applicationPromises);
   //     const allApplications = applicationsArrays.flat();
-      
+
   //     return allApplications;
   //   } catch (error) {
   //     console.error("Error fetching company applications:", error);
@@ -44,7 +44,7 @@ const applicationService = {
       console.log(`RAW Response for job ${jobId}:`, response);
       console.log('Response type:', typeof response);
       console.log('Response keys:', Object.keys(response || {}));
-      
+
       // Handle different response structures
       if (response.result !== undefined) {
         return response.result;
@@ -78,7 +78,7 @@ const applicationService = {
   async getMyApplications() {
     try {
       const response = await api.get("/applications/me");
-      return response.data.result || response.data;
+      return response.result || response;
     } catch (error) {
       console.error("Error fetching my applications:", error);
       throw error;
