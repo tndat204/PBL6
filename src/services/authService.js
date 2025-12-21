@@ -44,4 +44,59 @@ export const authService = {
       throw error;
     }
   },
+
+  // ===== FORGOT PASSWORD FLOW =====
+  
+  /**
+   * Send OTP to email for password reset
+   * @param {string} email 
+   */
+  async sendPasswordResetOTP(email) {
+    try {
+      const response = await apiService.post('/auth/otp/password/send', { email }, { auth: false });
+      return response;
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Verify OTP code
+   * @param {string} email 
+   * @param {string} otp 
+   */
+  async verifyOTP(email, otp) {
+    try {
+      const response = await apiService.post('/auth/otp/verify', { email, otp }, { auth: false });
+      return response;
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Reset password (requires verified OTP session)
+   * @param {string} newPassword 
+   * @param {string} token - Reset token from OTP verification
+   */
+  async resetPassword(newPassword, token) {
+    try {
+      const response = await apiService.post(
+        '/auth/password/reset', 
+        { newPassword }, 
+        { 
+          auth: false,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response;
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
+    }
+  },
 };

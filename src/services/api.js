@@ -37,13 +37,16 @@ class ApiService {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
 
-    // Lấy flag isFormData từ options truyền vào
-    const { isFormData, ...fetchOptions } = options;
+    // Lấy flag isFormData và headers từ options truyền vào
+    const { isFormData, headers: customHeaders, ...fetchOptions } = options;
 
     const config = {
 
-      // Truyền flag xuống getHeaders
-      headers: this.getHeaders(options.auth !== false, isFormData),
+      // Merge default headers with custom headers
+      headers: {
+        ...this.getHeaders(options.auth !== false, isFormData),
+        ...customHeaders
+      },
       ...fetchOptions,
 
     };

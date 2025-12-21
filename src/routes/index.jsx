@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
+import ForgotPassword from "../pages/ForgotPassword";
 import Home from "../pages/Home"; // ví dụ
 import About from "../pages/About"; // ví dụ
 import JobDetails from "../pages/JobDetails";
@@ -64,6 +65,7 @@ export default function AppRoutes() {
         <Route path="/register-candidate" element={<RegisterCandidate />} />
         <Route path="/register-employer" element={<RegisterEmployer />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/career-tips" element={<CareerTips />} />
