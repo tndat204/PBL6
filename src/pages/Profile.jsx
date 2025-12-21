@@ -10,7 +10,7 @@ import { useAuth } from "../hooks/useAuth";
 import { formatCurrency } from "../utils/formatUtils";
 
 function Profile() {
-  const { user } = useAuth(); // Get user from auth context
+  const { user, updateUser } = useAuth(); // Get user and updateUser from auth context
   
   // --- STATE QUẢN LÝ CÁC MODAL ---
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false); // Modal Career/Skills
@@ -132,13 +132,20 @@ function Profile() {
   // Parse existing address when profileData loads
   useEffect(() => {
     const parseAddress = async () => {
+      console.log('🔍 Parsing address - profileData:', profileData);
+      console.log('🔍 Parsing address - profileData.address:', profileData?.address);
+      
       if (profileData && profileData.address) {
         // Split address: "detail, ward, province"
         const parts = profileData.address.split(', ');
+        console.log('🔍 Address parts:', parts);
+        
         if (parts.length >= 3) {
           const province = parts[parts.length - 1] || '';
           const ward = parts[parts.length - 2] || '';
           const detail = parts.slice(0, -2).join(', ') || '';
+          
+          console.log('🔍 Parsed address:', { province, ward, detail });
           
           setAddressParts({
             province,
@@ -153,6 +160,7 @@ function Profile() {
               const data = await response.json();
               if (data.success && data.data && data.data.wards) {
                 setWards(data.data.wards);
+                console.log('🔍 Fetched wards for province:', province, data.data.wards.length);
               }
             } catch (error) {
               console.error("Lỗi lấy danh sách phường xã:", error);
@@ -160,6 +168,7 @@ function Profile() {
           }
         } else {
           // Fallback if format is different
+          console.log('🔍 Address format different, using fallback');
           setAddressParts({
             province: '',
             ward: '',
@@ -192,7 +201,7 @@ function Profile() {
   const handleAddSkill = () => {
     setProfileData({
       ...profileData,
-      skills: [...profileData.skills, { id: "", name: "", years: 0, level: "Beginner", isPrimary: false }]
+      skills: [...profileData.skills, { id: "", name: "", years: 0, level: "BEGINNER", isPrimary: false }]
     });
   };
 
@@ -232,6 +241,16 @@ function Profile() {
       };
       
       console.log('Updating profile with data:', updateData);
+      console.log('🔍 DEBUG - Data types:', {
+        skills: typeof updateData.skills,
+        skillsIsArray: Array.isArray(updateData.skills),
+        skillsLength: updateData.skills?.length,
+        salary: typeof updateData.desiredSalary,
+        salaryValue: updateData.desiredSalary,
+        skillsContent: JSON.stringify(updateData.skills, null, 2)
+      });
+      console.log('🔍 DEBUG - Full payload:', JSON.stringify(updateData, null, 2));
+      
       await profileService.updateMyProfile(updateData);
       
       setIsEditProfileOpen(false);
@@ -283,6 +302,19 @@ function Profile() {
       const fullAddress = `${addressParts.detail}, ${addressParts.ward}, ${addressParts.province}`.replace(/^, |, $/g, '');
       
       await userService.updateMe({
+        fullName: profileData.fullName,
+        phone: profileData.phone,
+        address: fullAddress
+      });
+      
+      // Update profileData state to reflect changes immediately
+      setProfileData(prev => ({
+        ...prev,
+        address: fullAddress
+      }));
+      
+      // Update user in AuthContext and localStorage
+      updateUser({
         fullName: profileData.fullName,
         phone: profileData.phone,
         address: fullAddress
@@ -731,7 +763,13 @@ function Profile() {
                   <label className="block text-sm font-semibold text-gray-600 mb-1">Họ và tên</label>
                   <div className="relative">
                     <FaUser className="absolute left-3 top-3 text-gray-400" />
-                    <input type="text" name="fullName" value={profileData.fullName} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sea-300 outline-none" />
+                    <input 
+                      type="text" 
+                      name="fullName" 
+                      value={profileData.fullName} 
+                      onChange={handleChange} 
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sea-300 outline-none" 
+                    />
                   </div>
                 </div>
     
@@ -744,7 +782,7 @@ function Profile() {
                       name="phone" 
                       value={profileData.phone} 
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, ''); // Only digits
+                        const value = e.target.value.replace(/\D/g, '');
                         handleChange({ target: { name: 'phone', value } });
                       }} 
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sea-300 outline-none" 

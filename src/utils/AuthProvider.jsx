@@ -57,10 +57,17 @@ export function AuthProvider({ children }) {
     setUser(null);
     setCompany(null);
   };
+  
+  // Update user data (for profile updates)
+  const updateUser = (updates) => {
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
   const role = user?.roles?.[0]?.name || null;
 
   return (
-    <AuthContext.Provider value={{ user, company, role, login, logout }}>
+    <AuthContext.Provider value={{ user, company, role, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
