@@ -1234,7 +1234,7 @@ const EditCompanyModal = ({ company, onClose, onSubmit }) => {
                                     type="file"
                                     accept="image/*"
                                     onChange={handleFileChange}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    className="absolute inset-0 opacity-0 cursor-pointer z-50"
                                 />
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Edit className="text-white" size={24} />

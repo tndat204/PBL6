@@ -1,25 +1,37 @@
 import { useEffect, useState } from "react";
-import { TbPinned } from "react-icons/tb";
+import { Building2, Briefcase, DollarSign, MapPin } from "lucide-react";
 import SaveButton from "./SaveButton";
 import { companyService, skillService } from "../services";
 import { Link } from "react-router-dom";
+
 const JobCard = ({ job }) => {
   const [companyName, setCompanyName] = useState("");
+  const [companyLogo, setCompanyLogo] = useState("");
   const [skillNames, setSkillNames] = useState([]);
+
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
-        // Fetch company name
+        // Fetch company details
         if (job.companyId) {
-          const company = await companyService.getCompanyById(job.companyId); // ✅ Dùng service
+          const company = await companyService.getCompanyById(job.companyId);
           setCompanyName(company?.name || "Công ty không xác định");
+          setCompanyLogo(company?.logoUrl || "");
         } else {
           setCompanyName("Công ty không xác định");
         }
 
-        // Fetch skills
-        if (job.skillIds?.length) {
-          const skills = await skillService.getSkillsByIds(job.skillIds); // ✅ Dùng service
+        // Handle skills
+        if (job.skills && Array.isArray(job.skills) && job.skills.length > 0) {
+          // If skills are already populated
+          if (typeof job.skills[0] === 'string') {
+            setSkillNames(job.skills);
+          } else if (typeof job.skills[0] === 'object' && job.skills[0].name) {
+            setSkillNames(job.skills.map(s => s.name));
+          }
+        } else if (job.skillIds?.length) {
+          // Fetch by IDs if needed
+          const skills = await skillService.getSkillsByIds(job.skillIds);
           setSkillNames(skills);
         } else {
           setSkillNames([]);
@@ -33,55 +45,79 @@ const JobCard = ({ job }) => {
 
     fetchJobDetails();
   }, [job]);
-  
-
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-2 flex flex-col justify-between h-full relative">
-      <div className="bg-white rounded-lg shadow-md p-2 flex flex-col justify-between">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-12 h-12 bg-[url('./assets/images/cmc.png')] bg-cover bg-center rounded flex items-center justify-center ">
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{job.title}</h3>
-                  <p className="text-sm text-gray-500">{companyName}</p>
-                </div>
-              </div>
-              <div className="text-gray-400 hover:text-gray-600 focus:outline-none">
-                <SaveButton />
-              </div>
-            </div>
-            <div className="mb-2">
-              <p className="text-sm text-gray-600 mb-1">{job.jobType}</p>
-              <p className="text-gray-700 text-sm mb-2 truncate w-[250px]">{job.description}</p>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {skillNames.map((name, idx) => (
-                  <span
-                    key={idx}
-                    className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs border border-gray-300"
-                  >
-                    {name}
-                  </span>
-                ))}
-              </div>
-            </div>
+    <div className="group bg-white rounded-xl border border-gray-200 p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-full relative">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex gap-4">
+          <div className="w-14 h-14 rounded-xl border border-gray-100 bg-white p-2 shadow-sm flex items-center justify-center shrink-0 group-hover:border-blue-100 transition-colors">
+            {companyLogo ? (
+              <img src={companyLogo} alt={companyName} className="w-full h-full object-contain" />
+            ) : (
+              <Building2 className="text-gray-300" size={28} />
+            )}
           </div>
-          <div className="flex items-center justify-between mt-3">
-              <span className="text-lg font-semibold text-gray-800">
-                {job.salaryMin && job.salaryMax
-                  ? `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} $`
-                  : "1000$"}
-              </span>
-              <Link
-                to={`/job-details/${job.id}`}
-                className="bg-sea-400 hover:bg-sea-300 text-white px-4 py-2 rounded-sm text-sm transition-colors"
-              >
-                Chi tiết
-              </Link>
-            </div>
+          <div>
+            <h3 className="font-bold text-gray-900 text-lg leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors" title={job.title}>
+              {job.title}
+            </h3>
+            <p className="text-sm text-gray-500 font-medium mt-1 line-clamp-1" title={companyName}>
+              {companyName}
+            </p>
+          </div>
+        </div>
+        <div className="shrink-0">
+          <SaveButton />
+        </div>
+      </div>
+
+      {/* Tags / Meta */}
+      <div className="space-y-3 mb-4 flex-1">
+        <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+          <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">
+            <Briefcase size={14} className="text-blue-500" />
+            {job.jobType}
+          </span>
+          <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">
+            <DollarSign size={14} className="text-green-500" />
+            {job.salaryMin && job.salaryMax
+              ? `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} $`
+              : "Thỏa thuận"}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-3">
+          {skillNames.slice(0, 3).map((name, idx) => (
+            <span
+              key={idx}
+              className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-xs font-medium border border-blue-100"
+            >
+              {name}
+            </span>
+          ))}
+          {skillNames.length > 3 && (
+            <span className="bg-gray-50 text-gray-500 px-2 py-1 rounded-full text-xs font-medium border border-gray-100">
+              +{skillNames.length - 3}
+            </span>
+          )}
+        </div>
+
+        <p className="text-gray-500 text-sm line-clamp-2 mt-2">
+          {job.description}
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="pt-4 border-t border-gray-100 mt-auto">
+        <Link
+          to={`/job-details/${job.id}`}
+          className="block w-full text-center bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-2.5 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
+        >
+          Xem chi tiết
+        </Link>
+      </div>
     </div>
-    
   );
 };
 

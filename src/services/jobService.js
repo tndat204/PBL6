@@ -1,5 +1,5 @@
 import apiService from "./api";
-// Đặt tên cho đối tượng ApiService là apiService
+import { skillService } from "./skillService";
 
 export const jobService = {
   // Lấy danh sách jobs
@@ -13,6 +13,8 @@ export const jobService = {
     }
   },
 
+
+
   // Lấy danh sách active jobs theo company
   async getActiveJobsByCompany(companyId, status = 'ACTIVE') {
     try {
@@ -22,7 +24,37 @@ export const jobService = {
           status
         }
       });
-      return response.result || response;
+
+      let jobs = response.result || response;
+
+      // Handle pagination content
+      let jobList = [];
+      if (jobs.content) {
+        jobList = jobs.content;
+      } else if (Array.isArray(jobs)) {
+        jobList = jobs;
+      }
+
+      // Enrich with skills if there are jobs
+      if (jobList.length > 0) {
+        try {
+          const allSkills = await skillService.getAllSkills();
+          const skillsMap = new Map(allSkills.map(s => [s.id, s]));
+
+          jobList.forEach(job => {
+            if (job.skillIds && job.skillIds.length > 0) {
+              job.skills = job.skillIds.map(id => skillsMap.get(id)?.name || id);
+            } else {
+              job.skills = [];
+            }
+          });
+        } catch (skillError) {
+          console.error("Failed to enrich jobs with skills:", skillError);
+          // Fallback: jobs will just have skillIds
+        }
+      }
+
+      return jobs;
     } catch (error) {
       console.error(`Lỗi khi lấy jobs của company ${companyId}:`, error);
       throw error;
